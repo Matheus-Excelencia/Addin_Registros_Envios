@@ -19,14 +19,11 @@
 
   <Description DefaultValue="Painel para registrar envios de Email."/>
 
-  <IconUrl
-    DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-32.png"/>
+  <IconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-32.png"/>
 
-  <HighResolutionIconUrl
-    DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-80.png"/>
+  <HighResolutionIconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-80.png"/>
 
-  <SupportUrl
-    DefaultValue="https://addin-registros-envios.vercel.app/"/>
+  <SupportUrl DefaultValue="https://addin-registros-envios.vercel.app/"/>
 
   <AppDomains>
     <AppDomain>https://addin-registros-envios.vercel.app</AppDomain>
@@ -37,8 +34,7 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation
-      DefaultValue="https://addin-registros-envios.vercel.app/taskpane.html"/>
+    <SourceLocation DefaultValue="https://addin-registros-envios.vercel.app/taskpane.html"/>
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -50,7 +46,15 @@
     <Requirements>
 
       <bt:Sets DefaultMinVersion="1.1">
-        <bt:Set Name="ExcelApi" MinVersion="1.1"/>
+
+        <bt:Set
+          Name="ExcelApi"
+          MinVersion="1.1"/>
+
+        <bt:Set
+          Name="IdentityAPI"
+          MinVersion="1.3"/>
+
       </bt:Sets>
 
     </Requirements>
@@ -101,16 +105,13 @@
                   xsi:type="Button"
                   id="TaskpaneButton">
 
-                  <Label
-                    resid="TaskpaneButton.Label"/>
+                  <Label resid="TaskpaneButton.Label"/>
 
                   <Supertip>
 
-                    <Title
-                      resid="TaskpaneButton.Label"/>
+                    <Title resid="TaskpaneButton.Label"/>
 
-                    <Description
-                      resid="TaskpaneButton.Tooltip"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
 
                   </Supertip>
 
@@ -221,13 +222,9 @@
 
     <WebApplicationInfo>
 
-      <Id>
-        9f273d53-6063-4810-ba24-62ac7fc1a0e1
-      </Id>
+      <Id>9f273d53-6063-4810-ba24-62ac7fc1a0e1</Id>
 
-      <Resource>
-        api://addin-registros-envios.vercel.app/9f273d53-6063-4810-ba24-62ac7fc1a0e1
-      </Resource>
+      <Resource>api://addin-registros-envios.vercel.app/9f273d53-6063-4810-ba24-62ac7fc1a0e1</Resource>
 
       <Scopes>
 
