@@ -329,6 +329,48 @@ async function identificarUsuario() {
   }
 
   try {
+         const identityApi =
+      Office.context.requirements.isSetSupported(
+        "IdentityAPI",
+        "1.3"
+      );
+
+    const getAccessTokenDisponivel =
+      typeof Office.auth?.getAccessToken === "function";
+
+    const versaoOffice =
+      Office.context.diagnostics?.version || "não informada";
+
+    const hostOffice =
+      Office.context.host || "não informado";
+
+    console.log("DIAGNÓSTICO SSO:", {
+      identityApi: identityApi,
+      getAccessToken: getAccessTokenDisponivel,
+      versaoOffice: versaoOffice,
+      hostOffice: hostOffice
+    });
+
+    mostrarStatus(
+      "Diagnóstico SSO — IdentityAPI 1.3: " +
+      (identityApi ? "SIM" : "NÃO") +
+      " | getAccessToken: " +
+      (getAccessTokenDisponivel ? "SIM" : "NÃO")
+    );
+
+    if (!identityApi) {
+      throw criarErroSSO(
+        "IDENTITY_API_NAO_SUPORTADA",
+        "O Excel não informou suporte à IdentityAPI 1.3."
+      );
+    }
+
+    if (!getAccessTokenDisponivel) {
+      throw criarErroSSO(
+        "GET_ACCESS_TOKEN_NAO_DISPONIVEL",
+        "Office.auth.getAccessToken não está disponível."
+      );
+    }
 
     mostrarStatus(
       "Identificando usuário Microsoft 365..."
