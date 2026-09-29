@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Novo Registro - E-mail</title>
+
+    <link rel="stylesheet" href="email.css">
+
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topo">
+
+        <button id="btnVoltar" class="btn-voltar">
+            ← Voltar
+        </button>
+
+        <div>
+            <h1>Novo Registro</h1>
+            <span>E-mail</span>
+        </div>
+
+    </div>
+
+    <div id="mensagemStatus" class="status"></div>
+
+    <form id="formEmail">
+
+        <div class="campo">
+
+            <label for="realizadoPor">
+                Realizado por
+            </label>
+
+            <input
+                type="text"
+                id="realizadoPor"
+                list="listaRealizadoPor"
+                placeholder="Realizado por">
+
+            <datalist id="listaRealizadoPor"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="empresa">
+                Empresa *
+            </label>
+
+            <input
+                type="text"
+                id="empresa"
+                list="listaEmpresas"
+                placeholder="Digite ou selecione a empresa"
+                required>
+
+            <datalist id="listaEmpresas"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="qtde">
+                Qtde *
+            </label>
+
+            <input
+                type="number"
+                id="qtde"
+                min="1"
+                step="1"
+                placeholder="Quantidade"
+                required>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="emailResposta">
+                E-mail Resposta *
+            </label>
+
+            <input
+                type="email"
+                id="emailResposta"
+                list="listaEmails"
+                placeholder="Digite ou selecione o e-mail"
+                required>
+
+            <datalist id="listaEmails"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="supervisor">
+                Supervisor *
+            </label>
+
+            <input
+                type="text"
+                id="supervisor"
+                list="listaSupervisores"
+                placeholder="Digite ou selecione o supervisor"
+                required>
+
+            <datalist id="listaSupervisores"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="obs">
+                Observação
+            </label>
+
+            <textarea
+                id="obs"
+                rows="3"
+                placeholder="Observação"></textarea>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="historicoExterno">
+                Histórico Externo *
+            </label>
+
+            <textarea
+                id="historicoExterno"
+                rows="4"
+                placeholder="Informe o histórico externo"
+                required></textarea>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="mensagem">
+                Mensagem *
+            </label>
+
+            <select id="mensagem" required>
+
+                <option value="">
+                    Carregando mensagens...
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="textoMensagem">
+                Texto da mensagem
+            </label>
+
+            <textarea
+                id="textoMensagem"
+                rows="5"
+                readonly
+                placeholder="O texto da mensagem aparecerá aqui"></textarea>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="assunto">
+                Assunto *
+            </label>
+
+            <input
+                type="text"
+                id="assunto"
+                placeholder="Assunto"
+                required>
+
+        </div>
+
+        <div class="botoes">
+
+            <button
+                type="button"
+                id="btnCancelar"
+                class="btn-cancelar">
+                Cancelar
+            </button>
+
+            <button
+                type="submit"
+                id="btnSalvar"
+                class="btn-salvar">
+                Salvar
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+<script src="email.js"></script>
+
+</body>
+</html>
