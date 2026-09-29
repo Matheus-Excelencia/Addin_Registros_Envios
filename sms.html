@@ -1,118 +1,178 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Novo Registro - SMS</title>
 
     <link rel="stylesheet" href="sms.css">
 
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
 </head>
 
 <body>
 
 <div class="container">
 
-    <h1>Novo Registro</h1>
-    <div class="subtitulo">Envio de SMS</div>
+    <div class="topo">
 
-    <div id="status" class="status"></div>
+        <button id="btnVoltar" class="btn-voltar">
+            ← Voltar
+        </button>
 
-    <div class="campo">
-        <label>Realizado por</label>
-        <input
-            type="text"
-            id="realizadoPor"
-            list="listaRealizadoPor"
-            placeholder="Identificando usuário..."
-        >
-        <datalist id="listaRealizadoPor"></datalist>
-    </div>
-
-    <div class="campo">
-        <label>Empresa *</label>
-        <input
-            type="text"
-            id="empresa"
-            list="listaEmpresas"
-            placeholder="Selecione ou digite uma empresa"
-        >
-        <datalist id="listaEmpresas"></datalist>
-    </div>
-
-    <div class="campo">
-        <label>Qtde *</label>
-        <input
-            type="number"
-            id="qtde"
-            min="1"
-            step="1"
-            placeholder="Quantidade"
-        >
-    </div>
-
-    <div class="campo">
-        <label>Supervisor *</label>
-        <input
-            type="text"
-            id="supervisor"
-            list="listaSupervisores"
-            placeholder="Selecione ou digite"
-        >
-        <datalist id="listaSupervisores"></datalist>
-    </div>
-
-    <div class="campo">
-        <label>Obs</label>
-        <textarea
-            id="obs"
-            rows="3"
-            placeholder="Observação opcional"
-        ></textarea>
-    </div>
-
-    <div class="campo">
-        <label>Mensagem SMS *</label>
-
-        <select id="mensagem">
-            <option value="">Selecione uma mensagem SMS</option>
-        </select>
-    </div>
-
-    <div class="campo">
-        <label>Texto da mensagem</label>
-
-        <textarea
-            id="textoMensagem"
-            rows="6"
-            readonly
-        ></textarea>
-
-        <div class="contador">
-            <span id="contador">0 / 160</span>
+        <div>
+            <h1>Novo Registro</h1>
+            <span>SMS</span>
         </div>
-    </div>
-
-    <div class="botoes">
-
-        <button
-            id="btnSalvar"
-            class="btn btn-salvar"
-        >
-            Salvar
-        </button>
-
-        <button
-            id="btnCancelar"
-            class="btn btn-cancelar"
-        >
-            Cancelar
-        </button>
 
     </div>
+
+    <div id="mensagemStatus" class="status"></div>
+
+    <form id="formSms">
+
+        <div class="campo">
+
+            <label for="realizadoPor">
+                Realizado por
+            </label>
+
+            <input
+                type="text"
+                id="realizadoPor"
+                list="listaRealizadoPor"
+                placeholder="Realizado por">
+
+            <datalist id="listaRealizadoPor"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="empresa">
+                Empresa *
+            </label>
+
+            <input
+                type="text"
+                id="empresa"
+                list="listaEmpresas"
+                placeholder="Digite ou selecione a empresa"
+                required>
+
+            <datalist id="listaEmpresas"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="qtde">
+                Qtde *
+            </label>
+
+            <input
+                type="number"
+                id="qtde"
+                min="1"
+                step="1"
+                placeholder="Quantidade"
+                required>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="supervisor">
+                Supervisor *
+            </label>
+
+            <input
+                type="text"
+                id="supervisor"
+                list="listaSupervisores"
+                placeholder="Digite ou selecione o supervisor"
+                required>
+
+            <datalist id="listaSupervisores"></datalist>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="obs">
+                Observação
+            </label>
+
+            <textarea
+                id="obs"
+                rows="3"
+                placeholder="Observação"></textarea>
+
+        </div>
+
+        <div class="campo">
+
+            <label for="mensagem">
+                Mensagem *
+            </label>
+
+            <select id="mensagem" required>
+
+                <option value="">
+                    Carregando mensagens...
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="campo">
+
+            <div class="linha-mensagem">
+
+                <label for="textoMensagem">
+                    Texto da mensagem
+                </label>
+
+                <span id="contador">
+                    0 / 160
+                </span>
+
+            </div>
+
+            <textarea
+                id="textoMensagem"
+                rows="5"
+                readonly
+                placeholder="O texto da mensagem aparecerá aqui"></textarea>
+
+        </div>
+
+        <div class="botoes">
+
+            <button
+                type="button"
+                id="btnCancelar"
+                class="btn-cancelar">
+                Cancelar
+            </button>
+
+            <button
+                type="submit"
+                id="btnSalvar"
+                class="btn-salvar">
+                Salvar
+            </button>
+
+        </div>
+
+    </form>
 
 </div>
 
