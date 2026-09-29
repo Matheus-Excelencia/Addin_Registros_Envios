@@ -1,31 +1,15 @@
 /* ============================================================
-   REGISTROS DE ENVIOS
-   TASK PANE - EXCEL
+   REGISTROS DE ENVIOS - E-MAIL
    ============================================================ */
 
-const ABA_EMAIL = "Email";
-const ABA_CONFIG = "Config";
-
-let configuracao = {
-    empresas: [],
-    emails: [],
-    supervisores: [],
-    realizadoPor: [],
-    mensagens: []
-};
-
-let mensagemSelecionada = null;
-
-
-/* ============================================================
-   INICIALIZAÇÃO
-   ============================================================ */
+let configInfo = null;
+let mensagensEmail = [];
 
 Office.onReady(async (info) => {
 
     if (info.host !== Office.HostType.Excel) {
         mostrarStatus(
-            "Este complemento deve ser utilizado dentro do Excel.",
+            "Este formulário precisa ser aberto dentro do Excel.",
             "erro"
         );
         return;
@@ -33,362 +17,291 @@ Office.onReady(async (info) => {
 
     document
         .getElementById("btnSalvar")
-        .addEventListener("click", salvarRegistro);
+        .addEventListener("click", salvar);
 
     document
         .getElementById("btnCancelar")
-        .addEventListener("click", limparFormulario);
+        .addEventListener("click", cancelar);
 
     document
         .getElementById("mensagem")
-        .addEventListener("change", selecionarMensagem);
+        .addEventListener("change", carregarTextoMensagem);
 
-    await iniciar();
-
+    await inicializar();
 });
 
 
 /* ============================================================
-   INICIAR
+   INICIALIZAÇÃO
    ============================================================ */
 
-async function iniciar() {
+async function inicializar() {
 
     try {
 
-        mostrarStatus("Carregando configurações...", "info");
+        mostrarStatus("Carregando dados...", "info");
 
-        await carregarConfiguracao();
+        await Excel.run(async (context) => {
 
-        await identificarUsuario();
+            const sheet = context.workbook.worksheets.getItem("Config");
 
-        preencherListas();
+            const used = sheet.getUsedRangeOrNullObject(true);
 
-        preencherMensagens();
+            used.load([
+                "isNullObject",
+                "values",
+                "rowCount",
+                "columnCount"
+            ]);
 
-        mostrarStatus("Formulário pronto.", "sucesso");
+            await context.sync();
+
+            if (used.isNullObject) {
+                throw new Error(
+                    "A aba Config está vazia."
+                );
+            }
+
+            configInfo = identificarConfig(
+                used.values
+            );
+        });
+
+        await carregarListas();
+
+        const usuario = await obterUsuarioLogado();
+
+        if (usuario) {
+
+            document.getElementById(
+                "realizadoPor"
+            ).value = usuario;
+
+            adicionarOpcao(
+                "listaRealizadoPor",
+                usuario
+            );
+
+            mostrarStatus(
+                "Usuário identificado automaticamente: " + usuario,
+                "sucesso"
+            );
+
+        } else {
+
+            document.getElementById(
+                "realizadoPor"
+            ).placeholder = "Digite o nome manualmente";
+
+            mostrarStatus(
+                "Não foi possível identificar o usuário automaticamente. Preencha 'Realizado por' manualmente.",
+                "aviso"
+            );
+        }
 
     } catch (erro) {
 
-        console.error("Erro ao iniciar:", erro);
+        console.error(erro);
 
         mostrarStatus(
-            "Erro ao carregar o formulário: " + obterMensagemErro(erro),
-            "erro"
+            "Não foi possível carregar todas as listas. Os campos continuam disponíveis para preenchimento manual.",
+            "aviso"
         );
-
     }
-
 }
 
 
 /* ============================================================
-   NORMALIZAÇÃO
+   CONFIG
    ============================================================ */
 
-function normalizarTexto(valor) {
+function normalizar(texto) {
 
-    if (valor === null || valor === undefined) {
-        return "";
-    }
-
-    return String(valor)
+    return String(texto || "")
         .trim()
+        .toUpperCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toUpperCase();
-
+        .replace(/[\u0300-\u036f]/g, "");
 }
 
 
-function normalizarCabecalho(valor) {
+function identificarConfig(valores) {
 
-    return normalizarTexto(valor)
-        .replace(/_/g, " ")
-        .replace(/\s+/g, " ");
+    let headerRow = -1;
 
-}
+    for (let i = 0; i < valores.length; i++) {
 
+        const linha = valores[i]
+            .map(v => normalizar(v));
 
-/* ============================================================
-   LOCALIZAR CABEÇALHO
-   ============================================================ */
+        if (
+            linha.includes("EMPRESAS") &&
+            linha.includes("SUPERVISORES")
+        ) {
+            headerRow = i;
+            break;
+        }
+    }
 
-function localizarCabecalho(valores, nomesAceitos) {
+    if (headerRow === -1) {
 
-    const procurados = nomesAceitos.map(normalizarCabecalho);
+        throw new Error(
+            "Não encontrei a linha de cabeçalhos da aba Config."
+        );
+    }
 
-    for (let linha = 0; linha < valores.length; linha++) {
+    const headers = valores[headerRow];
 
-        for (let coluna = 0; coluna < valores[linha].length; coluna++) {
+    function achar(...nomes) {
 
-            const valor = normalizarCabecalho(valores[linha][coluna]);
+        for (const nome of nomes) {
 
-            if (procurados.includes(valor)) {
+            const indice = headers.findIndex(
+                h => normalizar(h) === normalizar(nome)
+            );
 
-                return {
-                    linha,
-                    coluna
-                };
-
+            if (indice !== -1) {
+                return indice;
             }
-
         }
 
+        return -1;
     }
 
-    return null;
+    return {
+        headerRow,
 
+        empresas: achar("EMPRESAS"),
+
+        emails: achar(
+            "EMAILS_RESPOSTA",
+            "EMAIL RESPOSTA"
+        ),
+
+        supervisores: achar("SUPERVISORES"),
+
+        realizadoPor: achar(
+            "REALIZADO POR",
+            "REALIZADO_POR"
+        ),
+
+        nomeMensagemEmail: achar(
+            "NOME MENSAGEM EMAIL",
+            "NOME MENSAGEM E-MAIL",
+            "MENSAGENS",
+            "NOME MENSAGEM"
+        ),
+
+        textoMensagemEmail: achar(
+            "TEXTO MENSAGEM EMAIL",
+            "TEXTO MENSAGEM E-MAIL",
+            "TEXTO COMPLETO",
+            "TEXTO MENSAGEM"
+        )
+    };
 }
 
 
 /* ============================================================
-   CARREGAR CONFIGURAÇÃO
+   CARREGAR LISTAS
    ============================================================ */
 
-async function carregarConfiguracao() {
+async function carregarListas() {
 
     await Excel.run(async (context) => {
 
-        const planilha = context.workbook.worksheets.getItem(ABA_CONFIG);
+        const sheet =
+            context.workbook.worksheets.getItem("Config");
 
-        const usado = planilha.getUsedRangeOrNullObject(true);
+        const used =
+            sheet.getUsedRange();
 
-        usado.load([
+        used.load([
             "values",
             "rowCount",
-            "columnCount",
-            "rowIndex"
+            "columnCount"
         ]);
 
         await context.sync();
 
-        if (usado.isNullObject) {
+        const valores = used.values;
 
-            throw new Error(
-                "A aba Config está vazia."
-            );
-
-        }
-
-        const valores = usado.values;
-
-        const cabEmpresa = localizarCabecalho(
-            valores,
-            ["EMPRESAS"]
+        const dados = valores.slice(
+            configInfo.headerRow + 1
         );
 
-        const cabEmail = localizarCabecalho(
-            valores,
-            [
-                "EMAIL RESPOSTA",
-                "EMAILS RESPOSTA",
-                "EMAILS_RESPOSTA"
-            ]
+        preencherDatalist(
+            "listaEmpresas",
+            dados,
+            configInfo.empresas
         );
 
-        const cabSupervisor = localizarCabecalho(
-            valores,
-            ["SUPERVISORES"]
+        preencherDatalist(
+            "listaEmails",
+            dados,
+            configInfo.emails
         );
 
-        const cabRealizado = localizarCabecalho(
-            valores,
-            ["REALIZADO POR"]
+        preencherDatalist(
+            "listaSupervisores",
+            dados,
+            configInfo.supervisores
         );
 
-        const cabNomeMensagem = localizarCabecalho(
-            valores,
-            [
-                "NOME MENSAGEM",
-                "MENSAGENS"
-            ]
+        preencherDatalist(
+            "listaRealizadoPor",
+            dados,
+            configInfo.realizadoPor
         );
 
-        const cabTextoMensagem = localizarCabecalho(
-            valores,
-            [
-                "TEXTO MENSAGEM",
-                "TEXTO COMPLETO"
-            ]
+        carregarMensagensEmail(
+            dados,
+            configInfo.nomeMensagemEmail,
+            configInfo.textoMensagemEmail
         );
-
-        if (!cabEmpresa) {
-            throw new Error("Não encontrei a coluna EMPRESAS na aba Config.");
-        }
-
-        if (!cabEmail) {
-            throw new Error("Não encontrei a coluna EMAIL RESPOSTA na aba Config.");
-        }
-
-        if (!cabSupervisor) {
-            throw new Error("Não encontrei a coluna SUPERVISORES na aba Config.");
-        }
-
-        if (!cabNomeMensagem) {
-            throw new Error("Não encontrei a coluna NOME MENSAGEM na aba Config.");
-        }
-
-        if (!cabTextoMensagem) {
-            throw new Error("Não encontrei a coluna TEXTO MENSAGEM na aba Config.");
-        }
-
-
-        configuracao.empresas = obterColunaConfig(
-            valores,
-            cabEmpresa
-        );
-
-        configuracao.emails = obterColunaConfig(
-            valores,
-            cabEmail
-        );
-
-        configuracao.supervisores = obterColunaConfig(
-            valores,
-            cabSupervisor
-        );
-
-        configuracao.realizadoPor = cabRealizado
-            ? obterColunaConfig(valores, cabRealizado)
-            : [];
-
-        configuracao.mensagens = [];
-
-
-        const inicioDados = Math.max(
-            cabNomeMensagem.linha,
-            cabTextoMensagem.linha
-        ) + 1;
-
-
-        for (
-            let i = inicioDados;
-            i < valores.length;
-            i++
-        ) {
-
-            const nome =
-                valores[i][cabNomeMensagem.coluna];
-
-            const texto =
-                valores[i][cabTextoMensagem.coluna];
-
-            if (
-                nome !== null &&
-                nome !== undefined &&
-                String(nome).trim() !== ""
-            ) {
-
-                configuracao.mensagens.push({
-
-                    nome: String(nome).trim(),
-
-                    texto:
-                        texto === null ||
-                        texto === undefined
-                            ? ""
-                            : String(texto)
-
-                });
-
-            }
-
-        }
-
     });
-
 }
 
 
 /* ============================================================
-   OBTER COLUNA DA CONFIG
+   DATALISTS
    ============================================================ */
 
-function obterColunaConfig(valores, cabecalho) {
+function preencherDatalist(
+    id,
+    dados,
+    coluna
+) {
 
-    const lista = [];
+    const lista =
+        document.getElementById(id);
 
-    for (
-        let i = cabecalho.linha + 1;
-        i < valores.length;
-        i++
+    lista.innerHTML = "";
+
+    if (
+        coluna === -1 ||
+        coluna === null ||
+        coluna === undefined
     ) {
-
-        const valor =
-            valores[i][cabecalho.coluna];
-
-        if (
-            valor !== null &&
-            valor !== undefined &&
-            String(valor).trim() !== ""
-        ) {
-
-            const texto = String(valor).trim();
-
-            if (
-                !lista.some(
-                    item =>
-                        normalizarTexto(item) ===
-                        normalizarTexto(texto)
-                )
-            ) {
-
-                lista.push(texto);
-
-            }
-
-        }
-
-    }
-
-    return lista;
-
-}
-
-
-/* ============================================================
-   PREENCHER LISTAS
-   ============================================================ */
-
-function preencherListas() {
-
-    preencherDatalist(
-        "listaEmpresas",
-        configuracao.empresas
-    );
-
-    preencherDatalist(
-        "listaEmails",
-        configuracao.emails
-    );
-
-    preencherDatalist(
-        "listaSupervisores",
-        configuracao.supervisores
-    );
-
-    preencherDatalist(
-        "listaRealizadoPor",
-        configuracao.realizadoPor
-    );
-
-}
-
-
-/* ============================================================
-   DATALIST
-   ============================================================ */
-
-function preencherDatalist(id, valores) {
-
-    const lista = document.getElementById(id);
-
-    if (!lista) {
         return;
     }
 
-    lista.innerHTML = "";
+    const valores = [];
+
+    for (const linha of dados) {
+
+        const valor =
+            String(linha[coluna] || "").trim();
+
+        if (
+            valor &&
+            !valores.some(
+                v => normalizar(v) === normalizar(valor)
+            )
+        ) {
+            valores.push(valor);
+        }
+    }
 
     valores.forEach(valor => {
 
@@ -398,17 +311,45 @@ function preencherDatalist(id, valores) {
         option.value = valor;
 
         lista.appendChild(option);
-
     });
+}
 
+
+function adicionarOpcao(id, valor) {
+
+    if (!valor) return;
+
+    const lista =
+        document.getElementById(id);
+
+    const existe =
+        [...lista.options].some(
+            o =>
+                normalizar(o.value) ===
+                normalizar(valor)
+        );
+
+    if (!existe) {
+
+        const option =
+            document.createElement("option");
+
+        option.value = valor;
+
+        lista.appendChild(option);
+    }
 }
 
 
 /* ============================================================
-   MENSAGENS
+   MENSAGENS E-MAIL
    ============================================================ */
 
-function preencherMensagens() {
+function carregarMensagensEmail(
+    dados,
+    colunaNome,
+    colunaTexto
+) {
 
     const select =
         document.getElementById("mensagem");
@@ -416,672 +357,332 @@ function preencherMensagens() {
     select.innerHTML =
         '<option value="">Selecione uma mensagem</option>';
 
-    configuracao.mensagens.forEach(
-        (item, indice) => {
+    mensagensEmail = [];
 
-            const option =
-                document.createElement("option");
+    if (
+        colunaNome === -1 ||
+        colunaTexto === -1
+    ) {
+        return;
+    }
 
-            option.value = String(indice);
+    for (const linha of dados) {
 
-            option.textContent = item.nome;
+        const nome =
+            String(linha[colunaNome] || "").trim();
 
-            select.appendChild(option);
+        const texto =
+            String(linha[colunaTexto] || "").trim();
 
-        }
-    );
+        if (!nome) continue;
 
+        mensagensEmail.push({
+            nome,
+            texto
+        });
+
+        const option =
+            document.createElement("option");
+
+        option.value = nome;
+        option.textContent = nome;
+
+        select.appendChild(option);
+    }
 }
 
 
-function selecionarMensagem() {
+function carregarTextoMensagem() {
 
-    const select =
-        document.getElementById("mensagem");
+    const nome =
+        document.getElementById("mensagem").value;
 
-    const indice = select.value;
+    const item =
+        mensagensEmail.find(
+            m => m.nome === nome
+        );
 
-    const campoTexto =
-        document.getElementById("textoMensagem");
-
-    if (
-        indice === "" ||
-        !configuracao.mensagens[indice]
-    ) {
-
-        mensagemSelecionada = null;
-
-        campoTexto.value = "";
-
-        return;
-
-    }
-
-    mensagemSelecionada =
-        configuracao.mensagens[indice];
-
-    campoTexto.value =
-        mensagemSelecionada.texto;
-
+    document.getElementById(
+        "textoMensagem"
+    ).value = item ? item.texto : "";
 }
 
 
 /* ============================================================
-   IDENTIFICAR USUÁRIO
+   USUÁRIO LOGADO
    ============================================================ */
 
-async function identificarUsuario() {
-
-    const campo =
-        document.getElementById("realizadoPor");
+async function obterUsuarioLogado() {
 
     try {
 
         const token =
-            await obterTokenSSO();
+            await Office.auth.getAccessToken({
+                allowSignInPrompt: true,
+                allowConsentPrompt: true
+            });
 
         if (!token) {
-            throw new Error("Não foi possível obter o token.");
+            return null;
         }
 
-        const payload =
-            decodificarToken(token);
+        const dados =
+            decodificarJWT(token);
 
-        console.log("Payload SSO:", payload);
-
-
-        const nome =
-            payload.name ||
-            payload.preferred_username ||
-            payload.unique_name ||
-            payload.upn ||
-            "";
-
-
-        if (nome) {
-
-            campo.value = nome;
-
-            campo.readOnly = true;
-
-            adicionarNaListaLocal(
-                configuracao.realizadoPor,
-                nome
-            );
-
-            preencherDatalist(
-                "listaRealizadoPor",
-                configuracao.realizadoPor
-            );
-
-            mostrarStatus(
-                "Usuário identificado automaticamente: " + nome,
-                "sucesso"
-            );
-
-            return;
-
+        if (!dados) {
+            return null;
         }
 
-        throw new Error(
-            "O token não possui o nome do usuário."
+        return (
+            dados.name ||
+            dados.preferred_username ||
+            dados.upn ||
+            dados.email ||
+            null
         );
 
     } catch (erro) {
 
         console.warn(
-            "Não foi possível identificar automaticamente:",
+            "Falha ao identificar usuário:",
             erro
         );
 
-        campo.readOnly = false;
-
-        campo.placeholder =
-            "Digite seu nome";
-
-        mostrarStatus(
-            "Não foi possível identificar automaticamente. Informe seu nome.",
-            "aviso"
-        );
-
+        return null;
     }
-
 }
 
 
-/* ============================================================
-   TOKEN SSO
-   ============================================================ */
-
-async function obterTokenSSO() {
-
-    if (
-        Office &&
-        Office.auth &&
-        typeof Office.auth.getAccessToken === "function"
-    ) {
-
-        return await Office.auth.getAccessToken({
-            allowSignInPrompt: true,
-            allowConsentPrompt: true
-        });
-
-    }
-
-    throw new Error(
-        "A API de autenticação do Office não está disponível."
-    );
-
-}
-
-
-/* ============================================================
-   DECODIFICAR JWT
-   ============================================================ */
-
-function decodificarToken(token) {
-
-    const partes =
-        token.split(".");
-
-    if (partes.length !== 3) {
-
-        throw new Error(
-            "Token SSO inválido."
-        );
-
-    }
-
-    let base64 =
-        partes[1]
-            .replace(/-/g, "+")
-            .replace(/_/g, "/");
-
-    while (base64.length % 4) {
-        base64 += "=";
-    }
-
-    const json =
-        decodeURIComponent(
-            atob(base64)
-                .split("")
-                .map(
-                    c =>
-                        "%" +
-                        (
-                            "00" +
-                            c.charCodeAt(0).toString(16)
-                        ).slice(-2)
-                )
-                .join("")
-        );
-
-    return JSON.parse(json);
-
-}
-
-
-/* ============================================================
-   SALVAR REGISTRO
-   ============================================================ */
-
-async function salvarRegistro() {
-
-    const botao =
-        document.getElementById("btnSalvar");
+function decodificarJWT(token) {
 
     try {
 
-        botao.disabled = true;
+        const partes =
+            token.split(".");
 
-        mostrarStatus(
-            "Validando informações...",
-            "info"
-        );
-
-
-        const dados =
-            coletarFormulario();
-
-
-        const erroValidacao =
-            validarFormulario(dados);
-
-
-        if (erroValidacao) {
-
-            mostrarStatus(
-                erroValidacao,
-                "erro"
-            );
-
-            return;
-
+        if (partes.length < 2) {
+            return null;
         }
 
+        const base64 =
+            partes[1]
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
+
+        const json =
+            decodeURIComponent(
+                atob(base64)
+                    .split("")
+                    .map(
+                        c =>
+                            "%" +
+                            (
+                                "00" +
+                                c.charCodeAt(0)
+                                    .toString(16)
+                            ).slice(-2)
+                    )
+                    .join("")
+            );
+
+        return JSON.parse(json);
+
+    } catch (erro) {
+
+        console.warn(
+            "Não foi possível ler o token.",
+            erro
+        );
+
+        return null;
+    }
+}
+
+
+/* ============================================================
+   SALVAR
+   ============================================================ */
+
+async function salvar() {
+
+    const realizadoPor =
+        document.getElementById("realizadoPor")
+            .value.trim();
+
+    const empresa =
+        document.getElementById("empresa")
+            .value.trim();
+
+    const qtde =
+        document.getElementById("qtde")
+            .value.trim();
+
+    const emailResposta =
+        document.getElementById("emailResposta")
+            .value.trim();
+
+    const supervisor =
+        document.getElementById("supervisor")
+            .value.trim();
+
+    const obs =
+        document.getElementById("obs")
+            .value.trim();
+
+    const historicoExterno =
+        document.getElementById("historicoExterno")
+            .value.trim();
+
+    const mensagem =
+        document.getElementById("mensagem")
+            .value.trim();
+
+    const textoMensagem =
+        document.getElementById("textoMensagem")
+            .value;
+
+    const assunto =
+        document.getElementById("assunto")
+            .value.trim();
+
+
+    /* ----------------------------
+       VALIDAÇÃO
+       ---------------------------- */
+
+    if (!realizadoPor) {
 
         mostrarStatus(
-            "Atualizando listas de configuração...",
+            "Informe o campo 'Realizado por'.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (!empresa) {
+
+        mostrarStatus(
+            "Informe a empresa.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (
+        !qtde ||
+        !Number.isInteger(Number(qtde)) ||
+        Number(qtde) <= 0
+    ) {
+
+        mostrarStatus(
+            "Informe uma quantidade válida.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (!emailResposta) {
+
+        mostrarStatus(
+            "Informe o E-mail Resposta.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (!supervisor) {
+
+        mostrarStatus(
+            "Informe o supervisor.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (!historicoExterno) {
+
+        mostrarStatus(
+            "Informe o Histórico Externo.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (!mensagem) {
+
+        mostrarStatus(
+            "Selecione uma mensagem.",
+            "erro"
+        );
+
+        return;
+    }
+
+    if (!assunto) {
+
+        mostrarStatus(
+            "Informe o assunto.",
+            "erro"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        desabilitarBotoes(true);
+
+        mostrarStatus(
+            "Salvando registro...",
             "info"
         );
 
-
-        await atualizarConfig(dados);
-
-
-        mostrarStatus(
-            "Salvando registro no Excel...",
-            "info"
+        await atualizarConfig(
+            empresa,
+            supervisor,
+            realizadoPor
         );
 
-
-        await adicionarRegistroEmail(dados);
-
+        await adicionarRegistroEmail({
+            realizadoPor,
+            empresa,
+            qtde: Number(qtde),
+            emailResposta,
+            supervisor,
+            obs,
+            historicoExterno,
+            textoMensagem,
+            assunto
+        });
 
         limparFormulario();
-
 
         mostrarStatus(
             "Registro salvo com sucesso!",
             "sucesso"
         );
 
-
     } catch (erro) {
 
-        console.error(
-            "Erro ao salvar:",
-            erro
-        );
+        console.error(erro);
 
         mostrarStatus(
             "Erro ao salvar: " +
-            obterMensagemErro(erro),
+            (erro.message || erro),
             "erro"
         );
 
     } finally {
 
-        botao.disabled = false;
-
+        desabilitarBotoes(false);
     }
-
-}
-
-
-/* ============================================================
-   COLETAR FORMULÁRIO
-   ============================================================ */
-
-function coletarFormulario() {
-
-    const mensagem =
-        mensagemSelecionada
-            ? mensagemSelecionada.texto
-            : "";
-
-
-    return {
-
-        data:
-            new Date(),
-
-        realizadoPor:
-            document
-                .getElementById("realizadoPor")
-                .value
-                .trim(),
-
-        empresa:
-            document
-                .getElementById("empresa")
-                .value
-                .trim(),
-
-        qtde:
-            Number(
-                document
-                    .getElementById("qtde")
-                    .value
-            ),
-
-        emailResposta:
-            document
-                .getElementById("emailResposta")
-                .value
-                .trim(),
-
-        supervisor:
-            document
-                .getElementById("supervisor")
-                .value
-                .trim(),
-
-        obs:
-            document
-                .getElementById("obs")
-                .value
-                .trim(),
-
-        historicoExterno:
-            document
-                .getElementById("historicoExterno")
-                .value
-                .trim(),
-
-        mensagem: mensagem,
-
-        nomeMensagem:
-            mensagemSelecionada
-                ? mensagemSelecionada.nome
-                : "",
-
-        assunto:
-            document
-                .getElementById("assunto")
-                .value
-                .trim()
-
-    };
-
-}
-
-
-/* ============================================================
-   VALIDAÇÃO
-   ============================================================ */
-
-function validarFormulario(dados) {
-
-    if (!dados.realizadoPor) {
-
-        return "Informe quem realizou o envio.";
-
-    }
-
-    if (!dados.empresa) {
-
-        return "Informe a empresa.";
-
-    }
-
-    if (
-        !Number.isInteger(dados.qtde) ||
-        dados.qtde <= 0
-    ) {
-
-        return "A Qtde deve ser um número inteiro maior que zero.";
-
-    }
-
-    if (!dados.emailResposta) {
-
-        return "Informe o Email Resposta.";
-
-    }
-
-
-    const emailValido =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (
-        !emailValido.test(
-            dados.emailResposta
-        )
-    ) {
-
-        return "Informe um Email Resposta válido.";
-
-    }
-
-
-    if (!dados.supervisor) {
-
-        return "Informe o supervisor.";
-
-    }
-
-    if (!dados.historicoExterno) {
-
-        return "Informe o Histórico Externo.";
-
-    }
-
-    if (!dados.nomeMensagem) {
-
-        return "Selecione uma mensagem.";
-
-    }
-
-    if (!dados.mensagem) {
-
-        return "A mensagem selecionada não possui texto.";
-
-    }
-
-    if (!dados.assunto) {
-
-        return "Informe o assunto.";
-
-    }
-
-    return null;
-
-}
-
-
-/* ============================================================
-   ADICIONAR REGISTRO NA ABA EMAIL
-   ============================================================ */
-
-async function adicionarRegistroEmail(dados) {
-
-    await Excel.run(async (context) => {
-
-        const planilha =
-            context.workbook.worksheets.getItem(
-                ABA_EMAIL
-            );
-
-
-        const tabela =
-            obterTabelaEmail(planilha);
-
-
-        const cabecalho =
-            tabela
-                .getHeaderRowRange();
-
-        cabecalho.load("values");
-
-        await context.sync();
-
-
-        const headers =
-            cabecalho.values[0];
-
-
-        const mapa =
-            criarMapaCabecalhos(headers);
-
-
-        const linha =
-            new Array(headers.length).fill("");
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["DATA"],
-            formatarData(dados.data)
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["REALIZADO POR"],
-            dados.realizadoPor
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["EMPRESA"],
-            dados.empresa
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["QTDE"],
-            dados.qtde
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            [
-                "EMAIL RESPOSTA",
-                "EMAILS RESPOSTA"
-            ],
-            dados.emailResposta
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["SUPERVISOR"],
-            dados.supervisor
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["OBS"],
-            dados.obs
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            [
-                "HISTORICO EXTERNO",
-                "HISTÓRICO EXTERNO"
-            ],
-            dados.historicoExterno
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["MENSAGEM"],
-            dados.mensagem
-        );
-
-
-        preencherCelulaPorCabecalho(
-            linha,
-            mapa,
-            ["ASSUNTO"],
-            dados.assunto
-        );
-
-
-        tabela.rows.add(
-            null,
-            [linha]
-        );
-
-
-        await context.sync();
-
-    });
-
-}
-
-
-/* ============================================================
-   OBTER TABELA EMAIL
-   ============================================================ */
-
-function obterTabelaEmail(planilha) {
-
-    const tabelas =
-        planilha.tables;
-
-    const tabela =
-        tabelas.getItemOrNullObject("Tabela1");
-
-    tabela.load("name");
-
-    return tabela;
-
-}
-
-
-/* ============================================================
-   MAPA DE CABEÇALHOS
-   ============================================================ */
-
-function criarMapaCabecalhos(headers) {
-
-    const mapa = {};
-
-    headers.forEach(
-        (header, indice) => {
-
-            const chave =
-                normalizarCabecalho(header);
-
-            mapa[chave] = indice;
-
-        }
-    );
-
-    return mapa;
-
-}
-
-
-/* ============================================================
-   PREENCHER CÉLULA
-   ============================================================ */
-
-function preencherCelulaPorCabecalho(
-    linha,
-    mapa,
-    nomes,
-    valor
-) {
-
-    for (const nome of nomes) {
-
-        const chave =
-            normalizarCabecalho(nome);
-
-        if (
-            mapa[chave] !== undefined
-        ) {
-
-            linha[mapa[chave]] =
-                valor;
-
-            return true;
-
-        }
-
-    }
-
-    return false;
-
 }
 
 
@@ -1089,327 +690,410 @@ function preencherCelulaPorCabecalho(
    ATUALIZAR CONFIG
    ============================================================ */
 
-async function atualizarConfig(dados) {
+async function atualizarConfig(
+    empresa,
+    supervisor,
+    realizadoPor
+) {
 
     await Excel.run(async (context) => {
 
-        const planilha =
-            context.workbook.worksheets.getItem(
-                ABA_CONFIG
-            );
+        const sheet =
+            context.workbook.worksheets
+                .getItem("Config");
 
+        const used =
+            sheet.getUsedRange();
 
-        const usado =
-            planilha.getUsedRangeOrNullObject(true);
-
-        usado.load([
-            "values",
-            "rowCount",
-            "columnCount",
-            "rowIndex"
-        ]);
-
+        used.load("values");
 
         await context.sync();
 
+        const valores = used.values;
 
-        if (usado.isNullObject) {
+        const headerRow =
+            configInfo.headerRow;
 
-            throw new Error(
-                "A aba Config não possui estrutura."
+        const dados =
+            valores.slice(headerRow + 1);
+
+        const ultimaLinha =
+            Math.max(
+                valores.length,
+                headerRow + 2
             );
 
+        const valoresNovos = [
+            {
+                coluna: configInfo.empresas,
+                valor: empresa
+            },
+            {
+                coluna: configInfo.supervisores,
+                valor: supervisor
+            },
+            {
+                coluna: configInfo.realizadoPor,
+                valor: realizadoPor
+            }
+        ];
+
+        for (const item of valoresNovos) {
+
+            if (
+                item.coluna === -1 ||
+                item.coluna === null ||
+                item.coluna === undefined
+            ) {
+                continue;
+            }
+
+            const jaExiste =
+                dados.some(
+                    linha =>
+                        normalizar(
+                            linha[item.coluna]
+                        ) === normalizar(item.valor)
+                );
+
+            if (!jaExiste) {
+
+                const linhaExcel =
+                    ultimaLinha + 1;
+
+                sheet
+                    .getCell(
+                        linhaExcel - 1,
+                        item.coluna
+                    )
+                    .values = [[item.valor]];
+            }
         }
-
-
-        const valores =
-            usado.values;
-
-
-        const cabEmpresa =
-            localizarCabecalho(
-                valores,
-                ["EMPRESAS"]
-            );
-
-
-        const cabEmail =
-            localizarCabecalho(
-                valores,
-                [
-                    "EMAIL RESPOSTA",
-                    "EMAILS RESPOSTA",
-                    "EMAILS_RESPOSTA"
-                ]
-            );
-
-
-        const cabSupervisor =
-            localizarCabecalho(
-                valores,
-                ["SUPERVISORES"]
-            );
-
-
-        const cabRealizado =
-            localizarCabecalho(
-                valores,
-                ["REALIZADO POR"]
-            );
-
-
-        if (
-            !cabEmpresa ||
-            !cabEmail ||
-            !cabSupervisor
-        ) {
-
-            throw new Error(
-                "Não foi possível localizar as colunas da aba Config."
-            );
-
-        }
-
-
-        let proximaLinha =
-            usado.rowIndex +
-            usado.rowCount;
-
-
-        await adicionarValorConfig(
-            context,
-            planilha,
-            valores,
-            cabEmpresa,
-            dados.empresa,
-            proximaLinha
-        );
-
-
-        await adicionarValorConfig(
-            context,
-            planilha,
-            valores,
-            cabEmail,
-            dados.emailResposta,
-            proximaLinha
-        );
-
-
-        await adicionarValorConfig(
-            context,
-            planilha,
-            valores,
-            cabSupervisor,
-            dados.supervisor,
-            proximaLinha
-        );
-
-
-        if (cabRealizado) {
-
-            await adicionarValorConfig(
-                context,
-                planilha,
-                valores,
-                cabRealizado,
-                dados.realizadoPor,
-                proximaLinha
-            );
-
-        }
-
 
         await context.sync();
-
     });
-
-
-    /*
-       Atualiza as listas locais também.
-       Assim o novo valor já aparece no formulário
-       sem precisar fechar e abrir o complemento.
-    */
-
-    adicionarNaListaLocal(
-        configuracao.empresas,
-        dados.empresa
-    );
-
-    adicionarNaListaLocal(
-        configuracao.emails,
-        dados.emailResposta
-    );
-
-    adicionarNaListaLocal(
-        configuracao.supervisores,
-        dados.supervisor
-    );
-
-    adicionarNaListaLocal(
-        configuracao.realizadoPor,
-        dados.realizadoPor
-    );
-
-
-    preencherListas();
-
 }
 
 
 /* ============================================================
-   ADICIONAR VALOR NA CONFIG
+   ADICIONAR E-MAIL
    ============================================================ */
 
-async function adicionarValorConfig(
-    context,
-    planilha,
-    valores,
-    cabecalho,
-    novoValor,
-    proximaLinha
-) {
+async function adicionarRegistroEmail(dados) {
 
-    if (!novoValor) {
-        return;
+    await Excel.run(async (context) => {
+
+        const sheet =
+            context.workbook.worksheets
+                .getItem("Email");
+
+        const used =
+            sheet.getUsedRangeOrNullObject(true);
+
+        used.load([
+            "isNullObject",
+            "values",
+            "rowCount",
+            "columnCount"
+        ]);
+
+        await context.sync();
+
+        if (used.isNullObject) {
+            throw new Error(
+                "A aba Email não possui estrutura."
+            );
+        }
+
+        const valores =
+            used.values;
+
+        const header = encontrarCabecalhoEmail(
+            valores
+        );
+
+        if (!header) {
+            throw new Error(
+                "Não encontrei os cabeçalhos da aba Email."
+            );
+        }
+
+        const linhaDestino =
+            header.row + 1 +
+            contarLinhasDados(
+                valores,
+                header.row
+            );
+
+        const linha =
+            new Array(
+                Math.max(
+                    header.columnCount,
+                    10
+                )
+            ).fill("");
+
+        preencherColuna(
+            linha,
+            header,
+            "Data",
+            formatarData(new Date())
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Realizado por",
+            dados.realizadoPor
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Empresa",
+            dados.empresa
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Qtde",
+            dados.qtde
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Email Resposta",
+            dados.emailResposta
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Supervisor",
+            dados.supervisor
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Obs",
+            dados.obs
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Historico Externo",
+            dados.historicoExterno
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Mensagem",
+            dados.textoMensagem
+        );
+
+        preencherColuna(
+            linha,
+            header,
+            "Assunto",
+            dados.assunto
+        );
+
+        const range =
+            sheet.getRangeByIndexes(
+                linhaDestino,
+                0,
+                1,
+                linha.length
+            );
+
+        range.values = [linha];
+
+        await context.sync();
+    });
+}
+
+
+/* ============================================================
+   CABEÇALHOS E-MAIL
+   ============================================================ */
+
+function encontrarCabecalhoEmail(valores) {
+
+    for (let r = 0; r < valores.length; r++) {
+
+        const headers =
+            valores[r].map(v => normalizar(v));
+
+        if (
+            headers.includes("DATA") &&
+            headers.includes("EMPRESA") &&
+            headers.includes("QTDE") &&
+            headers.includes("SUPERVISOR") &&
+            headers.includes("MENSAGEM")
+        ) {
+
+            const mapa = {};
+
+            headers.forEach(
+                (valor, coluna) => {
+
+                    mapa[valor] = coluna;
+                }
+            );
+
+            return {
+                row: r,
+                columnCount: headers.length,
+                mapa
+            };
+        }
     }
 
+    return null;
+}
 
-    const valorNormalizado =
-        normalizarTexto(novoValor);
+
+function preencherColuna(
+    linha,
+    header,
+    nome,
+    valor
+) {
+
+    const chave =
+        normalizar(nome);
+
+    const coluna =
+        header.mapa[chave];
+
+    if (
+        coluna !== undefined &&
+        coluna >= 0
+    ) {
+        linha[coluna] = valor;
+    }
+}
 
 
-    let existe = false;
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
 
+function contarLinhasDados(
+    valores,
+    headerRow
+) {
+
+    let quantidade = 0;
 
     for (
-        let i = cabecalho.linha + 1;
+        let i = headerRow + 1;
         i < valores.length;
         i++
     ) {
 
-        const atual =
-            valores[i][cabecalho.coluna];
+        const linha =
+            valores[i];
 
+        const possuiDados =
+            linha.some(
+                valor =>
+                    String(valor || "").trim() !== ""
+            );
 
-        if (
-            atual !== null &&
-            atual !== undefined &&
-            normalizarTexto(atual) ===
-            valorNormalizado
-        ) {
-
-            existe = true;
-
-            break;
-
+        if (possuiDados) {
+            quantidade++;
         }
-
     }
 
-
-    if (existe) {
-        return;
-    }
-
-
-    const celula =
-        planilha.getCell(
-            proximaLinha,
-            cabecalho.coluna
-        );
-
-
-    celula.values = [
-        [novoValor]
-    ];
-
+    return quantidade;
 }
 
-
-/* ============================================================
-   ADICIONAR LOCALMENTE
-   ============================================================ */
-
-function adicionarNaListaLocal(
-    lista,
-    valor
-) {
-
-    if (!valor) {
-        return;
-    }
-
-
-    const existe =
-        lista.some(
-            item =>
-                normalizarTexto(item) ===
-                normalizarTexto(valor)
-        );
-
-
-    if (!existe) {
-
-        lista.push(valor);
-
-    }
-
-}
-
-
-/* ============================================================
-   LIMPAR FORMULÁRIO
-   ============================================================ */
-
-function limparFormulario() {
-
-    document.getElementById("empresa").value = "";
-
-    document.getElementById("qtde").value = "";
-
-    document.getElementById("emailResposta").value = "";
-
-    document.getElementById("supervisor").value = "";
-
-    document.getElementById("obs").value = "";
-
-    document.getElementById("historicoExterno").value = "";
-
-    document.getElementById("mensagem").value = "";
-
-    document.getElementById("textoMensagem").value = "";
-
-    document.getElementById("assunto").value = "";
-
-    mensagemSelecionada = null;
-
-}
-
-
-/* ============================================================
-   DATA
-   ============================================================ */
 
 function formatarData(data) {
 
     const dia =
-        String(data.getDate()).padStart(2, "0");
+        String(data.getDate())
+            .padStart(2, "0");
 
     const mes =
-        String(data.getMonth() + 1).padStart(2, "0");
+        String(data.getMonth() + 1)
+            .padStart(2, "0");
 
     const ano =
         data.getFullYear();
 
     return `${dia}/${mes}/${ano}`;
-
 }
 
 
-/* ============================================================
-   STATUS
-   ============================================================ */
+function limparFormulario() {
+
+    document.getElementById(
+        "empresa"
+    ).value = "";
+
+    document.getElementById(
+        "qtde"
+    ).value = "";
+
+    document.getElementById(
+        "emailResposta"
+    ).value = "";
+
+    document.getElementById(
+        "supervisor"
+    ).value = "";
+
+    document.getElementById(
+        "obs"
+    ).value = "";
+
+    document.getElementById(
+        "historicoExterno"
+    ).value = "";
+
+    document.getElementById(
+        "mensagem"
+    ).value = "";
+
+    document.getElementById(
+        "textoMensagem"
+    ).value = "";
+
+    document.getElementById(
+        "assunto"
+    ).value = "";
+}
+
+
+function cancelar() {
+
+    limparFormulario();
+
+    mostrarStatus(
+        "Formulário limpo.",
+        "info"
+    );
+}
+
+
+function desabilitarBotoes(valor) {
+
+    document.getElementById(
+        "btnSalvar"
+    ).disabled = valor;
+
+    document.getElementById(
+        "btnCancelar"
+    ).disabled = valor;
+}
+
 
 function mostrarStatus(
     mensagem,
@@ -1419,32 +1103,8 @@ function mostrarStatus(
     const status =
         document.getElementById("status");
 
-
-    status.textContent =
-        mensagem;
-
+    status.textContent = mensagem;
 
     status.className =
-        "status " + tipo;
-
-
-}
-
-
-/* ============================================================
-   ERRO
-   ============================================================ */
-
-function obterMensagemErro(erro) {
-
-    if (!erro) {
-        return "Erro desconhecido.";
-    }
-
-    if (erro.message) {
-        return erro.message;
-    }
-
-    return String(erro);
-
+        "status " + (tipo || "");
 }
