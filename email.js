@@ -3,48 +3,61 @@ let mensagensEmail = [];
 
 Office.onReady(async function () {
 
-    document
-        .getElementById("btnVoltar")
-        .addEventListener("click", function () {
-            window.location.href = "taskpane.html";
-        });
+    document.getElementById("btnVoltar").addEventListener("click", function () {
+        window.location.href = "taskpane.html";
+    });
 
-    document
-        .getElementById("btnCancelar")
-        .addEventListener("click", limparFormulario);
+    document.getElementById("btnCancelar").addEventListener("click", limparFormulario);
 
-    document
-        .getElementById("formEmail")
-        .addEventListener("submit", salvarEmail);
+    document.getElementById("formEmail").addEventListener("submit", salvarEmail);
 
-    document
-        .getElementById("mensagem")
-        .addEventListener("change", mostrarTextoMensagem);
+    document.getElementById("mensagem").addEventListener("change", mostrarTextoMensagem);
 
     await carregarDados();
-
 });
 
 
-function mostrarStatus(texto, tipo) {
+/* =========================================================
+   STATUS
+========================================================= */
 
+function mostrarStatus(texto, tipo) {
     const elemento = document.getElementById("mensagemStatus");
 
     elemento.textContent = texto;
     elemento.className = "status " + tipo;
-
 }
 
 
 function limparStatus() {
-
     const elemento = document.getElementById("mensagemStatus");
 
     elemento.textContent = "";
     elemento.className = "status";
-
 }
 
+
+/* =========================================================
+   LIMPAR FORMULÁRIO
+========================================================= */
+
+function limparFormulario() {
+
+    document.getElementById("formEmail").reset();
+
+    document.getElementById("mensagem").selectedIndex = 0;
+
+    document.getElementById("textoMensagem").value = "";
+
+    limparStatus();
+
+    identificarUsuario();
+}
+
+
+/* =========================================================
+   CARREGAR CONFIGURAÇÕES
+========================================================= */
 
 async function carregarDados() {
 
@@ -68,18 +81,23 @@ async function carregarDados() {
             await context.sync();
 
             if (usado.isNullObject) {
+
                 throw new Error("A aba Config está vazia.");
+
             }
 
-            configInfo = encontrarCabecalho(
-                usado.values
-            );
+            configInfo = encontrarCabecalho(usado.values);
 
             if (!configInfo) {
+
                 throw new Error(
                     "Não foi possível localizar os cabeçalhos da aba Config."
                 );
+
             }
+
+
+            /* EMPRESAS */
 
             preencherLista(
                 "listaEmpresas",
@@ -90,6 +108,9 @@ async function carregarDados() {
                 )
             );
 
+
+            /* E-MAILS */
+
             preencherLista(
                 "listaEmails",
                 obterValoresColuna(
@@ -98,6 +119,9 @@ async function carregarDados() {
                     "EMAILS_RESPOSTA"
                 )
             );
+
+
+            /* SUPERVISORES */
 
             preencherLista(
                 "listaSupervisores",
@@ -108,6 +132,9 @@ async function carregarDados() {
                 )
             );
 
+
+            /* REALIZADO POR */
+
             preencherLista(
                 "listaRealizadoPor",
                 obterValoresColuna(
@@ -117,6 +144,9 @@ async function carregarDados() {
                 )
             );
 
+
+            /* MENSAGENS */
+
             carregarMensagens(
                 usado.values,
                 configInfo
@@ -124,23 +154,43 @@ async function carregarDados() {
 
         });
 
+
         await identificarUsuario();
 
-    } catch (erro) {
+    }
+    catch (erro) {
 
         console.error(erro);
+
+        const selectMensagem =
+            document.getElementById("mensagem");
+
+        selectMensagem.innerHTML = "";
+
+        const opcao = document.createElement("option");
+
+        opcao.value = "";
+
+        opcao.textContent =
+            "Não foi possível carregar as mensagens";
+
+        selectMensagem.appendChild(opcao);
+
 
         mostrarStatus(
             "Não foi possível carregar todas as listas. Os campos ainda podem ser preenchidos manualmente.",
             "aviso"
         );
 
+
         await identificarUsuario();
-
     }
-
 }
 
+
+/* =========================================================
+   NORMALIZAÇÃO
+========================================================= */
 
 function normalizar(valor) {
 
@@ -149,27 +199,40 @@ function normalizar(valor) {
         .replace(/[\u0300-\u036f]/g, "")
         .trim()
         .toUpperCase();
-
 }
 
 
+/* =========================================================
+   LOCALIZAR CABEÇALHO
+========================================================= */
+
 function encontrarCabecalho(valores) {
 
-    for (let linha = 0; linha < Math.min(valores.length, 20); linha++) {
+    for (
+        let linha = 0;
+        linha < Math.min(valores.length, 20);
+        linha++
+    ) {
 
         const colunas = valores[linha];
 
         const mapa = {};
 
+
         colunas.forEach(function (valor, indice) {
 
-            if (valor !== null && valor !== undefined && valor !== "") {
+            if (
+                valor !== null &&
+                valor !== undefined &&
+                valor !== ""
+            ) {
 
                 mapa[normalizar(valor)] = indice;
 
             }
 
         });
+
 
         if (
             mapa["EMPRESAS"] !== undefined &&
@@ -182,43 +245,56 @@ function encontrarCabecalho(valores) {
             };
 
         }
-
     }
 
     return null;
-
 }
 
+
+/* =========================================================
+   OBTER ÍNDICE
+========================================================= */
 
 function obterIndice(mapa, nomes) {
 
     for (const nome of nomes) {
 
-        const indice = mapa[normalizar(nome)];
+        const indice =
+            mapa[normalizar(nome)];
 
         if (indice !== undefined) {
-            return indice;
-        }
 
+            return indice;
+
+        }
     }
 
     return -1;
-
 }
 
 
-function obterValoresColuna(valores, info, nome) {
+/* =========================================================
+   OBTER VALORES DE UMA COLUNA
+========================================================= */
 
-    const indice = obterIndice(
-        info.mapa,
-        [nome]
-    );
+function obterValoresColuna(
+    valores,
+    info,
+    nome
+) {
+
+    const indice =
+        obterIndice(info.mapa, [nome]);
 
     if (indice === -1) {
+
         return [];
+
     }
 
+
     const resultado = [];
+
 
     for (
         let linha = info.linha + 1;
@@ -226,7 +302,9 @@ function obterValoresColuna(valores, info, nome) {
         linha++
     ) {
 
-        const valor = valores[linha][indice];
+        const valor =
+            valores[linha][indice];
+
 
         if (
             valor !== null &&
@@ -234,81 +312,123 @@ function obterValoresColuna(valores, info, nome) {
             String(valor).trim() !== ""
         ) {
 
-            resultado.push(String(valor).trim());
+            resultado.push(
+                String(valor).trim()
+            );
 
         }
 
     }
 
-    return [...new Set(resultado)];
 
+    return [...new Set(resultado)];
 }
 
 
+/* =========================================================
+   PREENCHER DATALIST
+========================================================= */
+
 function preencherLista(id, valores) {
 
-    const lista = document.getElementById(id);
+    const lista =
+        document.getElementById(id);
 
     lista.innerHTML = "";
 
+
     valores.forEach(function (valor) {
 
-        const option = document.createElement("option");
+        const option =
+            document.createElement("option");
 
         option.value = valor;
 
         lista.appendChild(option);
 
     });
-
 }
 
 
-function carregarMensagens(valores, info) {
+/* =========================================================
+   CARREGAR MENSAGENS DE E-MAIL
+========================================================= */
 
-    const indiceNome = obterIndice(
-        info.mapa,
-        [
-            "NOME MENSAGEM EMAIL",
-            "MENSAGENS"
-        ]
-    );
+function carregarMensagens(
+    valores,
+    info
+) {
 
-    const indiceTexto = obterIndice(
-        info.mapa,
-        [
-            "TEXTO MENSAGEM EMAIL",
-            "TEXTO COMPLETO"
-        ]
-    );
+    const indiceNome =
+        obterIndice(
+            info.mapa,
+            [
+                "NOME MENSAGEM EMAIL",
+                "MENSAGENS"
+            ]
+        );
 
-    const select = document.getElementById("mensagem");
+
+    const indiceTexto =
+        obterIndice(
+            info.mapa,
+            [
+                "TEXTO MENSAGEM EMAIL",
+                "TEXTO COMPLETO"
+            ]
+        );
+
+
+    const select =
+        document.getElementById("mensagem");
+
 
     select.innerHTML = "";
 
     mensagensEmail = [];
 
-    if (indiceNome === -1 || indiceTexto === -1) {
 
-        const option = document.createElement("option");
+    /* Se não encontrar as colunas */
+
+    if (
+        indiceNome === -1 ||
+        indiceTexto === -1
+    ) {
+
+        const option =
+            document.createElement("option");
 
         option.value = "";
+
         option.textContent =
             "Mensagens de E-mail não encontradas";
 
         select.appendChild(option);
 
-        return;
 
+        mostrarStatus(
+            "As mensagens de E-mail não foram encontradas na aba Config.",
+            "aviso"
+        );
+
+        return;
     }
 
-    const opcaoInicial = document.createElement("option");
+
+    /* Primeira opção */
+
+    const opcaoInicial =
+        document.createElement("option");
 
     opcaoInicial.value = "";
+
     opcaoInicial.textContent =
         "Selecione uma mensagem";
 
     select.appendChild(opcaoInicial);
+
+
+    /* Carregar mensagens */
 
     for (
         let linha = info.linha + 1;
@@ -316,8 +436,12 @@ function carregarMensagens(valores, info) {
         linha++
     ) {
 
-        const nome = valores[linha][indiceNome];
-        const texto = valores[linha][indiceTexto];
+        const nome =
+            valores[linha][indiceNome];
+
+        const texto =
+            valores[linha][indiceTexto];
+
 
         if (
             nome !== null &&
@@ -326,54 +450,94 @@ function carregarMensagens(valores, info) {
         ) {
 
             const mensagem = {
+
                 nome: String(nome).trim(),
-                texto: String(texto || "")
+
+                texto: String(
+                    texto || ""
+                )
+
             };
+
 
             mensagensEmail.push(mensagem);
 
-            const option = document.createElement("option");
 
-            option.value = mensagem.nome;
-            option.textContent = mensagem.nome;
+            const option =
+                document.createElement("option");
+
+            option.value =
+                mensagem.nome;
+
+            option.textContent =
+                mensagem.nome;
 
             select.appendChild(option);
 
         }
-
     }
 
+
+    if (mensagensEmail.length === 0) {
+
+        mostrarStatus(
+            "Nenhuma mensagem de E-mail foi cadastrada na aba Config.",
+            "aviso"
+        );
+
+    }
 }
 
+
+/* =========================================================
+   MOSTRAR TEXTO DA MENSAGEM
+========================================================= */
 
 function mostrarTextoMensagem() {
 
-    const nome = document.getElementById("mensagem").value;
+    const nome =
+        document.getElementById("mensagem").value;
 
-    const mensagem = mensagensEmail.find(
-        function (item) {
+
+    const mensagem =
+        mensagensEmail.find(function (item) {
+
             return item.nome === nome;
-        }
-    );
 
-    document.getElementById("textoMensagem").value =
-        mensagem ? mensagem.texto : "";
+        });
 
+
+    document.getElementById(
+        "textoMensagem"
+    ).value =
+        mensagem
+            ? mensagem.texto
+            : "";
 }
 
 
+/* =========================================================
+   IDENTIFICAR USUÁRIO
+========================================================= */
+
 async function identificarUsuario() {
 
-    const campo = document.getElementById("realizadoPor");
+    const campo =
+        document.getElementById("realizadoPor");
+
 
     try {
 
-        const token = await Office.auth.getAccessToken({
-            allowSignInPrompt: true,
-            allowConsentPrompt: true
-        });
+        const token =
+            await Office.auth.getAccessToken({
+                allowSignInPrompt: true,
+                allowConsentPrompt: true
+            });
 
-        const dados = decodificarToken(token);
+
+        const dados =
+            decodificarToken(token);
+
 
         const nome =
             dados.name ||
@@ -381,14 +545,17 @@ async function identificarUsuario() {
             dados.email ||
             dados.upn;
 
+
         if (nome) {
 
             campo.value = nome;
+
             campo.readOnly = false;
 
         }
 
-    } catch (erro) {
+    }
+    catch (erro) {
 
         console.log(
             "Identificação automática não disponível.",
@@ -396,43 +563,65 @@ async function identificarUsuario() {
         );
 
         campo.readOnly = false;
-
     }
-
 }
 
 
+/* =========================================================
+   DECODIFICAR TOKEN
+========================================================= */
+
 function decodificarToken(token) {
 
-    const partes = token.split(".");
+    const partes =
+        token.split(".");
+
 
     if (partes.length !== 3) {
-        throw new Error("Token inválido.");
+
+        throw new Error(
+            "Token inválido."
+        );
+
     }
 
-    let payload = partes[1]
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
+
+    let payload =
+        partes[1]
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
 
     while (payload.length % 4 !== 0) {
+
         payload += "=";
+
     }
+
 
     return JSON.parse(
         decodeURIComponent(
             atob(payload)
                 .split("")
                 .map(function (c) {
+
                     return "%" +
-                        ("00" + c.charCodeAt(0).toString(16))
-                            .slice(-2);
+                        (
+                            "00" +
+                            c.charCodeAt(0)
+                                .toString(16)
+                        ).slice(-2);
+
                 })
                 .join("")
         )
     );
-
 }
 
+
+/* =========================================================
+   SALVAR E-MAIL
+========================================================= */
 
 async function salvarEmail(event) {
 
@@ -440,158 +629,286 @@ async function salvarEmail(event) {
 
     limparStatus();
 
+
     const btnSalvar =
         document.getElementById("btnSalvar");
 
+
     btnSalvar.disabled = true;
-    btnSalvar.textContent = "Salvando...";
+
+    btnSalvar.textContent =
+        "Salvando...";
+
 
     try {
 
         const realizadoPor =
-            document.getElementById("realizadoPor").value.trim();
+            document
+                .getElementById("realizadoPor")
+                .value
+                .trim();
+
 
         const empresa =
-            document.getElementById("empresa").value.trim();
+            document
+                .getElementById("empresa")
+                .value
+                .trim();
+
 
         const qtde =
-            document.getElementById("qtde").value.trim();
+            document
+                .getElementById("qtde")
+                .value
+                .trim();
+
 
         const emailResposta =
-            document.getElementById("emailResposta").value.trim();
+            document
+                .getElementById("emailResposta")
+                .value
+                .trim();
+
 
         const supervisor =
-            document.getElementById("supervisor").value.trim();
+            document
+                .getElementById("supervisor")
+                .value
+                .trim();
+
 
         const obs =
-            document.getElementById("obs").value.trim();
+            document
+                .getElementById("obs")
+                .value
+                .trim();
+
 
         const historicoExterno =
-            document.getElementById("historicoExterno").value.trim();
+            document
+                .getElementById("historicoExterno")
+                .value
+                .trim();
+
 
         const nomeMensagem =
-            document.getElementById("mensagem").value;
+            document
+                .getElementById("mensagem")
+                .value;
+
 
         const textoMensagem =
-            document.getElementById("textoMensagem").value;
+            document
+                .getElementById("textoMensagem")
+                .value;
+
 
         const assunto =
-            document.getElementById("assunto").value.trim();
+            document
+                .getElementById("assunto")
+                .value
+                .trim();
 
+
+        /* VALIDAÇÕES */
 
         if (!empresa) {
-            throw new Error("Informe a empresa.");
+
+            throw new Error(
+                "Informe a empresa."
+            );
+
         }
 
-        if (!qtde || Number(qtde) <= 0 || !Number.isInteger(Number(qtde))) {
-            throw new Error("A Qtde deve ser um número inteiro maior que zero.");
+
+        if (
+            !qtde ||
+            Number(qtde) <= 0 ||
+            !Number.isInteger(Number(qtde))
+        ) {
+
+            throw new Error(
+                "A Qtde deve ser um número inteiro maior que zero."
+            );
+
         }
+
 
         if (!emailResposta) {
-            throw new Error("Informe o E-mail Resposta.");
+
+            throw new Error(
+                "Informe o E-mail Resposta."
+            );
+
         }
+
 
         if (!supervisor) {
-            throw new Error("Informe o Supervisor.");
+
+            throw new Error(
+                "Informe o Supervisor."
+            );
+
         }
+
 
         if (!historicoExterno) {
-            throw new Error("Informe o Histórico Externo.");
+
+            throw new Error(
+                "Informe o Histórico Externo."
+            );
+
         }
+
 
         if (!nomeMensagem) {
-            throw new Error("Selecione uma mensagem.");
+
+            throw new Error(
+                "Selecione uma mensagem."
+            );
+
         }
+
 
         if (!textoMensagem) {
-            throw new Error("A mensagem selecionada não possui texto.");
+
+            throw new Error(
+                "A mensagem selecionada não possui texto."
+            );
+
         }
+
 
         if (!assunto) {
-            throw new Error("Informe o assunto.");
+
+            throw new Error(
+                "Informe o assunto."
+            );
+
         }
 
-        await Excel.run(async function (context) {
 
-            await adicionarRegistroEmail(
-                context,
-                {
-                    realizadoPor,
-                    empresa,
-                    qtde: Number(qtde),
-                    emailResposta,
-                    supervisor,
-                    obs,
-                    historicoExterno,
-                    textoMensagem,
-                    assunto
-                }
-            );
+        /* SALVAR */
 
-            await atualizarConfig(
-                context,
-                {
-                    empresa,
-                    emailResposta,
-                    supervisor,
-                    realizadoPor
-                }
-            );
+        await Excel.run(
+            async function (context) {
 
-            await context.sync();
+                await adicionarRegistroEmail(
+                    context,
+                    {
+                        realizadoPor,
+                        empresa,
+                        qtde: Number(qtde),
+                        emailResposta,
+                        supervisor,
+                        obs,
+                        historicoExterno,
+                        textoMensagem,
+                        assunto
+                    }
+                );
 
-        });
+
+                await atualizarConfig(
+                    context,
+                    {
+                        empresa,
+                        emailResposta,
+                        supervisor,
+                        realizadoPor
+                    }
+                );
+
+
+                await context.sync();
+
+            }
+        );
+
+
+        /* SUCESSO */
 
         mostrarStatus(
             "Registro de E-mail salvo com sucesso!",
             "sucesso"
         );
 
-        document.getElementById("formEmail").reset();
+
+        /* LIMPA O FORMULÁRIO */
+
+        document
+            .getElementById("formEmail")
+            .reset();
+
+
+        document
+            .getElementById("mensagem")
+            .selectedIndex = 0;
+
+
+        document
+            .getElementById("textoMensagem")
+            .value = "";
+
 
         await identificarUsuario();
 
-        document.getElementById("mensagem").selectedIndex = 0;
-        document.getElementById("textoMensagem").value = "";
-
-    } catch (erro) {
+    }
+    catch (erro) {
 
         console.error(erro);
 
+
         mostrarStatus(
-            erro.message || "Erro ao salvar o registro.",
+            erro.message ||
+            "Erro ao salvar o registro.",
             "erro"
         );
 
-    } finally {
+    }
+    finally {
 
         btnSalvar.disabled = false;
-        btnSalvar.textContent = "Salvar";
+
+        btnSalvar.textContent =
+            "Salvar";
 
     }
-
 }
 
 
-async function adicionarRegistroEmail(context, dados) {
+/* =========================================================
+   ADICIONAR REGISTRO NA ABA EMAIL
+========================================================= */
+
+async function adicionarRegistroEmail(
+    context,
+    dados
+) {
 
     const folha =
         context.workbook.worksheets.getItem("Email");
 
+
     const usado =
         folha.getUsedRangeOrNullObject();
+
 
     usado.load([
         "values",
         "rowCount",
         "columnCount",
-        "isNullObject"
+        "isNullObject",
+        "rowIndex",
+        "columnIndex"
     ]);
+
 
     await context.sync();
 
 
     const cabecalhos = [
+
         "DATA",
         "REALIZADO POR",
         "EMPRESA",
@@ -602,24 +919,36 @@ async function adicionarRegistroEmail(context, dados) {
         "HISTORICO EXTERNO",
         "MENSAGEM",
         "ASSUNTO"
+
     ];
 
 
     let linhaCabecalho = -1;
+
     let mapa = {};
+
+
+    /* Procurar cabeçalho existente */
 
     if (!usado.isNullObject) {
 
         for (
             let linha = 0;
-            linha < Math.min(usado.values.length, 20);
+            linha < Math.min(
+                usado.values.length,
+                20
+            );
             linha++
         ) {
 
             const atual = {};
 
-            usado.values[linha].forEach(
-                function (valor, indice) {
+
+            usado.values[linha]
+                .forEach(function (
+                    valor,
+                    indice
+                ) {
 
                     if (
                         valor !== null &&
@@ -627,12 +956,14 @@ async function adicionarRegistroEmail(context, dados) {
                         valor !== ""
                     ) {
 
-                        atual[normalizar(valor)] = indice;
+                        atual[
+                            normalizar(valor)
+                        ] = indice;
 
                     }
 
-                }
-            );
+                });
+
 
             if (
                 atual["EMPRESA"] !== undefined &&
@@ -643,21 +974,23 @@ async function adicionarRegistroEmail(context, dados) {
             ) {
 
                 linhaCabecalho = linha;
+
                 mapa = atual;
+
                 break;
-
             }
-
         }
-
     }
 
+
+    /* Se não houver cabeçalho */
 
     if (linhaCabecalho === -1) {
 
         folha
             .getRange("A1:J1")
             .values = [[
+
                 "Data",
                 "Realizado por",
                 "Empresa",
@@ -668,42 +1001,64 @@ async function adicionarRegistroEmail(context, dados) {
                 "Historico Externo",
                 "Mensagem",
                 "Assunto"
+
             ]];
+
 
         linhaCabecalho = 0;
 
         mapa = {};
 
+
         cabecalhos.forEach(
-            function (nome, indice) {
+            function (
+                nome,
+                indice
+            ) {
+
                 mapa[nome] = indice;
+
             }
         );
-
     }
 
 
-    const valores = new Array(
+    const numeroColunas =
         Math.max(
             10,
-            Object.keys(mapa).length
-        )
-    ).fill("");
-
-
-    const dataAtual = new Date();
-
-    function colocar(nomes, valor) {
-
-        const indice = obterIndice(
-            mapa,
-            nomes
+            usado.isNullObject
+                ? 10
+                : usado.columnCount
         );
 
-        if (indice !== -1) {
-            valores[indice] = valor;
-        }
 
+    const valores =
+        new Array(numeroColunas)
+            .fill("");
+
+
+    const dataAtual =
+        new Date();
+
+
+    function colocar(
+        nomes,
+        valor
+    ) {
+
+        const indice =
+            obterIndice(
+                mapa,
+                nomes
+            );
+
+
+        if (indice !== -1) {
+
+            valores[indice] =
+                valor;
+
+        }
     }
 
 
@@ -712,45 +1067,57 @@ async function adicionarRegistroEmail(context, dados) {
         dataAtual
     );
 
+
     colocar(
         ["REALIZADO POR"],
         dados.realizadoPor
     );
+
 
     colocar(
         ["EMPRESA"],
         dados.empresa
     );
 
+
     colocar(
         ["QTDE"],
         dados.qtde
     );
+
 
     colocar(
         ["EMAIL RESPOSTA"],
         dados.emailResposta
     );
 
+
     colocar(
         ["SUPERVISOR"],
         dados.supervisor
     );
+
 
     colocar(
         ["OBS"],
         dados.obs
     );
 
+
     colocar(
-        ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
+        [
+            "HISTORICO EXTERNO",
+            "HISTÓRICO EXTERNO"
+        ],
         dados.historicoExterno
     );
+
 
     colocar(
         ["MENSAGEM"],
         dados.textoMensagem
     );
+
 
     colocar(
         ["ASSUNTO"],
@@ -758,30 +1125,23 @@ async function adicionarRegistroEmail(context, dados) {
     );
 
 
-    const ultimaLinha =
-        linhaCabecalho +
-        (
-            usado.isNullObject
-                ? 1
-                : usado.rowCount
-        );
+    /* Próxima linha */
 
-    const numeroColunas =
-        Math.max(
-            valores.length,
-            usado.isNullObject
-                ? 10
-                : usado.columnCount
-        );
+    let ultimaLinha;
 
-    const linhaFinal =
-        new Array(numeroColunas).fill("");
 
-    valores.forEach(
-        function (valor, indice) {
-            linhaFinal[indice] = valor;
-        }
-    );
+    if (usado.isNullObject) {
+
+        ultimaLinha = 1;
+
+    }
+    else {
+
+        ultimaLinha =
+            usado.rowIndex +
+            usado.rowCount;
+
+    }
 
 
     folha
@@ -791,65 +1151,120 @@ async function adicionarRegistroEmail(context, dados) {
             1,
             numeroColunas
         )
-        .values = [linhaFinal];
+        .values = [valores];
 
+
+    /* Formatação da data */
+
+    const indiceData =
+        obterIndice(
+            mapa,
+            ["DATA"]
+        );
+
+
+    if (indiceData !== -1) {
+
+        folha
+            .getRangeByIndexes(
+                ultimaLinha,
+                indiceData,
+                1,
+                1
+            )
+            .numberFormat = [
+                ["dd/mm/yyyy"]
+            ];
+
+    }
 }
 
 
-async function atualizarConfig(context, dados) {
+/* =========================================================
+   ATUALIZAR ABA CONFIG
+========================================================= */
+
+async function atualizarConfig(
+    context,
+    dados
+) {
 
     const folha =
-        context.workbook.worksheets.getItem("Config");
+        context.workbook.worksheets.getItem(
+            "Config"
+        );
+
 
     const usado =
         folha.getUsedRangeOrNullObject();
+
 
     usado.load([
         "values",
         "rowCount",
         "columnCount",
-        "isNullObject"
+        "isNullObject",
+        "rowIndex",
+        "columnIndex"
     ]);
+
 
     await context.sync();
 
+
     if (usado.isNullObject) {
+
         return;
+
     }
 
+
     const info =
-        encontrarCabecalho(usado.values);
+        encontrarCabecalho(
+            usado.values
+        );
+
 
     if (!info) {
+
         return;
+
     }
 
 
     const campos = [
+
         {
             nome: "EMPRESAS",
             valor: dados.empresa
         },
+
         {
             nome: "EMAILS_RESPOSTA",
             valor: dados.emailResposta
         },
+
         {
             nome: "SUPERVISORES",
             valor: dados.supervisor
         },
+
         {
             nome: "REALIZADO POR",
             valor: dados.realizadoPor
         }
+
     ];
 
 
     for (const campo of campos) {
 
         if (!campo.valor) {
+
             continue;
+
         }
+
 
         const coluna =
             obterIndice(
@@ -857,11 +1272,16 @@ async function atualizarConfig(context, dados) {
                 [campo.nome]
             );
 
+
         if (coluna === -1) {
+
             continue;
+
         }
 
+
         const valoresColuna = [];
+
 
         for (
             let linha = info.linha + 1;
@@ -871,31 +1291,43 @@ async function atualizarConfig(context, dados) {
 
             valoresColuna.push(
                 String(
-                    usado.values[linha][coluna] || ""
+                    usado.values[linha][coluna] ||
+                    ""
                 ).trim()
             );
 
         }
 
+
         const existe =
             valoresColuna.some(
                 function (valor) {
-                    return normalizar(valor) ===
-                        normalizar(campo.valor);
+
+                    return (
+                        normalizar(valor) ===
+                        normalizar(campo.valor)
+                    );
+
                 }
             );
 
+
         if (existe) {
+
             continue;
+
         }
+
 
         let linhaDestino =
             info.linha + 1;
 
+
         while (
             linhaDestino < usado.values.length &&
             String(
-                usado.values[linhaDestino][coluna] || ""
+                usado.values[linhaDestino][coluna] ||
+                ""
             ).trim() !== ""
         ) {
 
@@ -903,15 +1335,22 @@ async function atualizarConfig(context, dados) {
 
         }
 
+
+        const linhaAbsoluta =
+            usado.rowIndex +
+            linhaDestino;
+
+
         folha
             .getRangeByIndexes(
-                linhaDestino,
+                linhaAbsoluta,
                 coluna,
                 1,
                 1
             )
-            .values = [[campo.valor]];
+            .values = [
+                [campo.valor]
+            ];
 
     }
-
 }
