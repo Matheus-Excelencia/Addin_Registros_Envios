@@ -132,15 +132,7 @@
 
     </Resources>
 
-    <WebApplicationInfo>
-      <Id>9f273d53-6063-4810-ba24-62ac7fc1a0e1</Id>
-      <Resource>api://addin-registros-envios.vercel.app/9f273d53-6063-4810-ba24-62ac7fc1a0e1</Resource>
-      <Scopes>
-        <Scope>openid</Scope>
-        <Scope>profile</Scope>
-        <Scope>User.Read</Scope>
-      </Scopes>
-    </WebApplicationInfo>
+    <WebApplicationInfo><Id>9f273d53-6063-4810-ba24-62ac7fc1a0e1</Id><Resource>api://addin-registros-envios.vercel.app/9f273d53-6063-4810-ba24-62ac7fc1a0e1</Resource><Scopes><Scope>openid</Scope><Scope>profile</Scope><Scope>User.Read</Scope></Scopes></WebApplicationInfo>
 
   </VersionOverrides>
 
