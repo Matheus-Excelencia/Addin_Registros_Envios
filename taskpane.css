@@ -1,1 +1,146 @@
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8;color:#222}.app{min-height:100vh}header{background:#1f4e78;color:#fff;padding:16px 18px}h1{font-size:20px;margin:0 0 4px}header p{margin:0;font-size:13px}main{padding:16px}form{display:flex;flex-direction:column;gap:11px}label{font-size:12px;font-weight:600;display:flex;flex-direction:column;gap:5px}label span{color:#c00000}input,select,textarea{font:inherit;font-size:13px;border:1px solid #c9cdd3;border-radius:5px;padding:8px;background:#fff}textarea{resize:vertical}.actions{display:flex;gap:8px;margin-top:4px}.actions button{flex:1;border:0;border-radius:5px;padding:9px;font-weight:700;cursor:pointer}.actions button:first-child{background:#e7e9ed}.actions button:last-child{background:#1f4e78;color:#fff}#status{min-height:18px;font-size:12px}.ok{color:#107c10}.error{color:#c00000}.info{color:#555}
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f5f6f8;
+    color: #222;
+}
+
+.container {
+    width: 100%;
+    padding: 20px;
+}
+
+.header {
+    margin-bottom: 18px;
+}
+
+.header h1 {
+    margin: 0 0 5px 0;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.header p {
+    margin: 0;
+    color: #666;
+    font-size: 13px;
+}
+
+.campo {
+    margin-bottom: 14px;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.obrigatorio {
+    color: #c62828;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid #c8c8c8;
+    border-radius: 5px;
+    padding: 9px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    background: white;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #217346;
+}
+
+textarea {
+    resize: vertical;
+}
+
+textarea[readonly],
+input[readonly] {
+    background: #eeeeee;
+}
+
+.botoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-bottom: 10px;
+}
+
+.btn {
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-cancelar {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-salvar {
+    background: #217346;
+    color: white;
+}
+
+.btn-salvar:hover {
+    background: #185c37;
+}
+
+.status {
+    display: none;
+    padding: 9px 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-size: 13px;
+}
+
+.status.sucesso,
+.status.erro,
+.status.info,
+.status.aviso {
+    display: block;
+}
+
+.status.sucesso {
+    background: #e7f5e9;
+    color: #216e39;
+}
+
+.status.erro {
+    background: #fdeaea;
+    color: #a12622;
+}
+
+.status.info {
+    background: #e8f1fb;
+    color: #245a91;
+}
+
+.status.aviso {
+    background: #fff4d6;
+    color: #765900;
+}
