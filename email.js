@@ -56,7 +56,7 @@ function limparFormulario() {
 
 
 /* =========================================================
-   CARREGAR CONFIGURAÇÕES
+   CARREGAR CONFIG
 ========================================================= */
 
 async function carregarDados() {
@@ -67,37 +67,35 @@ async function carregarDados() {
 
         await Excel.run(async function (context) {
 
-            const folha = context.workbook.worksheets.getItem("Config");
+            const folha =
+                context.workbook.worksheets.getItem("Config");
 
-            const usado = folha.getUsedRangeOrNullObject();
+            const usado =
+                folha.getUsedRangeOrNullObject();
 
             usado.load([
                 "values",
                 "rowCount",
                 "columnCount",
-                "isNullObject"
+                "isNullObject",
+                "rowIndex",
+                "columnIndex"
             ]);
 
             await context.sync();
 
             if (usado.isNullObject) {
-
                 throw new Error("A aba Config está vazia.");
-
             }
 
-            configInfo = encontrarCabecalho(usado.values);
+            configInfo =
+                encontrarCabecalho(usado.values);
 
             if (!configInfo) {
-
                 throw new Error(
                     "Não foi possível localizar os cabeçalhos da aba Config."
                 );
-
             }
-
-
-            /* EMPRESAS */
 
             preencherLista(
                 "listaEmpresas",
@@ -108,9 +106,6 @@ async function carregarDados() {
                 )
             );
 
-
-            /* E-MAILS */
-
             preencherLista(
                 "listaEmails",
                 obterValoresColuna(
@@ -119,9 +114,6 @@ async function carregarDados() {
                     "EMAILS_RESPOSTA"
                 )
             );
-
-
-            /* SUPERVISORES */
 
             preencherLista(
                 "listaSupervisores",
@@ -132,9 +124,6 @@ async function carregarDados() {
                 )
             );
 
-
-            /* REALIZADO POR */
-
             preencherLista(
                 "listaRealizadoPor",
                 obterValoresColuna(
@@ -144,16 +133,12 @@ async function carregarDados() {
                 )
             );
 
-
-            /* MENSAGENS */
-
             carregarMensagens(
                 usado.values,
                 configInfo
             );
 
         });
-
 
         await identificarUsuario();
 
@@ -167,7 +152,8 @@ async function carregarDados() {
 
         selectMensagem.innerHTML = "";
 
-        const opcao = document.createElement("option");
+        const opcao =
+            document.createElement("option");
 
         opcao.value = "";
 
@@ -176,12 +162,10 @@ async function carregarDados() {
 
         selectMensagem.appendChild(opcao);
 
-
         mostrarStatus(
             "Não foi possível carregar todas as listas. Os campos ainda podem ser preenchidos manualmente.",
             "aviso"
         );
-
 
         await identificarUsuario();
     }
@@ -189,7 +173,7 @@ async function carregarDados() {
 
 
 /* =========================================================
-   NORMALIZAÇÃO
+   NORMALIZAR
 ========================================================= */
 
 function normalizar(valor) {
@@ -203,7 +187,7 @@ function normalizar(valor) {
 
 
 /* =========================================================
-   LOCALIZAR CABEÇALHO
+   ENCONTRAR CABEÇALHO
 ========================================================= */
 
 function encontrarCabecalho(valores) {
@@ -218,7 +202,6 @@ function encontrarCabecalho(valores) {
 
         const mapa = {};
 
-
         colunas.forEach(function (valor, indice) {
 
             if (
@@ -228,11 +211,9 @@ function encontrarCabecalho(valores) {
             ) {
 
                 mapa[normalizar(valor)] = indice;
-
             }
 
         });
-
 
         if (
             mapa["EMPRESAS"] !== undefined &&
@@ -243,7 +224,6 @@ function encontrarCabecalho(valores) {
                 linha: linha,
                 mapa: mapa
             };
-
         }
     }
 
@@ -263,9 +243,7 @@ function obterIndice(mapa, nomes) {
             mapa[normalizar(nome)];
 
         if (indice !== undefined) {
-
             return indice;
-
         }
     }
 
@@ -274,7 +252,7 @@ function obterIndice(mapa, nomes) {
 
 
 /* =========================================================
-   OBTER VALORES DE UMA COLUNA
+   OBTER VALORES
 ========================================================= */
 
 function obterValoresColuna(
@@ -287,14 +265,10 @@ function obterValoresColuna(
         obterIndice(info.mapa, [nome]);
 
     if (indice === -1) {
-
         return [];
-
     }
 
-
     const resultado = [];
-
 
     for (
         let linha = info.linha + 1;
@@ -305,7 +279,6 @@ function obterValoresColuna(
         const valor =
             valores[linha][indice];
 
-
         if (
             valor !== null &&
             valor !== undefined &&
@@ -315,18 +288,15 @@ function obterValoresColuna(
             resultado.push(
                 String(valor).trim()
             );
-
         }
-
     }
-
 
     return [...new Set(resultado)];
 }
 
 
 /* =========================================================
-   PREENCHER DATALIST
+   PREENCHER LISTA
 ========================================================= */
 
 function preencherLista(id, valores) {
@@ -336,7 +306,6 @@ function preencherLista(id, valores) {
 
     lista.innerHTML = "";
 
-
     valores.forEach(function (valor) {
 
         const option =
@@ -345,13 +314,12 @@ function preencherLista(id, valores) {
         option.value = valor;
 
         lista.appendChild(option);
-
     });
 }
 
 
 /* =========================================================
-   CARREGAR MENSAGENS DE E-MAIL
+   CARREGAR MENSAGENS
 ========================================================= */
 
 function carregarMensagens(
@@ -368,7 +336,6 @@ function carregarMensagens(
             ]
         );
 
-
     const indiceTexto =
         obterIndice(
             info.mapa,
@@ -378,17 +345,12 @@ function carregarMensagens(
             ]
         );
 
-
     const select =
         document.getElementById("mensagem");
-
 
     select.innerHTML = "";
 
     mensagensEmail = [];
-
-
-    /* Se não encontrar as colunas */
 
     if (
         indiceNome === -1 ||
@@ -405,7 +367,6 @@ function carregarMensagens(
 
         select.appendChild(option);
 
-
         mostrarStatus(
             "As mensagens de E-mail não foram encontradas na aba Config.",
             "aviso"
@@ -413,9 +374,6 @@ function carregarMensagens(
 
         return;
     }
-
-
-    /* Primeira opção */
 
     const opcaoInicial =
         document.createElement("option");
@@ -426,9 +384,6 @@ function carregarMensagens(
         "Selecione uma mensagem";
 
     select.appendChild(opcaoInicial);
-
-
-    /* Carregar mensagens */
 
     for (
         let linha = info.linha + 1;
@@ -442,7 +397,6 @@ function carregarMensagens(
         const texto =
             valores[linha][indiceTexto];
 
-
         if (
             nome !== null &&
             nome !== undefined &&
@@ -450,33 +404,22 @@ function carregarMensagens(
         ) {
 
             const mensagem = {
-
                 nome: String(nome).trim(),
-
-                texto: String(
-                    texto || ""
-                )
-
+                texto: String(texto || "")
             };
 
-
             mensagensEmail.push(mensagem);
-
 
             const option =
                 document.createElement("option");
 
-            option.value =
-                mensagem.nome;
+            option.value = mensagem.nome;
 
-            option.textContent =
-                mensagem.nome;
+            option.textContent = mensagem.nome;
 
             select.appendChild(option);
-
         }
     }
-
 
     if (mensagensEmail.length === 0) {
 
@@ -484,7 +427,6 @@ function carregarMensagens(
             "Nenhuma mensagem de E-mail foi cadastrada na aba Config.",
             "aviso"
         );
-
     }
 }
 
@@ -498,14 +440,12 @@ function mostrarTextoMensagem() {
     const nome =
         document.getElementById("mensagem").value;
 
-
     const mensagem =
         mensagensEmail.find(function (item) {
 
             return item.nome === nome;
 
         });
-
 
     document.getElementById(
         "textoMensagem"
@@ -525,7 +465,6 @@ async function identificarUsuario() {
     const campo =
         document.getElementById("realizadoPor");
 
-
     try {
 
         const token =
@@ -534,10 +473,8 @@ async function identificarUsuario() {
                 allowConsentPrompt: true
             });
 
-
         const dados =
             decodificarToken(token);
-
 
         const nome =
             dados.name ||
@@ -545,13 +482,11 @@ async function identificarUsuario() {
             dados.email ||
             dados.upn;
 
-
         if (nome) {
 
             campo.value = nome;
 
             campo.readOnly = false;
-
         }
 
     }
@@ -576,28 +511,18 @@ function decodificarToken(token) {
     const partes =
         token.split(".");
 
-
     if (partes.length !== 3) {
-
-        throw new Error(
-            "Token inválido."
-        );
-
+        throw new Error("Token inválido.");
     }
-
 
     let payload =
         partes[1]
             .replace(/-/g, "+")
             .replace(/_/g, "/");
 
-
     while (payload.length % 4 !== 0) {
-
         payload += "=";
-
     }
-
 
     return JSON.parse(
         decodeURIComponent(
@@ -620,6 +545,48 @@ function decodificarToken(token) {
 
 
 /* =========================================================
+   DATA E HORA
+========================================================= */
+
+function obterDataHoraAtual() {
+
+    const agora = new Date();
+
+    const dia =
+        String(agora.getDate()).padStart(2, "0");
+
+    const mes =
+        String(agora.getMonth() + 1).padStart(2, "0");
+
+    const ano =
+        agora.getFullYear();
+
+    const hora =
+        String(agora.getHours()).padStart(2, "0");
+
+    const minuto =
+        String(agora.getMinutes()).padStart(2, "0");
+
+    const segundo =
+        String(agora.getSeconds()).padStart(2, "0");
+
+    return (
+        dia +
+        "/" +
+        mes +
+        "/" +
+        ano +
+        " " +
+        hora +
+        ":" +
+        minuto +
+        ":" +
+        segundo
+    );
+}
+
+
+/* =========================================================
    SALVAR E-MAIL
 ========================================================= */
 
@@ -629,16 +596,13 @@ async function salvarEmail(event) {
 
     limparStatus();
 
-
     const btnSalvar =
         document.getElementById("btnSalvar");
-
 
     btnSalvar.disabled = true;
 
     btnSalvar.textContent =
         "Salvando...";
-
 
     try {
 
@@ -648,13 +612,11 @@ async function salvarEmail(event) {
                 .value
                 .trim();
 
-
         const empresa =
             document
                 .getElementById("empresa")
                 .value
                 .trim();
-
 
         const qtde =
             document
@@ -662,13 +624,11 @@ async function salvarEmail(event) {
                 .value
                 .trim();
 
-
         const emailResposta =
             document
                 .getElementById("emailResposta")
                 .value
                 .trim();
-
 
         const supervisor =
             document
@@ -676,13 +636,11 @@ async function salvarEmail(event) {
                 .value
                 .trim();
 
-
         const obs =
             document
                 .getElementById("obs")
                 .value
                 .trim();
-
 
         const historicoExterno =
             document
@@ -690,18 +648,15 @@ async function salvarEmail(event) {
                 .value
                 .trim();
 
-
         const nomeMensagem =
             document
                 .getElementById("mensagem")
                 .value;
 
-
         const textoMensagem =
             document
                 .getElementById("textoMensagem")
                 .value;
-
 
         const assunto =
             document
@@ -709,86 +664,55 @@ async function salvarEmail(event) {
                 .value
                 .trim();
 
-
-        /* VALIDAÇÕES */
-
         if (!empresa) {
-
-            throw new Error(
-                "Informe a empresa."
-            );
-
+            throw new Error("Informe a empresa.");
         }
-
 
         if (
             !qtde ||
             Number(qtde) <= 0 ||
             !Number.isInteger(Number(qtde))
         ) {
-
             throw new Error(
                 "A Qtde deve ser um número inteiro maior que zero."
             );
-
         }
 
-
         if (!emailResposta) {
-
             throw new Error(
                 "Informe o E-mail Resposta."
             );
-
         }
 
-
         if (!supervisor) {
-
             throw new Error(
                 "Informe o Supervisor."
             );
-
         }
 
-
         if (!historicoExterno) {
-
             throw new Error(
                 "Informe o Histórico Externo."
             );
-
         }
 
-
         if (!nomeMensagem) {
-
             throw new Error(
                 "Selecione uma mensagem."
             );
-
         }
 
-
         if (!textoMensagem) {
-
             throw new Error(
                 "A mensagem selecionada não possui texto."
             );
-
         }
 
-
         if (!assunto) {
-
             throw new Error(
                 "Informe o assunto."
             );
-
         }
-
-
-        /* SALVAR */
 
         await Excel.run(
             async function (context) {
@@ -808,7 +732,6 @@ async function salvarEmail(event) {
                     }
                 );
 
-
                 await atualizarConfig(
                     context,
                     {
@@ -819,37 +742,26 @@ async function salvarEmail(event) {
                     }
                 );
 
-
                 await context.sync();
-
             }
         );
-
-
-        /* SUCESSO */
 
         mostrarStatus(
             "Registro de E-mail salvo com sucesso!",
             "sucesso"
         );
 
-
-        /* LIMPA O FORMULÁRIO */
-
         document
             .getElementById("formEmail")
             .reset();
-
 
         document
             .getElementById("mensagem")
             .selectedIndex = 0;
 
-
         document
             .getElementById("textoMensagem")
             .value = "";
-
 
         await identificarUsuario();
 
@@ -857,7 +769,6 @@ async function salvarEmail(event) {
     catch (erro) {
 
         console.error(erro);
-
 
         mostrarStatus(
             erro.message ||
@@ -872,13 +783,12 @@ async function salvarEmail(event) {
 
         btnSalvar.textContent =
             "Salvar";
-
     }
 }
 
 
 /* =========================================================
-   ADICIONAR REGISTRO NA ABA EMAIL
+   ADICIONAR REGISTRO EMAIL
 ========================================================= */
 
 async function adicionarRegistroEmail(
@@ -889,10 +799,8 @@ async function adicionarRegistroEmail(
     const folha =
         context.workbook.worksheets.getItem("Email");
 
-
     const usado =
         folha.getUsedRangeOrNullObject();
-
 
     usado.load([
         "values",
@@ -903,12 +811,9 @@ async function adicionarRegistroEmail(
         "columnIndex"
     ]);
 
-
     await context.sync();
 
-
     const cabecalhos = [
-
         "DATA",
         "REALIZADO POR",
         "EMPRESA",
@@ -919,16 +824,11 @@ async function adicionarRegistroEmail(
         "HISTORICO EXTERNO",
         "MENSAGEM",
         "ASSUNTO"
-
     ];
-
 
     let linhaCabecalho = -1;
 
     let mapa = {};
-
-
-    /* Procurar cabeçalho existente */
 
     if (!usado.isNullObject) {
 
@@ -942,7 +842,6 @@ async function adicionarRegistroEmail(
         ) {
 
             const atual = {};
-
 
             usado.values[linha]
                 .forEach(function (
@@ -959,11 +858,9 @@ async function adicionarRegistroEmail(
                         atual[
                             normalizar(valor)
                         ] = indice;
-
                     }
 
                 });
-
 
             if (
                 atual["EMPRESA"] !== undefined &&
@@ -982,15 +879,11 @@ async function adicionarRegistroEmail(
         }
     }
 
-
-    /* Se não houver cabeçalho */
-
     if (linhaCabecalho === -1) {
 
         folha
             .getRange("A1:J1")
             .values = [[
-
                 "Data",
                 "Realizado por",
                 "Empresa",
@@ -1001,27 +894,18 @@ async function adicionarRegistroEmail(
                 "Historico Externo",
                 "Mensagem",
                 "Assunto"
-
             ]];
-
 
         linhaCabecalho = 0;
 
         mapa = {};
 
-
         cabecalhos.forEach(
-            function (
-                nome,
-                indice
-            ) {
-
+            function (nome, indice) {
                 mapa[nome] = indice;
-
             }
         );
     }
-
 
     const numeroColunas =
         Math.max(
@@ -1031,15 +915,12 @@ async function adicionarRegistroEmail(
                 : usado.columnCount
         );
 
-
     const valores =
         new Array(numeroColunas)
             .fill("");
 
-
     const dataAtual =
-        new Date();
-
+        obterDataHoraAtual();
 
     function colocar(
         nomes,
@@ -1052,57 +933,45 @@ async function adicionarRegistroEmail(
                 nomes
             );
 
-
         if (indice !== -1) {
-
-            valores[indice] =
-                valor;
-
+            valores[indice] = valor;
         }
     }
-
 
     colocar(
         ["DATA"],
         dataAtual
     );
 
-
     colocar(
         ["REALIZADO POR"],
         dados.realizadoPor
     );
-
 
     colocar(
         ["EMPRESA"],
         dados.empresa
     );
 
-
     colocar(
         ["QTDE"],
         dados.qtde
     );
-
 
     colocar(
         ["EMAIL RESPOSTA"],
         dados.emailResposta
     );
 
-
     colocar(
         ["SUPERVISOR"],
         dados.supervisor
     );
 
-
     colocar(
         ["OBS"],
         dados.obs
     );
-
 
     colocar(
         [
@@ -1112,12 +981,10 @@ async function adicionarRegistroEmail(
         dados.historicoExterno
     );
 
-
     colocar(
         ["MENSAGEM"],
         dados.textoMensagem
     );
-
 
     colocar(
         ["ASSUNTO"],
@@ -1125,10 +992,13 @@ async function adicionarRegistroEmail(
     );
 
 
-    /* Próxima linha */
+    /*
+       IMPORTANTE:
+       A nova linha será sempre depois
+       da última linha utilizada.
+    */
 
     let ultimaLinha;
-
 
     if (usado.isNullObject) {
 
@@ -1140,9 +1010,7 @@ async function adicionarRegistroEmail(
         ultimaLinha =
             usado.rowIndex +
             usado.rowCount;
-
     }
-
 
     folha
         .getRangeByIndexes(
@@ -1152,36 +1020,11 @@ async function adicionarRegistroEmail(
             numeroColunas
         )
         .values = [valores];
-
-
-    /* Formatação da data */
-
-    const indiceData =
-        obterIndice(
-            mapa,
-            ["DATA"]
-        );
-
-
-    if (indiceData !== -1) {
-
-        folha
-            .getRangeByIndexes(
-                ultimaLinha,
-                indiceData,
-                1,
-                1
-            )
-            .numberFormat = [
-                ["dd/mm/yyyy"]
-            ];
-
-    }
 }
 
 
 /* =========================================================
-   ATUALIZAR ABA CONFIG
+   ATUALIZAR CONFIG
 ========================================================= */
 
 async function atualizarConfig(
@@ -1194,10 +1037,8 @@ async function atualizarConfig(
             "Config"
         );
 
-
     const usado =
         folha.getUsedRangeOrNullObject();
-
 
     usado.load([
         "values",
@@ -1208,63 +1049,45 @@ async function atualizarConfig(
         "columnIndex"
     ]);
 
-
     await context.sync();
 
-
     if (usado.isNullObject) {
-
         return;
-
     }
-
 
     const info =
         encontrarCabecalho(
             usado.values
         );
 
-
     if (!info) {
-
         return;
-
     }
 
-
     const campos = [
-
         {
             nome: "EMPRESAS",
             valor: dados.empresa
         },
-
         {
             nome: "EMAILS_RESPOSTA",
             valor: dados.emailResposta
         },
-
         {
             nome: "SUPERVISORES",
             valor: dados.supervisor
         },
-
         {
             nome: "REALIZADO POR",
             valor: dados.realizadoPor
         }
-
     ];
-
 
     for (const campo of campos) {
 
         if (!campo.valor) {
-
             continue;
-
         }
-
 
         const coluna =
             obterIndice(
@@ -1272,16 +1095,11 @@ async function atualizarConfig(
                 [campo.nome]
             );
 
-
         if (coluna === -1) {
-
             continue;
-
         }
 
-
         const valoresColuna = [];
-
 
         for (
             let linha = info.linha + 1;
@@ -1295,9 +1113,7 @@ async function atualizarConfig(
                     ""
                 ).trim()
             );
-
         }
-
 
         const existe =
             valoresColuna.some(
@@ -1307,21 +1123,15 @@ async function atualizarConfig(
                         normalizar(valor) ===
                         normalizar(campo.valor)
                     );
-
                 }
             );
 
-
         if (existe) {
-
             continue;
-
         }
-
 
         let linhaDestino =
             info.linha + 1;
-
 
         while (
             linhaDestino < usado.values.length &&
@@ -1332,14 +1142,11 @@ async function atualizarConfig(
         ) {
 
             linhaDestino++;
-
         }
-
 
         const linhaAbsoluta =
             usado.rowIndex +
             linhaDestino;
-
 
         folha
             .getRangeByIndexes(
@@ -1351,6 +1158,5 @@ async function atualizarConfig(
             .values = [
                 [campo.valor]
             ];
-
     }
 }
