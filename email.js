@@ -1,39 +1,106 @@
 let configInfo = null;
 let mensagensEmail = [];
+let statusLog = [];
+
+
+/* =========================================================
+   INÍCIO
+========================================================= */
 
 Office.onReady(async function () {
 
-    document.getElementById("btnVoltar").addEventListener("click", function () {
-        window.location.href = "taskpane.html";
-    });
+    document
+        .getElementById("btnVoltar")
+        .addEventListener("click", function () {
+            window.location.href = "taskpane.html";
+        });
 
-    document.getElementById("btnCancelar").addEventListener("click", limparFormulario);
+    document
+        .getElementById("btnCancelar")
+        .addEventListener("click", limparFormulario);
 
-    document.getElementById("formEmail").addEventListener("submit", salvarEmail);
+    document
+        .getElementById("formEmail")
+        .addEventListener("submit", salvarEmail);
 
-    document.getElementById("mensagem").addEventListener("change", mostrarTextoMensagem);
+    document
+        .getElementById("mensagem")
+        .addEventListener("change", mostrarTextoMensagem);
+
+    prepararLog();
 
     await carregarDados();
 });
 
 
 /* =========================================================
-   STATUS
+   LOG / STATUS
 ========================================================= */
 
-function mostrarStatus(texto, tipo) {
-    const elemento = document.getElementById("mensagemStatus");
+function prepararLog() {
 
-    elemento.textContent = texto;
-    elemento.className = "status " + tipo;
+    const elemento =
+        document.getElementById("mensagemStatus");
+
+    if (!elemento) return;
+
+    elemento.style.whiteSpace = "pre-line";
+    elemento.style.fontSize = "12px";
+    elemento.style.lineHeight = "1.4";
+    elemento.style.padding = "8px 10px";
+    elemento.style.marginBottom = "12px";
+}
+
+
+function atualizarLog() {
+
+    const elemento =
+        document.getElementById("mensagemStatus");
+
+    if (!elemento) return;
+
+    elemento.style.whiteSpace = "pre-line";
+    elemento.style.fontSize = "12px";
+    elemento.style.lineHeight = "1.4";
+
+    elemento.textContent =
+        statusLog.join("\n");
+
+    elemento.className = "status aviso";
+}
+
+
+function adicionarLog(texto) {
+
+    statusLog.push(texto);
+
+    atualizarLog();
 }
 
 
 function limparStatus() {
-    const elemento = document.getElementById("mensagemStatus");
+
+    statusLog = [];
+
+    const elemento =
+        document.getElementById("mensagemStatus");
+
+    if (!elemento) return;
 
     elemento.textContent = "";
     elemento.className = "status";
+}
+
+
+function mostrarStatus(texto, tipo) {
+
+    const elemento =
+        document.getElementById("mensagemStatus");
+
+    if (!elemento) return;
+
+    elemento.textContent = texto;
+    elemento.className = "status " + tipo;
 }
 
 
@@ -43,11 +110,17 @@ function limparStatus() {
 
 function limparFormulario() {
 
-    document.getElementById("formEmail").reset();
+    document
+        .getElementById("formEmail")
+        .reset();
 
-    document.getElementById("mensagem").selectedIndex = 0;
+    document
+        .getElementById("mensagem")
+        .selectedIndex = 0;
 
-    document.getElementById("textoMensagem").value = "";
+    document
+        .getElementById("textoMensagem")
+        .value = "";
 
     limparStatus();
 
@@ -56,124 +129,7 @@ function limparFormulario() {
 
 
 /* =========================================================
-   CARREGAR CONFIG
-========================================================= */
-
-async function carregarDados() {
-
-    try {
-
-        limparStatus();
-
-        await Excel.run(async function (context) {
-
-            const folha =
-                context.workbook.worksheets.getItem("Config");
-
-            const usado =
-                folha.getUsedRangeOrNullObject();
-
-            usado.load([
-                "values",
-                "rowCount",
-                "columnCount",
-                "isNullObject",
-                "rowIndex",
-                "columnIndex"
-            ]);
-
-            await context.sync();
-
-            if (usado.isNullObject) {
-                throw new Error("A aba Config está vazia.");
-            }
-
-            configInfo =
-                encontrarCabecalho(usado.values);
-
-            if (!configInfo) {
-                throw new Error(
-                    "Não foi possível localizar os cabeçalhos da aba Config."
-                );
-            }
-
-            preencherLista(
-                "listaEmpresas",
-                obterValoresColuna(
-                    usado.values,
-                    configInfo,
-                    "EMPRESAS"
-                )
-            );
-
-            preencherLista(
-                "listaEmails",
-                obterValoresColuna(
-                    usado.values,
-                    configInfo,
-                    "EMAILS_RESPOSTA"
-                )
-            );
-
-            preencherLista(
-                "listaSupervisores",
-                obterValoresColuna(
-                    usado.values,
-                    configInfo,
-                    "SUPERVISORES"
-                )
-            );
-
-            preencherLista(
-                "listaRealizadoPor",
-                obterValoresColuna(
-                    usado.values,
-                    configInfo,
-                    "REALIZADO POR"
-                )
-            );
-
-            carregarMensagens(
-                usado.values,
-                configInfo
-            );
-
-        });
-
-        await identificarUsuario();
-
-    }
-    catch (erro) {
-
-        console.error(erro);
-
-        const selectMensagem =
-            document.getElementById("mensagem");
-
-        selectMensagem.innerHTML = "";
-
-        const opcao =
-            document.createElement("option");
-
-        opcao.value = "";
-
-        opcao.textContent =
-            "Não foi possível carregar as mensagens";
-
-        selectMensagem.appendChild(opcao);
-
-        mostrarStatus(
-            "Não foi possível carregar todas as listas. Os campos ainda podem ser preenchidos manualmente.",
-            "aviso"
-        );
-
-        await identificarUsuario();
-    }
-}
-
-
-/* =========================================================
-   NORMALIZAR
+   NORMALIZAÇÃO
 ========================================================= */
 
 function normalizar(valor) {
@@ -187,37 +143,52 @@ function normalizar(valor) {
 
 
 /* =========================================================
-   ENCONTRAR CABEÇALHO
+   LOCALIZAR CABEÇALHO DO CONFIG
 ========================================================= */
 
 function encontrarCabecalho(valores) {
 
     for (
         let linha = 0;
-        linha < Math.min(valores.length, 20);
+        linha < Math.min(valores.length, 30);
         linha++
     ) {
 
-        const colunas = valores[linha];
-
         const mapa = {};
 
-        colunas.forEach(function (valor, indice) {
+        valores[linha].forEach(function (
+            valor,
+            indice
+        ) {
 
             if (
                 valor !== null &&
                 valor !== undefined &&
-                valor !== ""
+                String(valor).trim() !== ""
             ) {
 
                 mapa[normalizar(valor)] = indice;
             }
-
         });
 
+
+        const temEmpresa =
+            obterIndice(
+                mapa,
+                ["EMPRESAS", "EMPRESA"]
+            ) !== -1;
+
+
+        const temSupervisor =
+            obterIndice(
+                mapa,
+                ["SUPERVISORES", "SUPERVISOR"]
+            ) !== -1;
+
+
         if (
-            mapa["EMPRESAS"] !== undefined &&
-            mapa["SUPERVISORES"] !== undefined
+            temEmpresa &&
+            temSupervisor
         ) {
 
             return {
@@ -239,11 +210,14 @@ function obterIndice(mapa, nomes) {
 
     for (const nome of nomes) {
 
-        const indice =
-            mapa[normalizar(nome)];
+        const chave =
+            normalizar(nome);
 
-        if (indice !== undefined) {
-            return indice;
+        if (
+            mapa[chave] !== undefined
+        ) {
+
+            return mapa[chave];
         }
     }
 
@@ -258,17 +232,26 @@ function obterIndice(mapa, nomes) {
 function obterValoresColuna(
     valores,
     info,
-    nome
+    nomes
 ) {
 
     const indice =
-        obterIndice(info.mapa, [nome]);
+        obterIndice(
+            info.mapa,
+            Array.isArray(nomes)
+                ? nomes
+                : [nomes]
+        );
+
 
     if (indice === -1) {
+
         return [];
     }
 
+
     const resultado = [];
+
 
     for (
         let linha = info.linha + 1;
@@ -278,6 +261,7 @@ function obterValoresColuna(
 
         const valor =
             valores[linha][indice];
+
 
         if (
             valor !== null &&
@@ -291,7 +275,10 @@ function obterValoresColuna(
         }
     }
 
-    return [...new Set(resultado)];
+
+    return [
+        ...new Set(resultado)
+    ];
 }
 
 
@@ -299,12 +286,18 @@ function obterValoresColuna(
    PREENCHER LISTA
 ========================================================= */
 
-function preencherLista(id, valores) {
+function preencherLista(
+    id,
+    valores
+) {
 
     const lista =
         document.getElementById(id);
 
+    if (!lista) return;
+
     lista.innerHTML = "";
+
 
     valores.forEach(function (valor) {
 
@@ -319,7 +312,211 @@ function preencherLista(id, valores) {
 
 
 /* =========================================================
-   CARREGAR MENSAGENS
+   CARREGAR DADOS DO CONFIG
+========================================================= */
+
+async function carregarDados() {
+
+    limparStatus();
+
+    statusLog = [];
+
+    adicionarLog("● Conectando ao Config...");
+
+
+    try {
+
+        await Excel.run(
+            async function (context) {
+
+                const folha =
+                    context.workbook.worksheets.getItem(
+                        "Config"
+                    );
+
+
+                const usado =
+                    folha.getUsedRangeOrNullObject();
+
+
+                usado.load([
+                    "values",
+                    "rowCount",
+                    "columnCount",
+                    "rowIndex",
+                    "columnIndex",
+                    "isNullObject"
+                ]);
+
+
+                await context.sync();
+
+
+                if (usado.isNullObject) {
+
+                    throw new Error(
+                        "A aba Config está vazia."
+                    );
+                }
+
+
+                configInfo =
+                    encontrarCabecalho(
+                        usado.values
+                    );
+
+
+                if (!configInfo) {
+
+                    throw new Error(
+                        "Cabeçalho do Config não encontrado."
+                    );
+                }
+
+
+                /* EMPRESAS */
+
+                const empresas =
+                    obterValoresColuna(
+                        usado.values,
+                        configInfo,
+                        [
+                            "EMPRESAS",
+                            "EMPRESA"
+                        ]
+                    );
+
+
+                preencherLista(
+                    "listaEmpresas",
+                    empresas
+                );
+
+
+                adicionarLog(
+                    empresas.length > 0
+                        ? "✓ Empresas " + empresas.length
+                        : "⚠ Empresas 0"
+                );
+
+
+                /* E-MAILS */
+
+                const emails =
+                    obterValoresColuna(
+                        usado.values,
+                        configInfo,
+                        [
+                            "EMAILS_RESPOSTA",
+                            "E-MAILS RESPOSTA",
+                            "EMAIL RESPOSTA",
+                            "E-MAIL RESPOSTA"
+                        ]
+                    );
+
+
+                preencherLista(
+                    "listaEmails",
+                    emails
+                );
+
+
+                adicionarLog(
+                    emails.length > 0
+                        ? "✓ E-mails " + emails.length
+                        : "⚠ E-mails 0"
+                );
+
+
+                /* SUPERVISORES */
+
+                const supervisores =
+                    obterValoresColuna(
+                        usado.values,
+                        configInfo,
+                        [
+                            "SUPERVISORES",
+                            "SUPERVISOR"
+                        ]
+                    );
+
+
+                preencherLista(
+                    "listaSupervisores",
+                    supervisores
+                );
+
+
+                adicionarLog(
+                    supervisores.length > 0
+                        ? "✓ Supervisores " + supervisores.length
+                        : "⚠ Supervisores 0"
+                );
+
+
+                /* REALIZADO POR */
+
+                const realizadoPor =
+                    obterValoresColuna(
+                        usado.values,
+                        configInfo,
+                        [
+                            "REALIZADO POR",
+                            "REALIZADO_POR",
+                            "REALIZADOPOR"
+                        ]
+                    );
+
+
+                preencherLista(
+                    "listaRealizadoPor",
+                    realizadoPor
+                );
+
+
+                adicionarLog(
+                    realizadoPor.length > 0
+                        ? "✓ Realizado por " + realizadoPor.length
+                        : "⚠ Realizado por 0"
+                );
+
+
+                /* MENSAGENS */
+
+                carregarMensagens(
+                    usado.values,
+                    configInfo
+                );
+
+            }
+        );
+
+
+        await identificarUsuario();
+
+
+    }
+    catch (erro) {
+
+        console.error(erro);
+
+        adicionarLog(
+            "⚠ Erro no Config"
+        );
+
+        mostrarStatus(
+            statusLog.join("\n"),
+            "aviso"
+        );
+
+
+        await identificarUsuario();
+    }
+}
+
+
+/* =========================================================
+   MENSAGENS
 ========================================================= */
 
 function carregarMensagens(
@@ -332,25 +529,31 @@ function carregarMensagens(
             info.mapa,
             [
                 "NOME MENSAGEM EMAIL",
-                "MENSAGENS"
+                "MENSAGENS",
+                "NOME MENSAGEM"
             ]
         );
+
 
     const indiceTexto =
         obterIndice(
             info.mapa,
             [
                 "TEXTO MENSAGEM EMAIL",
-                "TEXTO COMPLETO"
+                "TEXTO COMPLETO",
+                "TEXTO MENSAGEM"
             ]
         );
+
 
     const select =
         document.getElementById("mensagem");
 
+
     select.innerHTML = "";
 
     mensagensEmail = [];
+
 
     if (
         indiceNome === -1 ||
@@ -367,23 +570,25 @@ function carregarMensagens(
 
         select.appendChild(option);
 
-        mostrarStatus(
-            "As mensagens de E-mail não foram encontradas na aba Config.",
-            "aviso"
+
+        adicionarLog(
+            "⚠ Mensagens de E-mail 0"
         );
 
         return;
     }
 
-    const opcaoInicial =
+
+    const inicial =
         document.createElement("option");
 
-    opcaoInicial.value = "";
+    inicial.value = "";
 
-    opcaoInicial.textContent =
+    inicial.textContent =
         "Selecione uma mensagem";
 
-    select.appendChild(opcaoInicial);
+    select.appendChild(inicial);
+
 
     for (
         let linha = info.linha + 1;
@@ -397,6 +602,7 @@ function carregarMensagens(
         const texto =
             valores[linha][indiceTexto];
 
+
         if (
             nome !== null &&
             nome !== undefined &&
@@ -404,48 +610,62 @@ function carregarMensagens(
         ) {
 
             const mensagem = {
-                nome: String(nome).trim(),
-                texto: String(texto || "")
+
+                nome:
+                    String(nome).trim(),
+
+                texto:
+                    String(texto || "")
+
             };
 
-            mensagensEmail.push(mensagem);
+
+            mensagensEmail.push(
+                mensagem
+            );
+
 
             const option =
                 document.createElement("option");
 
-            option.value = mensagem.nome;
+            option.value =
+                mensagem.nome;
 
-            option.textContent = mensagem.nome;
+            option.textContent =
+                mensagem.nome;
 
             select.appendChild(option);
         }
     }
 
-    if (mensagensEmail.length === 0) {
 
-        mostrarStatus(
-            "Nenhuma mensagem de E-mail foi cadastrada na aba Config.",
-            "aviso"
-        );
-    }
+    adicionarLog(
+        mensagensEmail.length > 0
+            ? "✓ Mensagens " + mensagensEmail.length
+            : "⚠ Mensagens 0"
+    );
 }
 
 
 /* =========================================================
-   MOSTRAR TEXTO DA MENSAGEM
+   TEXTO DA MENSAGEM
 ========================================================= */
 
 function mostrarTextoMensagem() {
 
     const nome =
-        document.getElementById("mensagem").value;
+        document.getElementById(
+            "mensagem"
+        ).value;
+
 
     const mensagem =
-        mensagensEmail.find(function (item) {
+        mensagensEmail.find(
+            function (item) {
+                return item.nome === nome;
+            }
+        );
 
-            return item.nome === nome;
-
-        });
 
     document.getElementById(
         "textoMensagem"
@@ -457,13 +677,16 @@ function mostrarTextoMensagem() {
 
 
 /* =========================================================
-   IDENTIFICAR USUÁRIO
+   SSO
 ========================================================= */
 
 async function identificarUsuario() {
 
     const campo =
-        document.getElementById("realizadoPor");
+        document.getElementById(
+            "realizadoPor"
+        );
+
 
     try {
 
@@ -473,8 +696,10 @@ async function identificarUsuario() {
                 allowConsentPrompt: true
             });
 
+
         const dados =
             decodificarToken(token);
+
 
         const nome =
             dados.name ||
@@ -482,28 +707,42 @@ async function identificarUsuario() {
             dados.email ||
             dados.upn;
 
+
         if (nome) {
 
             campo.value = nome;
 
             campo.readOnly = false;
+
+
+            adicionarLog(
+                "✓ SSO: " + nome
+            );
+
+        }
+        else {
+
+            adicionarLog(
+                "⚠ SSO sem nome"
+            );
         }
 
     }
     catch (erro) {
 
-        console.log(
-            "Identificação automática não disponível.",
-            erro
-        );
+        console.error(erro);
 
         campo.readOnly = false;
+
+        adicionarLog(
+            "⚠ SSO não identificado"
+        );
     }
 }
 
 
 /* =========================================================
-   DECODIFICAR TOKEN
+   TOKEN
 ========================================================= */
 
 function decodificarToken(token) {
@@ -511,18 +750,28 @@ function decodificarToken(token) {
     const partes =
         token.split(".");
 
+
     if (partes.length !== 3) {
-        throw new Error("Token inválido.");
+
+        throw new Error(
+            "Token inválido."
+        );
     }
+
 
     let payload =
         partes[1]
             .replace(/-/g, "+")
             .replace(/_/g, "/");
 
-    while (payload.length % 4 !== 0) {
+
+    while (
+        payload.length % 4 !== 0
+    ) {
+
         payload += "=";
     }
+
 
     return JSON.parse(
         decodeURIComponent(
@@ -545,49 +794,42 @@ function decodificarToken(token) {
 
 
 /* =========================================================
-   DATA E HORA
+   DATA + HORA
 ========================================================= */
 
 function obterDataHoraAtual() {
 
     const agora = new Date();
 
-    const dia =
-        String(agora.getDate()).padStart(2, "0");
-
-    const mes =
-        String(agora.getMonth() + 1).padStart(2, "0");
-
-    const ano =
-        agora.getFullYear();
-
-    const hora =
-        String(agora.getHours()).padStart(2, "0");
-
-    const minuto =
-        String(agora.getMinutes()).padStart(2, "0");
-
-    const segundo =
-        String(agora.getSeconds()).padStart(2, "0");
 
     return (
-        dia +
-        "/" +
-        mes +
-        "/" +
-        ano +
-        " " +
-        hora +
-        ":" +
-        minuto +
-        ":" +
-        segundo
+        String(
+            agora.getDate()
+        ).padStart(2, "0")
+        + "/" +
+        String(
+            agora.getMonth() + 1
+        ).padStart(2, "0")
+        + "/" +
+        agora.getFullYear()
+        + " " +
+        String(
+            agora.getHours()
+        ).padStart(2, "0")
+        + ":" +
+        String(
+            agora.getMinutes()
+        ).padStart(2, "0")
+        + ":" +
+        String(
+            agora.getSeconds()
+        ).padStart(2, "0")
     );
 }
 
 
 /* =========================================================
-   SALVAR E-MAIL
+   SALVAR
 ========================================================= */
 
 async function salvarEmail(event) {
@@ -596,123 +838,133 @@ async function salvarEmail(event) {
 
     limparStatus();
 
-    const btnSalvar =
-        document.getElementById("btnSalvar");
+    const btn =
+        document.getElementById(
+            "btnSalvar"
+        );
 
-    btnSalvar.disabled = true;
 
-    btnSalvar.textContent =
+    btn.disabled = true;
+
+    btn.textContent =
         "Salvando...";
+
 
     try {
 
         const realizadoPor =
-            document
-                .getElementById("realizadoPor")
-                .value
-                .trim();
+            document.getElementById(
+                "realizadoPor"
+            ).value.trim();
+
 
         const empresa =
-            document
-                .getElementById("empresa")
-                .value
-                .trim();
+            document.getElementById(
+                "empresa"
+            ).value.trim();
+
 
         const qtde =
-            document
-                .getElementById("qtde")
-                .value
-                .trim();
+            document.getElementById(
+                "qtde"
+            ).value.trim();
+
 
         const emailResposta =
-            document
-                .getElementById("emailResposta")
-                .value
-                .trim();
+            document.getElementById(
+                "emailResposta"
+            ).value.trim();
+
 
         const supervisor =
-            document
-                .getElementById("supervisor")
-                .value
-                .trim();
+            document.getElementById(
+                "supervisor"
+            ).value.trim();
+
 
         const obs =
-            document
-                .getElementById("obs")
-                .value
-                .trim();
+            document.getElementById(
+                "obs"
+            ).value.trim();
+
 
         const historicoExterno =
-            document
-                .getElementById("historicoExterno")
-                .value
-                .trim();
+            document.getElementById(
+                "historicoExterno"
+            ).value.trim();
+
 
         const nomeMensagem =
-            document
-                .getElementById("mensagem")
-                .value;
+            document.getElementById(
+                "mensagem"
+            ).value;
+
 
         const textoMensagem =
-            document
-                .getElementById("textoMensagem")
-                .value;
+            document.getElementById(
+                "textoMensagem"
+            ).value;
+
 
         const assunto =
-            document
-                .getElementById("assunto")
-                .value
-                .trim();
+            document.getElementById(
+                "assunto"
+            ).value.trim();
 
-        if (!empresa) {
-            throw new Error("Informe a empresa.");
-        }
+
+        if (!empresa)
+            throw new Error(
+                "Informe a empresa."
+            );
+
 
         if (
             !qtde ||
             Number(qtde) <= 0 ||
-            !Number.isInteger(Number(qtde))
-        ) {
+            !Number.isInteger(
+                Number(qtde)
+            )
+        )
             throw new Error(
                 "A Qtde deve ser um número inteiro maior que zero."
             );
-        }
 
-        if (!emailResposta) {
+
+        if (!emailResposta)
             throw new Error(
                 "Informe o E-mail Resposta."
             );
-        }
 
-        if (!supervisor) {
+
+        if (!supervisor)
             throw new Error(
                 "Informe o Supervisor."
             );
-        }
 
-        if (!historicoExterno) {
+
+        if (!historicoExterno)
             throw new Error(
                 "Informe o Histórico Externo."
             );
-        }
 
-        if (!nomeMensagem) {
+
+        if (!nomeMensagem)
             throw new Error(
                 "Selecione uma mensagem."
             );
-        }
 
-        if (!textoMensagem) {
+
+        if (!textoMensagem)
             throw new Error(
                 "A mensagem selecionada não possui texto."
             );
-        }
 
-        if (!assunto) {
+
+        if (!assunto)
             throw new Error(
                 "Informe o assunto."
             );
-        }
+
 
         await Excel.run(
             async function (context) {
@@ -732,6 +984,7 @@ async function salvarEmail(event) {
                     }
                 );
 
+
                 await atualizarConfig(
                     context,
                     {
@@ -742,26 +995,38 @@ async function salvarEmail(event) {
                     }
                 );
 
+
                 await context.sync();
             }
         );
 
+
         mostrarStatus(
-            "Registro de E-mail salvo com sucesso!",
+            "✓ Registro de E-mail salvo!",
             "sucesso"
         );
 
+
         document
-            .getElementById("formEmail")
+            .getElementById(
+                "formEmail"
+            )
             .reset();
 
-        document
-            .getElementById("mensagem")
-            .selectedIndex = 0;
 
         document
-            .getElementById("textoMensagem")
+            .getElementById(
+                "mensagem"
+            )
+            .selectedIndex = 0;
+
+
+        document
+            .getElementById(
+                "textoMensagem"
+            )
             .value = "";
+
 
         await identificarUsuario();
 
@@ -772,23 +1037,23 @@ async function salvarEmail(event) {
 
         mostrarStatus(
             erro.message ||
-            "Erro ao salvar o registro.",
+            "Erro ao salvar.",
             "erro"
         );
 
     }
     finally {
 
-        btnSalvar.disabled = false;
+        btn.disabled = false;
 
-        btnSalvar.textContent =
+        btn.textContent =
             "Salvar";
     }
 }
 
 
 /* =========================================================
-   ADICIONAR REGISTRO EMAIL
+   ADICIONAR REGISTRO
 ========================================================= */
 
 async function adicionarRegistroEmail(
@@ -797,38 +1062,31 @@ async function adicionarRegistroEmail(
 ) {
 
     const folha =
-        context.workbook.worksheets.getItem("Email");
+        context.workbook.worksheets.getItem(
+            "Email"
+        );
+
 
     const usado =
         folha.getUsedRangeOrNullObject();
+
 
     usado.load([
         "values",
         "rowCount",
         "columnCount",
         "isNullObject",
-        "rowIndex",
-        "columnIndex"
+        "rowIndex"
     ]);
+
 
     await context.sync();
 
-    const cabecalhos = [
-        "DATA",
-        "REALIZADO POR",
-        "EMPRESA",
-        "QTDE",
-        "EMAIL RESPOSTA",
-        "SUPERVISOR",
-        "OBS",
-        "HISTORICO EXTERNO",
-        "MENSAGEM",
-        "ASSUNTO"
-    ];
 
     let linhaCabecalho = -1;
 
     let mapa = {};
+
 
     if (!usado.isNullObject) {
 
@@ -843,8 +1101,9 @@ async function adicionarRegistroEmail(
 
             const atual = {};
 
-            usado.values[linha]
-                .forEach(function (
+
+            usado.values[linha].forEach(
+                function (
                     valor,
                     indice
                 ) {
@@ -852,15 +1111,16 @@ async function adicionarRegistroEmail(
                     if (
                         valor !== null &&
                         valor !== undefined &&
-                        valor !== ""
+                        String(valor).trim() !== ""
                     ) {
 
                         atual[
                             normalizar(valor)
                         ] = indice;
                     }
+                }
+            );
 
-                });
 
             if (
                 atual["EMPRESA"] !== undefined &&
@@ -870,7 +1130,8 @@ async function adicionarRegistroEmail(
                 )
             ) {
 
-                linhaCabecalho = linha;
+                linhaCabecalho =
+                    linha;
 
                 mapa = atual;
 
@@ -878,6 +1139,7 @@ async function adicionarRegistroEmail(
             }
         }
     }
+
 
     if (linhaCabecalho === -1) {
 
@@ -898,14 +1160,25 @@ async function adicionarRegistroEmail(
 
         linhaCabecalho = 0;
 
-        mapa = {};
-
-        cabecalhos.forEach(
-            function (nome, indice) {
-                mapa[nome] = indice;
-            }
-        );
+        [
+            "DATA",
+            "REALIZADO POR",
+            "EMPRESA",
+            "QTDE",
+            "EMAIL RESPOSTA",
+            "SUPERVISOR",
+            "OBS",
+            "HISTORICO EXTERNO",
+            "MENSAGEM",
+            "ASSUNTO"
+        ].forEach(function (
+            nome,
+            indice
+        ) {
+            mapa[nome] = indice;
+        });
     }
+
 
     const numeroColunas =
         Math.max(
@@ -915,12 +1188,11 @@ async function adicionarRegistroEmail(
                 : usado.columnCount
         );
 
+
     const valores =
         new Array(numeroColunas)
             .fill("");
 
-    const dataAtual =
-        obterDataHoraAtual();
 
     function colocar(
         nomes,
@@ -933,14 +1205,14 @@ async function adicionarRegistroEmail(
                 nomes
             );
 
-        if (indice !== -1) {
+        if (indice !== -1)
             valores[indice] = valor;
-        }
     }
+
 
     colocar(
         ["DATA"],
-        dataAtual
+        obterDataHoraAtual()
     );
 
     colocar(
@@ -959,7 +1231,10 @@ async function adicionarRegistroEmail(
     );
 
     colocar(
-        ["EMAIL RESPOSTA"],
+        [
+            "EMAIL RESPOSTA",
+            "E-MAIL RESPOSTA"
+        ],
         dados.emailResposta
     );
 
@@ -992,29 +1267,16 @@ async function adicionarRegistroEmail(
     );
 
 
-    /*
-       IMPORTANTE:
-       A nova linha será sempre depois
-       da última linha utilizada.
-    */
+    const proximaLinha =
+        usado.isNullObject
+            ? 1
+            : usado.rowIndex +
+              usado.rowCount;
 
-    let ultimaLinha;
-
-    if (usado.isNullObject) {
-
-        ultimaLinha = 1;
-
-    }
-    else {
-
-        ultimaLinha =
-            usado.rowIndex +
-            usado.rowCount;
-    }
 
     folha
         .getRangeByIndexes(
-            ultimaLinha,
+            proximaLinha,
             0,
             1,
             numeroColunas
@@ -1037,120 +1299,146 @@ async function atualizarConfig(
             "Config"
         );
 
+
     const usado =
         folha.getUsedRangeOrNullObject();
+
 
     usado.load([
         "values",
         "rowCount",
-        "columnCount",
         "isNullObject",
-        "rowIndex",
-        "columnIndex"
+        "rowIndex"
     ]);
+
 
     await context.sync();
 
-    if (usado.isNullObject) {
+
+    if (usado.isNullObject)
         return;
-    }
+
 
     const info =
         encontrarCabecalho(
             usado.values
         );
 
-    if (!info) {
+
+    if (!info)
         return;
-    }
+
 
     const campos = [
         {
-            nome: "EMPRESAS",
+            nomes: [
+                "EMPRESAS",
+                "EMPRESA"
+            ],
             valor: dados.empresa
         },
         {
-            nome: "EMAILS_RESPOSTA",
+            nomes: [
+                "EMAILS_RESPOSTA",
+                "EMAIL RESPOSTA",
+                "E-MAIL RESPOSTA"
+            ],
             valor: dados.emailResposta
         },
         {
-            nome: "SUPERVISORES",
+            nomes: [
+                "SUPERVISORES",
+                "SUPERVISOR"
+            ],
             valor: dados.supervisor
         },
         {
-            nome: "REALIZADO POR",
+            nomes: [
+                "REALIZADO POR",
+                "REALIZADO_POR",
+                "REALIZADOPOR"
+            ],
             valor: dados.realizadoPor
         }
     ];
 
+
     for (const campo of campos) {
 
-        if (!campo.valor) {
+        if (!campo.valor)
             continue;
-        }
+
 
         const coluna =
             obterIndice(
                 info.mapa,
-                [campo.nome]
+                campo.nomes
             );
 
-        if (coluna === -1) {
+
+        if (coluna === -1)
             continue;
-        }
 
-        const valoresColuna = [];
-
-        for (
-            let linha = info.linha + 1;
-            linha < usado.values.length;
-            linha++
-        ) {
-
-            valoresColuna.push(
-                String(
-                    usado.values[linha][coluna] ||
-                    ""
-                ).trim()
-            );
-        }
-
-        const existe =
-            valoresColuna.some(
-                function (valor) {
-
-                    return (
-                        normalizar(valor) ===
-                        normalizar(campo.valor)
-                    );
-                }
-            );
-
-        if (existe) {
-            continue;
-        }
 
         let linhaDestino =
             info.linha + 1;
 
+
         while (
-            linhaDestino < usado.values.length &&
+            linhaDestino <
+                usado.values.length &&
             String(
-                usado.values[linhaDestino][coluna] ||
-                ""
+                usado.values[
+                    linhaDestino
+                ][coluna] || ""
             ).trim() !== ""
         ) {
 
             linhaDestino++;
         }
 
-        const linhaAbsoluta =
-            usado.rowIndex +
-            linhaDestino;
+
+        const existentes = [];
+
+
+        for (
+            let linha =
+                info.linha + 1;
+            linha < usado.values.length;
+            linha++
+        ) {
+
+            existentes.push(
+                String(
+                    usado.values[
+                        linha
+                    ][coluna] || ""
+                ).trim()
+            );
+        }
+
+
+        const existe =
+            existentes.some(
+                function (valor) {
+                    return (
+                        normalizar(valor) ===
+                        normalizar(
+                            campo.valor
+                        )
+                    );
+                }
+            );
+
+
+        if (existe)
+            continue;
+
 
         folha
             .getRangeByIndexes(
-                linhaAbsoluta,
+                usado.rowIndex +
+                linhaDestino,
                 coluna,
                 1,
                 1
