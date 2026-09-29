@@ -1,12 +1,193 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registros de Envios</title><link rel="stylesheet" href="taskpane.css"><script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script></head><body><div class="app"><header><h1>Novo registro</h1><p>Envio por Email</p></header><main><form id="emailForm">
-<label>Realizado por <span>*</span><input id="realizadoPor" readonly placeholder="Identificando..."></label>
-<label>Empresa <span>*</span><input id="empresa" list="empresas" required placeholder="Selecione ou digite"><datalist id="empresas"></datalist></label>
-<label>Qtde <span>*</span><input id="qtde" type="number" min="1" step="1" required></label>
-<label>Email Resposta <span>*</span><input id="emailResposta" list="emailsResposta" required placeholder="Selecione ou digite"><datalist id="emailsResposta"></datalist></label>
-<label>Supervisor <span>*</span><input id="supervisor" list="supervisores" required placeholder="Selecione ou digite"><datalist id="supervisores"></datalist></label>
-<label>Obs<textarea id="obs" rows="2"></textarea></label>
-<label>Histórico Externo <span>*</span><textarea id="historicoExterno" rows="3" required></textarea></label>
-<label>Mensagem <span>*</span><select id="mensagem" required><option value="">Selecione...</option></select></label>
-<label>Assunto <span>*</span><input id="assunto" required></label><div id="status"></div>
-<div class="actions"><button type="button" id="cancelar">Cancelar</button><button type="submit" id="salvar">Salvar registro</button></div>
-</form></main></div><script src="taskpane.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Novo Registro de E-mail</title>
+
+    <link rel="stylesheet" href="taskpane.css">
+
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>Novo Registro de E-mail</h1>
+            <p>Preencha as informações do envio.</p>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <!-- REALIZADO POR -->
+        <div class="campo">
+            <label for="realizadoPor">Realizado por</label>
+
+            <input
+                type="text"
+                id="realizadoPor"
+                list="listaRealizadoPor"
+                placeholder="Identificando usuário..."
+                readonly
+            >
+
+            <datalist id="listaRealizadoPor"></datalist>
+        </div>
+
+        <!-- EMPRESA -->
+        <div class="campo">
+            <label for="empresa">
+                Empresa <span class="obrigatorio">*</span>
+            </label>
+
+            <input
+                type="text"
+                id="empresa"
+                list="listaEmpresas"
+                autocomplete="off"
+                placeholder="Selecione ou digite uma nova empresa"
+            >
+
+            <datalist id="listaEmpresas"></datalist>
+        </div>
+
+        <!-- QTDE -->
+        <div class="campo">
+            <label for="qtde">
+                Qtde <span class="obrigatorio">*</span>
+            </label>
+
+            <input
+                type="number"
+                id="qtde"
+                min="1"
+                step="1"
+                placeholder="Quantidade"
+            >
+        </div>
+
+        <!-- EMAIL RESPOSTA -->
+        <div class="campo">
+            <label for="emailResposta">
+                Email Resposta <span class="obrigatorio">*</span>
+            </label>
+
+            <input
+                type="email"
+                id="emailResposta"
+                list="listaEmails"
+                autocomplete="off"
+                placeholder="Selecione ou digite um novo e-mail"
+            >
+
+            <datalist id="listaEmails"></datalist>
+        </div>
+
+        <!-- SUPERVISOR -->
+        <div class="campo">
+            <label for="supervisor">
+                Supervisor <span class="obrigatorio">*</span>
+            </label>
+
+            <input
+                type="text"
+                id="supervisor"
+                list="listaSupervisores"
+                autocomplete="off"
+                placeholder="Selecione ou digite um novo supervisor"
+            >
+
+            <datalist id="listaSupervisores"></datalist>
+        </div>
+
+        <!-- OBS -->
+        <div class="campo">
+            <label for="obs">Obs</label>
+
+            <textarea
+                id="obs"
+                rows="3"
+                placeholder="Observação"
+            ></textarea>
+        </div>
+
+        <!-- HISTÓRICO EXTERNO -->
+        <div class="campo">
+            <label for="historicoExterno">
+                Histórico Externo <span class="obrigatorio">*</span>
+            </label>
+
+            <textarea
+                id="historicoExterno"
+                rows="4"
+                placeholder="Informe o histórico externo"
+            ></textarea>
+        </div>
+
+        <!-- MENSAGEM -->
+        <div class="campo">
+            <label for="mensagem">
+                Mensagem <span class="obrigatorio">*</span>
+            </label>
+
+            <select id="mensagem">
+                <option value="">Selecione uma mensagem</option>
+            </select>
+        </div>
+
+        <!-- TEXTO DA MENSAGEM -->
+        <div class="campo">
+            <label for="textoMensagem">Texto da mensagem</label>
+
+            <textarea
+                id="textoMensagem"
+                rows="8"
+                readonly
+                placeholder="O texto completo aparecerá aqui..."
+            ></textarea>
+        </div>
+
+        <!-- ASSUNTO -->
+        <div class="campo">
+            <label for="assunto">
+                Assunto <span class="obrigatorio">*</span>
+            </label>
+
+            <input
+                type="text"
+                id="assunto"
+                placeholder="Assunto do e-mail"
+            >
+        </div>
+
+        <!-- BOTÕES -->
+        <div class="botoes">
+
+            <button
+                type="button"
+                id="btnCancelar"
+                class="btn btn-cancelar"
+            >
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                id="btnSalvar"
+                class="btn btn-salvar"
+            >
+                Salvar
+            </button>
+
+        </div>
+
+    </div>
+
+    <script src="taskpane.js"></script>
+
+</body>
+</html>
