@@ -14,6 +14,7 @@ let nomeUsuarioSSO = "";
 // ======================================================
 
 Office.onReady(async function () {
+
     const btnVoltar = document.getElementById("btnVoltar");
     const btnCancelar = document.getElementById("btnCancelar");
     const formSMS = document.getElementById("formSMS");
@@ -32,9 +33,7 @@ Office.onReady(async function () {
     }
 
     if (mensagem) {
-        mensagem.addEventListener("change", function () {
-            atualizarTextoMensagem();
-        });
+        mensagem.addEventListener("change", atualizarTextoMensagem);
     }
 
     if (formSMS) {
@@ -48,7 +47,7 @@ Office.onReady(async function () {
 
 
 // ======================================================
-// INÍCIO
+// INICIAR
 // ======================================================
 
 async function iniciarSMS() {
@@ -58,7 +57,6 @@ async function iniciarSMS() {
     try {
 
         await carregarSSO();
-
         await carregarConfig();
 
         atualizarLogFinal();
@@ -68,7 +66,8 @@ async function iniciarSMS() {
         console.error("Erro ao iniciar SMS:", erro);
 
         logStatus(
-            "Erro ao carregar o formulário. Veja o console para detalhes.",
+            "❌ Erro ao carregar o formulário: " +
+            escapeHtml(erro.message),
             "erro"
         );
     }
@@ -84,7 +83,6 @@ function criarLogInicial() {
     const status = document.getElementById("mensagemStatus");
 
     if (!status) {
-        console.warn("Elemento mensagemStatus não encontrado no sms.html.");
         return;
     }
 
@@ -141,25 +139,13 @@ function atualizarLogFinal() {
         ? `✓ SSO: ${escapeHtml(nomeUsuarioSSO)}`
         : "⚠ SSO não identificado";
 
-    const empresas =
-        `✓ Empresas: ${configDados.empresas.length}`;
-
-    const supervisores =
-        `✓ Supervisores: ${configDados.supervisores.length}`;
-
-    const realizadoPor =
-        `✓ Realizado por: ${configDados.realizadoPor.length}`;
-
-    const mensagens =
-        `✓ Mensagens SMS: ${configDados.mensagens.length}`;
-
-    const limite =
-        `✓ Limite SMS: ${configDados.limiteSMS}`;
-
     logStatus(
         `${sso}<br>` +
-        `${empresas} &nbsp;&nbsp; ${supervisores}<br>` +
-        `${realizadoPor} &nbsp;&nbsp; ${mensagens} &nbsp;&nbsp; ${limite}`,
+        `✓ Empresas: ${configDados.empresas.length}` +
+        ` &nbsp;&nbsp; ✓ Supervisores: ${configDados.supervisores.length}<br>` +
+        `✓ Realizado por: ${configDados.realizadoPor.length}` +
+        ` &nbsp;&nbsp; ✓ Mensagens SMS: ${configDados.mensagens.length}` +
+        ` &nbsp;&nbsp; ✓ Limite: ${configDados.limiteSMS}`,
         "sucesso"
     );
 }
@@ -172,16 +158,6 @@ function atualizarLogFinal() {
 async function carregarSSO() {
 
     try {
-
-        if (!Office.context.requirements.isSetSupported("IdentityAPI", "1.3")) {
-
-            logStatus(
-                "⚠ Identity API não disponível. O campo Realizado por ficará editável.",
-                "aviso"
-            );
-
-            return;
-        }
 
         const token = await OfficeRuntime.auth.getAccessToken({
             allowSignInPrompt: true,
@@ -209,31 +185,42 @@ async function carregarSSO() {
             "";
 
         if (!nomeUsuarioSSO) {
-            throw new Error("Nome do usuário não encontrado no token.");
+            throw new Error(
+                "Nome do usuário não encontrado."
+            );
         }
 
-        const campo = document.getElementById("realizadoPor");
+        const campo =
+            document.getElementById("realizadoPor");
 
         if (campo) {
             campo.value = nomeUsuarioSSO;
         }
 
-        console.log("SSO encontrado:", nomeUsuarioSSO);
+        console.log(
+            "✓ SSO encontrado:",
+            nomeUsuarioSSO
+        );
 
     } catch (erro) {
 
-        console.error("Erro SSO:", erro);
+        console.warn(
+            "SSO não disponível:",
+            erro
+        );
 
         nomeUsuarioSSO = "";
 
-        const campo = document.getElementById("realizadoPor");
+        const campo =
+            document.getElementById("realizadoPor");
 
         if (campo) {
             campo.value = "";
         }
 
         logStatus(
-            "⚠ SSO não conseguiu identificar o usuário. O campo Realizado por pode ser preenchido manualmente.",
+            "⚠ SSO não identificado. " +
+            "Realizado por pode ser preenchido manualmente.",
             "aviso"
         );
     }
@@ -242,7 +229,9 @@ async function carregarSSO() {
 
 function decodeBase64Url(str) {
 
-    str = str.replace(/-/g, "+").replace(/_/g, "/");
+    str = str
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
 
     while (str.length % 4) {
         str += "=";
@@ -250,7 +239,8 @@ function decodeBase64Url(str) {
 
     const decoded = atob(str);
 
-    const bytes = new Uint8Array(decoded.length);
+    const bytes =
+        new Uint8Array(decoded.length);
 
     for (let i = 0; i < decoded.length; i++) {
         bytes[i] = decoded.charCodeAt(i);
@@ -261,85 +251,62 @@ function decodeBase64Url(str) {
 
 
 // ======================================================
-// CONFIG
+// CARREGAR CONFIG
 // ======================================================
 
 async function carregarConfig() {
 
-    const empresas = document.getElementById("empresa");
-    const supervisores = document.getElementById("supervisor");
-    const realizadoPor = document.getElementById("realizadoPor");
-    const mensagem = document.getElementById("mensagem");
+    await Excel.run(async function (context) {
 
-    try {
+        const config =
+            context.workbook.worksheets.getItem("Config");
 
-        await Excel.run(async function (context) {
+        const usado =
+            config.getUsedRange();
 
-            const planilha = context.workbook.worksheets.getItem("Config");
+        usado.load([
+            "values",
+            "rowIndex",
+            "rowCount",
+            "columnCount"
+        ]);
 
-            const usado = planilha.getUsedRangeOrNullObject(true);
+        await context.sync();
 
-            usado.load([
-                "isNullObject",
-                "values",
-                "rowIndex",
-                "columnIndex",
-                "rowCount",
-                "columnCount"
-            ]);
+        const valores = usado.values;
 
-            await context.sync();
+        const cabecalho =
+            localizarCabecalho(valores);
 
-            if (usado.isNullObject) {
-                throw new Error("A aba Config está vazia.");
-            }
+        if (!cabecalho) {
+            throw new Error(
+                "Cabeçalhos do Config não encontrados."
+            );
+        }
 
-            const valores = usado.values;
+        const colunas =
+            cabecalho.colunas;
 
-            console.log("Config encontrada:", valores);
+        console.log(
+            "Cabeçalhos Config:",
+            colunas
+        );
 
-            const cabecalho = localizarCabecalho(valores);
 
-            if (!cabecalho) {
-                throw new Error(
-                    "Não foi possível localizar os cabeçalhos da aba Config."
-                );
-            }
-
-            console.log("Linha do cabeçalho:", cabecalho.linha);
-            console.log("Cabeçalhos:", cabecalho.colunas);
-
-            const colunas = cabecalho.colunas;
-
-            // ----------------------------------------------
-            // EMPRESAS
-            // ----------------------------------------------
-
-            const colEmpresa = encontrarColuna(
+        const colEmpresa =
+            encontrarColuna(
                 colunas,
-                [
-                    "EMPRESAS",
-                    "EMPRESA"
-                ]
+                ["EMPRESAS", "EMPRESA"]
             );
 
-            // ----------------------------------------------
-            // SUPERVISORES
-            // ----------------------------------------------
-
-            const colSupervisor = encontrarColuna(
+        const colSupervisor =
+            encontrarColuna(
                 colunas,
-                [
-                    "SUPERVISORES",
-                    "SUPERVISOR"
-                ]
+                ["SUPERVISORES", "SUPERVISOR"]
             );
 
-            // ----------------------------------------------
-            // REALIZADO POR
-            // ----------------------------------------------
-
-            const colRealizadoPor = encontrarColuna(
+        const colRealizado =
+            encontrarColuna(
                 colunas,
                 [
                     "REALIZADO POR",
@@ -348,191 +315,191 @@ async function carregarConfig() {
                 ]
             );
 
-            // ----------------------------------------------
-            // MENSAGEM SMS
-            // ----------------------------------------------
-
-            const colNomeSMS = encontrarColuna(
+        const colNomeSMS =
+            encontrarColuna(
                 colunas,
-                [
-                    "NOME MENSAGEM SMS"
-                ]
+                ["NOME MENSAGEM SMS"]
             );
 
-            const colTextoSMS = encontrarColuna(
+        const colTextoSMS =
+            encontrarColuna(
                 colunas,
-                [
-                    "TEXTO MENSAGEM SMS"
-                ]
+                ["TEXTO MENSAGEM SMS"]
             );
 
-            // ----------------------------------------------
-            // LIMITE SMS
-            // ----------------------------------------------
-
-            const colLimiteSMS = encontrarColuna(
+        const colLimite =
+            encontrarColuna(
                 colunas,
-                [
-                    "LIMITE SMS"
-                ]
+                ["LIMITE SMS"]
             );
 
 
-            // ----------------------------------------------
-            // VALIDAR COLUNAS
-            // ----------------------------------------------
+        if (colEmpresa === -1) {
+            throw new Error(
+                "Coluna EMPRESAS não encontrada."
+            );
+        }
 
-            if (colEmpresa === -1) {
-                throw new Error("Coluna EMPRESAS não encontrada.");
+        if (colSupervisor === -1) {
+            throw new Error(
+                "Coluna SUPERVISORES não encontrada."
+            );
+        }
+
+        if (colRealizado === -1) {
+            throw new Error(
+                "Coluna REALIZADO POR não encontrada."
+            );
+        }
+
+        if (colNomeSMS === -1) {
+            throw new Error(
+                "Coluna NOME MENSAGEM SMS não encontrada."
+            );
+        }
+
+        if (colTextoSMS === -1) {
+            throw new Error(
+                "Coluna TEXTO MENSAGEM SMS não encontrada."
+            );
+        }
+
+
+        configDados.empresas =
+            pegarColuna(
+                valores,
+                cabecalho.linha,
+                colEmpresa
+            );
+
+        configDados.supervisores =
+            pegarColuna(
+                valores,
+                cabecalho.linha,
+                colSupervisor
+            );
+
+        configDados.realizadoPor =
+            pegarColuna(
+                valores,
+                cabecalho.linha,
+                colRealizado
+            );
+
+
+        const nomesSMS =
+            pegarColuna(
+                valores,
+                cabecalho.linha,
+                colNomeSMS
+            );
+
+        const textosSMS =
+            pegarColuna(
+                valores,
+                cabecalho.linha,
+                colTextoSMS
+            );
+
+
+        configDados.mensagens = [];
+        configDados.textosMensagens = {};
+
+
+        for (let i = 0; i < nomesSMS.length; i++) {
+
+            const nome =
+                limparTexto(nomesSMS[i]);
+
+            if (!nome) {
+                continue;
             }
 
-            if (colSupervisor === -1) {
-                throw new Error("Coluna SUPERVISORES não encontrada.");
-            }
+            const texto =
+                textosSMS[i] !== undefined
+                    ? String(textosSMS[i])
+                    : "";
 
-            if (colRealizadoPor === -1) {
-                throw new Error("Coluna REALIZADO POR não encontrada.");
-            }
+            configDados.mensagens.push(nome);
 
-            if (colNomeSMS === -1) {
-                throw new Error("Coluna NOME MENSAGEM SMS não encontrada.");
-            }
-
-            if (colTextoSMS === -1) {
-                throw new Error("Coluna TEXTO MENSAGEM SMS não encontrada.");
-            }
+            configDados.textosMensagens[nome] =
+                texto;
+        }
 
 
-            // ----------------------------------------------
-            // CARREGAR LISTAS
-            // ----------------------------------------------
-
-            configDados.empresas =
-                pegarColuna(valores, cabecalho.linha, colEmpresa);
-
-            configDados.supervisores =
-                pegarColuna(valores, cabecalho.linha, colSupervisor);
-
-            configDados.realizadoPor =
-                pegarColuna(valores, cabecalho.linha, colRealizadoPor);
-
-            const nomesSMS =
-                pegarColuna(valores, cabecalho.linha, colNomeSMS);
-
-            const textosSMS =
-                pegarColuna(valores, cabecalho.linha, colTextoSMS);
+        // Limite padrão
+        configDados.limiteSMS = 160;
 
 
-            configDados.mensagens = [];
+        if (colLimite !== -1) {
 
-            configDados.textosMensagens = {};
+            const limites =
+                pegarColuna(
+                    valores,
+                    cabecalho.linha,
+                    colLimite
+                );
 
+            for (const valor of limites) {
 
-            for (let i = 0; i < nomesSMS.length; i++) {
+                if (
+                    valor !== null &&
+                    valor !== undefined &&
+                    String(valor).trim() !== ""
+                ) {
 
-                const nome = limparTexto(nomesSMS[i]);
-
-                if (!nome) {
-                    continue;
-                }
-
-                const texto =
-                    textosSMS[i] !== undefined &&
-                    textosSMS[i] !== null
-                        ? String(textosSMS[i])
-                        : "";
-
-                configDados.mensagens.push(nome);
-
-                configDados.textosMensagens[nome] = texto;
-            }
-
-
-            // ----------------------------------------------
-            // LIMITE
-            // ----------------------------------------------
-
-            configDados.limiteSMS = 160;
-
-            if (colLimiteSMS !== -1) {
-
-                const limites =
-                    pegarColuna(
-                        valores,
-                        cabecalho.linha,
-                        colLimiteSMS
-                    );
-
-                for (const valor of limites) {
+                    const numero =
+                        Number(valor);
 
                     if (
-                        valor !== null &&
-                        valor !== undefined &&
-                        String(valor).trim() !== ""
+                        !isNaN(numero) &&
+                        numero > 0
                     ) {
-
-                        const numero = Number(valor);
-
-                        if (!isNaN(numero) && numero > 0) {
-                            configDados.limiteSMS = numero;
-                            break;
-                        }
+                        configDados.limiteSMS =
+                            numero;
+                        break;
                     }
                 }
             }
+        }
 
 
-            // ----------------------------------------------
-            // PREENCHER CAMPOS
-            // ----------------------------------------------
-
-            preencherDatalist(
-                "listaEmpresas",
-                configDados.empresas
-            );
-
-            preencherDatalist(
-                "listaSupervisores",
-                configDados.supervisores
-            );
-
-            preencherDatalist(
-                "listaRealizadoPor",
-                configDados.realizadoPor
-            );
-
-            preencherMensagens();
-
-
-            // ----------------------------------------------
-            // GARANTIR SSO NO CAMPO
-            // ----------------------------------------------
-
-            const campoRealizado =
-                document.getElementById("realizadoPor");
-
-            if (
-                campoRealizado &&
-                nomeUsuarioSSO
-            ) {
-                campoRealizado.value =
-                    nomeUsuarioSSO;
-            }
-
-        });
-
-    } catch (erro) {
-
-        console.error("Erro ao carregar Config:", erro);
-
-        logStatus(
-            "❌ Erro ao consultar Config: " +
-            escapeHtml(erro.message),
-            "erro"
+        preencherDatalist(
+            "listaEmpresas",
+            configDados.empresas
         );
 
-        throw erro;
-    }
+        preencherDatalist(
+            "listaSupervisores",
+            configDados.supervisores
+        );
+
+        preencherDatalist(
+            "listaRealizadoPor",
+            configDados.realizadoPor
+        );
+
+        preencherMensagens();
+
+
+        // Recoloca SSO no campo
+        const campoRealizado =
+            document.getElementById("realizadoPor");
+
+        if (
+            campoRealizado &&
+            nomeUsuarioSSO
+        ) {
+            campoRealizado.value =
+                nomeUsuarioSSO;
+        }
+
+
+        console.log(
+            "✓ Config carregado"
+        );
+
+    });
 }
 
 
@@ -542,26 +509,25 @@ async function carregarConfig() {
 
 function localizarCabecalho(valores) {
 
-    for (let linha = 0; linha < Math.min(valores.length, 30); linha++) {
+    for (
+        let linha = 0;
+        linha < Math.min(valores.length, 30);
+        linha++
+    ) {
 
-        const colunas = valores[linha].map(function (valor) {
-            return normalizarCabecalho(valor);
-        });
+        const colunas =
+            valores[linha].map(function (valor) {
+                return normalizarCabecalho(valor);
+            });
 
-        const temEmpresas =
-            colunas.includes("EMPRESAS");
-
-        const temSupervisor =
-            colunas.includes("SUPERVISORES");
-
-        const temSMS =
-            colunas.includes("NOME MENSAGEM SMS");
 
         if (
-            temEmpresas &&
-            temSupervisor &&
-            temSMS
+            colunas.includes("EMPRESAS") &&
+            colunas.includes("SUPERVISORES") &&
+            colunas.includes("REALIZADO POR") &&
+            colunas.includes("NOME MENSAGEM SMS")
         ) {
+
             return {
                 linha: linha,
                 colunas: colunas
@@ -574,7 +540,7 @@ function localizarCabecalho(valores) {
 
 
 // ======================================================
-// LOCALIZAR COLUNA
+// ENCONTRAR COLUNA
 // ======================================================
 
 function encontrarColuna(colunas, nomes) {
@@ -584,12 +550,47 @@ function encontrarColuna(colunas, nomes) {
 
     for (let i = 0; i < colunas.length; i++) {
 
-        if (procurados.includes(colunas[i])) {
+        if (
+            procurados.includes(colunas[i])
+        ) {
             return i;
         }
     }
 
     return -1;
+}
+
+
+// ======================================================
+// PEGAR COLUNA
+// ======================================================
+
+function pegarColuna(
+    valores,
+    linhaCabecalho,
+    coluna
+) {
+
+    const resultado = [];
+
+    for (
+        let linha = linhaCabecalho + 1;
+        linha < valores.length;
+        linha++
+    ) {
+
+        const valor =
+            valores[linha][coluna];
+
+        const texto =
+            limparTexto(valor);
+
+        if (texto !== "") {
+            resultado.push(texto);
+        }
+    }
+
+    return resultado;
 }
 
 
@@ -629,36 +630,7 @@ function limparTexto(valor) {
 
 
 // ======================================================
-// PEGAR COLUNA
-// ======================================================
-
-function pegarColuna(valores, linhaCabecalho, coluna) {
-
-    const resultado = [];
-
-    for (
-        let linha = linhaCabecalho + 1;
-        linha < valores.length;
-        linha++
-    ) {
-
-        const valor =
-            valores[linha][coluna];
-
-        const texto =
-            limparTexto(valor);
-
-        if (texto !== "") {
-            resultado.push(texto);
-        }
-    }
-
-    return resultado;
-}
-
-
-// ======================================================
-// DATALIST
+// DATALISTS
 // ======================================================
 
 function preencherDatalist(id, valores) {
@@ -685,7 +657,7 @@ function preencherDatalist(id, valores) {
 
 
 // ======================================================
-// MENSAGENS SMS
+// MENSAGENS
 // ======================================================
 
 function preencherMensagens() {
@@ -703,8 +675,9 @@ function preencherMensagens() {
         document.createElement("option");
 
     primeira.value = "";
+
     primeira.textContent =
-        configDados.mensagens.length > 0
+        configDados.mensagens.length
             ? "Selecione uma mensagem"
             : "Nenhuma mensagem SMS cadastrada";
 
@@ -725,7 +698,7 @@ function preencherMensagens() {
 
 
 // ======================================================
-// TEXTO DA MENSAGEM
+// TEXTO MENSAGEM
 // ======================================================
 
 function atualizarTextoMensagem() {
@@ -771,16 +744,10 @@ function atualizarContador(texto) {
     contador.textContent =
         `${tamanho}/${configDados.limiteSMS} caracteres`;
 
-    if (tamanho > configDados.limiteSMS) {
-
-        contador.style.color = "#a12626";
-        contador.style.fontWeight = "bold";
-
-    } else {
-
-        contador.style.color = "#666";
-        contador.style.fontWeight = "normal";
-    }
+    contador.style.color =
+        tamanho > configDados.limiteSMS
+            ? "#a12626"
+            : "#666";
 }
 
 
@@ -802,36 +769,36 @@ async function salvarSMS(evento) {
 
         const empresa =
             limparTexto(
-                document.getElementById("empresa")?.value
+                document.getElementById("empresa").value
             );
 
         const qtde =
-            limparTexto(
-                document.getElementById("qtde")?.value
-            );
+            document.getElementById("qtde").value;
 
         const supervisor =
             limparTexto(
-                document.getElementById("supervisor")?.value
+                document.getElementById("supervisor").value
             );
 
         const realizadoPor =
             limparTexto(
-                document.getElementById("realizadoPor")?.value
+                document.getElementById("realizadoPor").value
             );
 
         const obs =
             limparTexto(
-                document.getElementById("obs")?.value
+                document.getElementById("obs").value
             );
 
         const nomeMensagem =
             limparTexto(
-                document.getElementById("mensagem")?.value
+                document.getElementById("mensagem").value
             );
 
         const textoMensagem =
-            configDados.textosMensagens[nomeMensagem] || "";
+            configDados.textosMensagens[
+                nomeMensagem
+            ] || "";
 
 
         // ----------------------------------------------
@@ -839,28 +806,41 @@ async function salvarSMS(evento) {
         // ----------------------------------------------
 
         if (!empresa) {
-            throw new Error("Informe a empresa.");
+            throw new Error(
+                "Informe a empresa."
+            );
         }
 
-        if (!qtde || Number(qtde) <= 0) {
-            throw new Error("Informe uma quantidade válida.");
+        if (
+            !qtde ||
+            Number(qtde) <= 0
+        ) {
+            throw new Error(
+                "Informe uma quantidade válida."
+            );
         }
 
         if (!supervisor) {
-            throw new Error("Informe o supervisor.");
+            throw new Error(
+                "Informe o supervisor."
+            );
         }
 
         if (!realizadoPor) {
-            throw new Error("Informe quem realizou o registro.");
+            throw new Error(
+                "Informe o Realizado por."
+            );
         }
 
         if (!nomeMensagem) {
-            throw new Error("Selecione uma mensagem SMS.");
+            throw new Error(
+                "Selecione uma mensagem SMS."
+            );
         }
 
         if (!textoMensagem) {
             throw new Error(
-                "A mensagem selecionada não possui texto no Config."
+                "A mensagem selecionada não possui texto."
             );
         }
 
@@ -868,7 +848,6 @@ async function salvarSMS(evento) {
             textoMensagem.length >
             configDados.limiteSMS
         ) {
-
             throw new Error(
                 `A mensagem possui ${textoMensagem.length} caracteres. ` +
                 `O limite é ${configDados.limiteSMS}.`
@@ -877,7 +856,7 @@ async function salvarSMS(evento) {
 
 
         // ----------------------------------------------
-        // DATA E HORA
+        // DATA / HORA
         // ----------------------------------------------
 
         const data =
@@ -885,7 +864,10 @@ async function salvarSMS(evento) {
 
 
         // ----------------------------------------------
-        // GRAVAR
+        // SALVAR NA ABA SMS
+        //
+        // CABEÇALHO ESTÁ NA LINHA 2
+        // PRIMEIRO REGISTRO = LINHA 3
         // ----------------------------------------------
 
         await Excel.run(async function (context) {
@@ -893,34 +875,57 @@ async function salvarSMS(evento) {
             const planilha =
                 context.workbook.worksheets.getItem("SMS");
 
-            const usado =
-                planilha.getUsedRangeOrNullObject(true);
 
-            usado.load([
-                "isNullObject",
-                "rowIndex",
-                "rowCount",
-                "columnCount"
+            // Coluna A, a partir da linha 3
+            const colunaData =
+                planilha.getRange("A3:A1048576");
+
+            colunaData.load([
+                "values"
             ]);
 
             await context.sync();
 
 
-            let proximaLinha;
+            let proximaLinha = 3;
 
-            if (usado.isNullObject) {
 
-                proximaLinha = 0;
+            for (
+                let i = 0;
+                i < colunaData.values.length;
+                i++
+            ) {
 
-            } else {
+                const valor =
+                    colunaData.values[i][0];
 
-                proximaLinha =
-                    usado.rowIndex +
-                    usado.rowCount;
+                if (
+                    valor === null ||
+                    valor === undefined ||
+                    String(valor).trim() === ""
+                ) {
+
+                    proximaLinha =
+                        i + 3;
+
+                    break;
+                }
             }
 
 
-            const valores = [[
+            console.log(
+                "Gravando SMS na linha:",
+                proximaLinha
+            );
+
+
+            const destino =
+                planilha.getRange(
+                    `A${proximaLinha}:G${proximaLinha}`
+                );
+
+
+            destino.values = [[
                 data,
                 realizadoPor,
                 empresa,
@@ -930,17 +935,12 @@ async function salvarSMS(evento) {
                 textoMensagem
             ]];
 
-            const destino =
-                planilha.getRangeByIndexes(
-                    proximaLinha,
-                    0,
-                    1,
-                    7
-                );
-
-            destino.values = valores;
-
             await context.sync();
+
+
+            console.log(
+                "✓ SMS gravado com sucesso."
+            );
         });
 
 
@@ -948,33 +948,34 @@ async function salvarSMS(evento) {
         // ATUALIZAR CONFIG
         // ----------------------------------------------
 
-        await adicionarConfigSeNovo(
+        await adicionarConfig(
             "EMPRESAS",
             empresa
         );
 
-        await adicionarConfigSeNovo(
+        await adicionarConfig(
             "SUPERVISORES",
             supervisor
         );
 
-        await adicionarConfigSeNovo(
+        await adicionarConfig(
             "REALIZADO POR",
             realizadoPor
         );
 
 
+        // ----------------------------------------------
+        // SUCESSO
+        // ----------------------------------------------
+
         logStatus(
-            "✓ Registro SMS salvo com sucesso.",
+            "✓ SMS salvo com sucesso.",
             "sucesso"
         );
 
 
-        // ----------------------------------------------
-        // LIMPAR FORMULÁRIO
-        // ----------------------------------------------
-
         limparFormularioSMS();
+
 
     } catch (erro) {
 
@@ -984,7 +985,8 @@ async function salvarSMS(evento) {
         );
 
         logStatus(
-            "❌ " + escapeHtml(erro.message),
+            "❌ " +
+            escapeHtml(erro.message),
             "erro"
         );
 
@@ -996,10 +998,10 @@ async function salvarSMS(evento) {
 
 
 // ======================================================
-// ADICIONAR NOVO ITEM NO CONFIG
+// ADICIONAR NO CONFIG
 // ======================================================
 
-async function adicionarConfigSeNovo(
+async function adicionarConfig(
     nomeCabecalho,
     valorNovo
 ) {
@@ -1008,103 +1010,205 @@ async function adicionarConfigSeNovo(
         return;
     }
 
+
     try {
 
         await Excel.run(async function (context) {
 
-            const planilha =
+            const config =
                 context.workbook.worksheets.getItem("Config");
 
-            const usado =
-                planilha.getUsedRangeOrNullObject(true);
 
-            usado.load([
-                "isNullObject",
-                "values",
-                "rowIndex",
-                "rowCount",
-                "columnCount"
+            // Cabeçalho está na linha 2
+            const intervalo =
+                config.getRange("A2:I1048576");
+
+            intervalo.load([
+                "values"
             ]);
 
             await context.sync();
 
-            if (usado.isNullObject) {
-                return;
-            }
 
             const valores =
-                usado.values;
+                intervalo.values;
 
-            const cabecalho =
-                localizarCabecalho(valores);
 
-            if (!cabecalho) {
-                return;
+            // ------------------------------------------
+            // LOCALIZAR COLUNA
+            // ------------------------------------------
+
+            let coluna = -1;
+
+            const cabecalhos =
+                valores[0];
+
+
+            for (
+                let i = 0;
+                i < cabecalhos.length;
+                i++
+            ) {
+
+                if (
+                    normalizarCabecalho(
+                        cabecalhos[i]
+                    ) ===
+                    normalizarCabecalho(
+                        nomeCabecalho
+                    )
+                ) {
+
+                    coluna = i;
+                    break;
+                }
             }
 
-            const coluna =
-                encontrarColuna(
-                    cabecalho.colunas,
-                    [nomeCabecalho]
-                );
 
             if (coluna === -1) {
+
+                console.warn(
+                    `Coluna ${nomeCabecalho} não encontrada.`
+                );
+
                 return;
             }
 
-            const existente =
-                pegarColuna(
-                    valores,
-                    cabecalho.linha,
-                    coluna
-                );
 
-            const comparacao =
+            // ------------------------------------------
+            // VERIFICAR SE JÁ EXISTE
+            // ------------------------------------------
+
+            const valorComparar =
                 valorNovo
                     .trim()
                     .toUpperCase();
 
-            const jaExiste =
-                existente.some(function (valor) {
 
-                    return String(valor)
+            for (
+                let i = 1;
+                i < valores.length;
+                i++
+            ) {
+
+                const atual =
+                    valores[i][coluna];
+
+
+                if (
+                    atual !== null &&
+                    atual !== undefined &&
+                    String(atual)
                         .trim()
-                        .toUpperCase() === comparacao;
-                });
+                        .toUpperCase() ===
+                    valorComparar
+                ) {
 
-            if (jaExiste) {
-                return;
+                    console.log(
+                        `${nomeCabecalho} já existe:`,
+                        valorNovo
+                    );
+
+                    return;
+                }
             }
 
-            const linhaNova =
-                usado.rowIndex +
-                usado.rowCount;
+
+            // ------------------------------------------
+            // ENCONTRAR PRIMEIRA LINHA VAZIA
+            // ------------------------------------------
+
+            let linhaDestino = 3;
+
+
+            for (
+                let i = 1;
+                i < valores.length;
+                i++
+            ) {
+
+                const atual =
+                    valores[i][coluna];
+
+
+                if (
+                    atual === null ||
+                    atual === undefined ||
+                    String(atual).trim() === ""
+                ) {
+
+                    linhaDestino =
+                        i + 2;
+
+                    break;
+                }
+            }
+
+
+            console.log(
+                `Gravando ${nomeCabecalho} na linha ${linhaDestino}:`,
+                valorNovo
+            );
+
 
             const destino =
-                planilha.getRangeByIndexes(
-                    linhaNova,
-                    coluna,
-                    1,
-                    1
+                config.getRange(
+                    `${numeroParaColuna(coluna + 1)}${linhaDestino}`
                 );
 
-            destino.values = [[valorNovo]];
+
+            destino.values = [[
+                valorNovo
+            ]];
+
 
             await context.sync();
 
+
             console.log(
-                `Novo valor adicionado em ${nomeCabecalho}:`,
-                valorNovo
+                `✓ ${nomeCabecalho} salvo no Config.`
             );
         });
 
+
     } catch (erro) {
 
-        console.warn(
-            "Não foi possível atualizar Config:",
+        console.error(
+            `Erro ao salvar ${nomeCabecalho}:`,
             erro
         );
+
+        // Não interrompe o salvamento do SMS
+        // caso apenas o Config apresente problema.
     }
+}
+
+
+// ======================================================
+// CONVERTER NÚMERO PARA LETRA DA COLUNA
+// ======================================================
+
+function numeroParaColuna(numero) {
+
+    let resultado = "";
+
+    while (numero > 0) {
+
+        const resto =
+            (numero - 1) % 26;
+
+        resultado =
+            String.fromCharCode(
+                65 + resto
+            ) + resultado;
+
+        numero =
+            Math.floor(
+                (numero - 1) / 26
+            );
+    }
+
+    return resultado;
 }
 
 
@@ -1121,16 +1225,18 @@ function limparFormularioSMS() {
         form.reset();
     }
 
-    const realizadoPor =
+
+    const realizado =
         document.getElementById("realizadoPor");
 
     if (
-        realizadoPor &&
+        realizado &&
         nomeUsuarioSSO
     ) {
-        realizadoPor.value =
+        realizado.value =
             nomeUsuarioSSO;
     }
+
 
     const texto =
         document.getElementById("textoMensagem");
@@ -1138,6 +1244,7 @@ function limparFormularioSMS() {
     if (texto) {
         texto.value = "";
     }
+
 
     atualizarContador("");
 }
@@ -1153,7 +1260,9 @@ function formatarDataHora(data) {
         String(data.getDate()).padStart(2, "0");
 
     const mes =
-        String(data.getMonth() + 1).padStart(2, "0");
+        String(
+            data.getMonth() + 1
+        ).padStart(2, "0");
 
     const ano =
         data.getFullYear();
@@ -1172,7 +1281,7 @@ function formatarDataHora(data) {
 
 
 // ======================================================
-// HTML
+// ESCAPAR HTML
 // ======================================================
 
 function escapeHtml(valor) {
