@@ -1,934 +1,430 @@
-/* =========================================================
-   SMS - Office Add-in
-   Config:
-   A = EMPRESAS
-   B = EMAIL RESPOSTA
-   C = SUPERVISORES
-   D = REALIZADO POR
-   E = NOME MENSAGEM EMAIL
-   F = TEXTO MENSAGEM EMAIL
-   G = NOME MENSAGEM SMS
-   H = TEXTO MENSAGEM SMS
-   I = LIMITE SMS
+let configInfo = null;
+let mensagensSMS = [];
+let statusLog = [];
+let limiteSMS = 160;
 
-   Cabeçalho: linha 2
-   Dados: linha 3 em diante
-========================================================= */
+Office.onReady(async function () {
+    document.getElementById("btnVoltar").addEventListener("click", function () {
+        window.location.href = "taskpane.html";
+    });
 
-Office.onReady(function () {
+    document.getElementById("btnCancelar").addEventListener("click", limparFormulario);
+    document.getElementById("formSms").addEventListener("submit", salvarSMS);
+    document.getElementById("mensagem").addEventListener("change", mostrarTextoMensagem);
 
-    console.log("SMS iniciado.");
-
-    const form = document.getElementById("formSMS");
-    const btnSalvar = document.getElementById("btnSalvar");
-    const btnCancelar = document.getElementById("btnCancelar");
-
-    if (btnSalvar) {
-        // Evita que o botão dispare submit automaticamente
-        btnSalvar.type = "button";
-
-        btnSalvar.addEventListener("click", function (evento) {
-            evento.preventDefault();
-            salvarSMS();
-        });
-    }
-
-    if (form) {
-        form.addEventListener("submit", function (evento) {
-            evento.preventDefault();
-            salvarSMS();
-        });
-    }
-
-    if (btnCancelar) {
-        btnCancelar.addEventListener("click", function () {
-            limparFormulario();
-        });
-    }
-
-    carregarDadosConfig();
+    prepararLog();
+    await carregarDados();
 });
 
-
-/* =========================================================
-   FUNÇÕES AUXILIARES
-========================================================= */
-
-function logStatus(mensagem) {
-    const campo = document.getElementById("mensagemStatus");
-
-    if (campo) {
-        campo.textContent = mensagem;
-    }
-
-    console.log(mensagem);
+function prepararLog() {
+    const elemento = document.getElementById("mensagemStatus");
+    if (!elemento) return;
+    elemento.style.whiteSpace = "pre-line";
+    elemento.style.fontSize = "12px";
+    elemento.style.lineHeight = "1.4";
+    elemento.style.padding = "8px 10px";
+    elemento.style.marginBottom = "12px";
 }
 
-
-function obterValor(id) {
-    const elemento = document.getElementById(id);
-
-    if (!elemento) {
-        return "";
-    }
-
-    return elemento.value.trim();
+function atualizarLog() {
+    const elemento = document.getElementById("mensagemStatus");
+    if (!elemento) return;
+    elemento.style.whiteSpace = "pre-line";
+    elemento.style.fontSize = "12px";
+    elemento.style.lineHeight = "1.4";
+    elemento.textContent = statusLog.join("\n");
+    elemento.className = "status aviso";
 }
 
+function adicionarLog(texto) {
+    statusLog.push(texto);
+    atualizarLog();
+}
+
+function limparStatus() {
+    statusLog = [];
+    const elemento = document.getElementById("mensagemStatus");
+    if (!elemento) return;
+    elemento.textContent = "";
+    elemento.className = "status";
+}
+
+function mostrarStatus(texto, tipo) {
+    const elemento = document.getElementById("mensagemStatus");
+    if (!elemento) return;
+    elemento.textContent = texto;
+    elemento.className = "status " + tipo;
+}
+
+function limparFormulario() {
+    document.getElementById("formSms").reset();
+    document.getElementById("mensagem").selectedIndex = 0;
+    document.getElementById("textoMensagem").value = "";
+    atualizarContador();
+    limparStatus();
+    identificarUsuario();
+}
+
+function normalizar(valor) {
+    return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toUpperCase();
+}
+
+function obterIndice(mapa, nomes) {
+    for (const nome of nomes) {
+        const chave = normalizar(nome);
+        if (mapa[chave] !== undefined) return mapa[chave];
+    }
+    return -1;
+}
+
+function encontrarCabecalho(valores) {
+    for (let linha = 0; linha < Math.min(valores.length, 30); linha++) {
+        const mapa = {};
+        valores[linha].forEach(function (valor, indice) {
+            if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
+                mapa[normalizar(valor)] = indice;
+            }
+        });
+
+        const temEmpresa = obterIndice(mapa, ["EMPRESAS", "EMPRESA"]) !== -1;
+        const temSupervisor = obterIndice(mapa, ["SUPERVISORES", "SUPERVISOR"]) !== -1;
+
+        if (temEmpresa && temSupervisor) return { linha: linha, mapa: mapa };
+    }
+    return null;
+}
+
+function obterValoresColuna(valores, info, nomes) {
+    const indice = obterIndice(info.mapa, Array.isArray(nomes) ? nomes : [nomes]);
+    if (indice === -1) return [];
+    const resultado = [];
+    for (let linha = info.linha + 1; linha < valores.length; linha++) {
+        const valor = valores[linha][indice];
+        if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
+            resultado.push(String(valor).trim());
+        }
+    }
+    return [...new Set(resultado)];
+}
 
 function preencherLista(id, valores) {
-
     const lista = document.getElementById(id);
-
-    if (!lista) {
-        console.warn("Lista não encontrada:", id);
-        return;
-    }
-
+    if (!lista) return;
     lista.innerHTML = "";
-
     valores.forEach(function (valor) {
-
-        if (!valor) {
-            return;
-        }
-
         const option = document.createElement("option");
         option.value = valor;
-
         lista.appendChild(option);
     });
 }
 
-
-function valorUnico(valores) {
-
-    return [...new Set(
-        valores
-            .map(function (v) {
-                return String(v || "").trim();
-            })
-            .filter(function (v) {
-                return v !== "";
-            })
-    )];
-}
-
-
-/* =========================================================
-   CARREGAR CONFIG
-========================================================= */
-
-async function carregarDadosConfig() {
-
-    logStatus("Carregando Config...");
+async function carregarDados() {
+    limparStatus();
+    statusLog = [];
+    adicionarLog("● Conectando ao Config...");
 
     try {
-
         await Excel.run(async function (context) {
-
-            const config = context.workbook.worksheets.getItem("Config");
-
-            /*
-             * Linha 2 = cabeçalho
-             * Vamos ler diretamente A2:I1000.
-             */
-
-            const intervalo = config.getRange("A2:I1000");
-
-            intervalo.load("values");
-
+            const folha = context.workbook.worksheets.getItem("Config");
+            const usado = folha.getUsedRangeOrNullObject();
+            usado.load(["values", "rowCount", "columnCount", "rowIndex", "columnIndex", "isNullObject"]);
             await context.sync();
 
-            const dados = intervalo.values;
+            if (usado.isNullObject) throw new Error("A aba Config está vazia.");
 
-            if (!dados || dados.length === 0) {
-                throw new Error("Não foi possível ler a aba Config.");
-            }
+            configInfo = encontrarCabecalho(usado.values);
+            if (!configInfo) throw new Error("Cabeçalho do Config não encontrado.");
 
-            /*
-             * A primeira linha do intervalo A2:I1000
-             * corresponde à linha 2 da planilha.
-             */
+            const empresas = obterValoresColuna(usado.values, configInfo, ["EMPRESAS", "EMPRESA"]);
+            preencherLista("listaEmpresas", empresas);
+            adicionarLog(empresas.length > 0 ? "✓ Empresas " + empresas.length : "⚠ Empresas 0");
 
-            const cabecalho = dados[0].map(function (valor) {
-                return String(valor || "").trim().toUpperCase();
-            });
+            const supervisores = obterValoresColuna(usado.values, configInfo, ["SUPERVISORES", "SUPERVISOR"]);
+            preencherLista("listaSupervisores", supervisores);
+            adicionarLog(supervisores.length > 0 ? "✓ Supervisores " + supervisores.length : "⚠ Supervisores 0");
 
-            console.log("Cabeçalhos encontrados:", cabecalho);
+            const realizadoPor = obterValoresColuna(usado.values, configInfo, ["REALIZADO POR", "REALIZADO_POR", "REALIZADOPOR"]);
+            preencherLista("listaRealizadoPor", realizadoPor);
+            adicionarLog(realizadoPor.length > 0 ? "✓ Realizado por " + realizadoPor.length : "⚠ Realizado por 0");
 
-            /*
-             * Como sua estrutura é fixa, validamos
-             * diretamente a primeira linha.
-             */
-
-            if (cabecalho[0] !== "EMPRESAS") {
-                throw new Error(
-                    'A célula A2 deveria ser "EMPRESAS", mas foi encontrado: "' +
-                    cabecalho[0] +
-                    '"'
-                );
-            }
-
-            if (cabecalho[2] !== "SUPERVISORES") {
-                throw new Error(
-                    'A célula C2 deveria ser "SUPERVISORES", mas foi encontrado: "' +
-                    cabecalho[2] +
-                    '"'
-                );
-            }
-
-            if (cabecalho[3] !== "REALIZADO POR") {
-                throw new Error(
-                    'A célula D2 deveria ser "REALIZADO POR", mas foi encontrado: "' +
-                    cabecalho[3] +
-                    '"'
-                );
-            }
-
-            if (cabecalho[6] !== "NOME MENSAGEM SMS") {
-                throw new Error(
-                    'A célula G2 deveria ser "NOME MENSAGEM SMS", mas foi encontrado: "' +
-                    cabecalho[6] +
-                    '"'
-                );
-            }
-
-            /*
-             * Ignora a linha 2 e pega somente os dados.
-             */
-
-            const empresas = [];
-            const supervisores = [];
-            const realizadoPor = [];
-            const nomesMensagens = [];
-            const textosMensagens = [];
-
-            for (let i = 1; i < dados.length; i++) {
-
-                const linha = dados[i];
-
-                if (linha[0]) {
-                    empresas.push(String(linha[0]).trim());
-                }
-
-                if (linha[2]) {
-                    supervisores.push(String(linha[2]).trim());
-                }
-
-                if (linha[3]) {
-                    realizadoPor.push(String(linha[3]).trim());
-                }
-
-                if (linha[6]) {
-
-                    nomesMensagens.push(
-                        String(linha[6]).trim()
-                    );
-
-                    textosMensagens.push(
-                        String(linha[7] || "").trim()
-                    );
-                }
-            }
-
-            const empresasUnicas = valorUnico(empresas);
-            const supervisoresUnicos = valorUnico(supervisores);
-            const realizadoUnicos = valorUnico(realizadoPor);
-
-            preencherLista(
-                "listaEmpresas",
-                empresasUnicas
-            );
-
-            preencherLista(
-                "listaSupervisores",
-                supervisoresUnicos
-            );
-
-            preencherLista(
-                "listaRealizadoPor",
-                realizadoUnicos
-            );
-
-            /*
-             * Mensagens SMS
-             */
-
-            const listaMensagens =
-                document.getElementById("mensagem");
-
-            if (listaMensagens) {
-
-                listaMensagens.innerHTML =
-                    '<option value="">Selecione uma mensagem</option>';
-
-                for (let i = 0; i < nomesMensagens.length; i++) {
-
-                    const option =
-                        document.createElement("option");
-
-                    option.value = nomesMensagens[i];
-
-                    /*
-                     * Guarda o texto completo da mensagem.
-                     */
-
-                    option.dataset.texto =
-                        textosMensagens[i];
-
-                    option.textContent =
-                        nomesMensagens[i];
-
-                    listaMensagens.appendChild(option);
-                }
-            }
-
-            /*
-             * Também coloca o limite padrão de 160.
-             */
-
-            const campoMensagem =
-                document.getElementById("textoMensagem");
-
-            if (campoMensagem) {
-
-                campoMensagem.maxLength = 160;
-
-                campoMensagem.addEventListener(
-                    "input",
-                    atualizarContador
-                );
-            }
-
-            /*
-             * Quando escolher uma mensagem,
-             * preenche o texto completo.
-             */
-
-            if (listaMensagens) {
-
-                listaMensagens.addEventListener(
-                    "change",
-                    function () {
-
-                        const opcao =
-                            listaMensagens.options[
-                                listaMensagens.selectedIndex
-                            ];
-
-                        const texto =
-                            opcao?.dataset?.texto || "";
-
-                        if (campoMensagem) {
-                            campoMensagem.value = texto;
-                            atualizarContador();
-                        }
+            const indiceLimite = obterIndice(configInfo.mapa, ["LIMITE SMS", "LIMITE_SMS"]);
+            if (indiceLimite !== -1) {
+                for (let linha = configInfo.linha + 1; linha < usado.values.length; linha++) {
+                    const numero = Number(usado.values[linha][indiceLimite]);
+                    if (Number.isFinite(numero) && numero > 0) {
+                        limiteSMS = numero;
+                        break;
                     }
-                );
+                }
             }
 
-            logStatus("Config carregada.");
+            const campoMensagem = document.getElementById("textoMensagem");
+            campoMensagem.maxLength = limiteSMS;
+            atualizarContador();
 
+            carregarMensagensSMS(usado.values, configInfo);
         });
 
+        await identificarUsuario();
     } catch (erro) {
-
         console.error(erro);
-
-        logStatus(
-            "Erro ao carregar: " +
-            (erro.message || erro)
-        );
+        adicionarLog("⚠ Erro no Config");
+        mostrarStatus(statusLog.join("\n"), "aviso");
+        await identificarUsuario();
     }
 }
 
+function carregarMensagensSMS(valores, info) {
+    const indiceNome = obterIndice(info.mapa, ["NOME MENSAGEM SMS", "NOME MENSAGEM"]);
+    const indiceTexto = obterIndice(info.mapa, ["TEXTO MENSAGEM SMS", "TEXTO MENSAGEM"]);
+    const select = document.getElementById("mensagem");
 
-/* =========================================================
-   CONTADOR SMS
-========================================================= */
+    select.innerHTML = "";
+    mensagensSMS = [];
 
-function atualizarContador() {
-
-    const campo =
-        document.getElementById("textoMensagem");
-
-    const contador =
-        document.getElementById("contadorMensagem");
-
-    if (!campo) {
+    if (indiceNome === -1 || indiceTexto === -1) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Mensagens de SMS não encontradas";
+        select.appendChild(option);
+        adicionarLog("⚠ Mensagens de SMS 0");
         return;
     }
 
-    const quantidade =
-        campo.value.length;
+    const inicial = document.createElement("option");
+    inicial.value = "";
+    inicial.textContent = "Selecione uma mensagem";
+    select.appendChild(inicial);
 
-    if (contador) {
-
-        contador.textContent =
-            quantidade + " / 160";
+    for (let linha = info.linha + 1; linha < valores.length; linha++) {
+        const nome = valores[linha][indiceNome];
+        const texto = valores[linha][indiceTexto];
+        if (nome !== null && nome !== undefined && String(nome).trim() !== "") {
+            const mensagem = {
+                nome: String(nome).trim(),
+                texto: String(texto || "")
+            };
+            mensagensSMS.push(mensagem);
+            const option = document.createElement("option");
+            option.value = mensagem.nome;
+            option.textContent = mensagem.nome;
+            select.appendChild(option);
+        }
     }
 
-    if (quantidade > 160) {
+    adicionarLog(mensagensSMS.length > 0 ? "✓ Mensagens SMS " + mensagensSMS.length : "⚠ Mensagens SMS 0");
+}
 
-        campo.style.borderColor = "red";
+function mostrarTextoMensagem() {
+    const nome = document.getElementById("mensagem").value;
+    const mensagem = mensagensSMS.find(function (item) { return item.nome === nome; });
+    const campo = document.getElementById("textoMensagem");
+    campo.value = mensagem ? mensagem.texto : "";
+    atualizarContador();
+}
 
-    } else {
+function atualizarContador() {
+    const campo = document.getElementById("textoMensagem");
+    const contador = document.getElementById("contador");
+    if (!campo) return;
+    const quantidade = campo.value.length;
+    if (contador) contador.textContent = quantidade + " / " + limiteSMS;
+    campo.style.borderColor = quantidade > limiteSMS ? "red" : "";
+}
 
-        campo.style.borderColor = "";
+async function identificarUsuario() {
+    const campo = document.getElementById("realizadoPor");
+    try {
+        const token = await Office.auth.getAccessToken({
+            allowSignInPrompt: true,
+            allowConsentPrompt: true
+        });
+        const dados = decodificarToken(token);
+        const nome = dados.name || dados.preferred_username || dados.email || dados.upn;
+        if (nome) {
+            campo.value = nome;
+            campo.readOnly = false;
+            adicionarLog("✓ SSO: " + nome);
+        } else {
+            adicionarLog("⚠ SSO sem nome");
+        }
+    } catch (erro) {
+        console.error(erro);
+        campo.readOnly = false;
+        adicionarLog("⚠ SSO não identificado");
     }
 }
 
+function decodificarToken(token) {
+    const partes = token.split(".");
+    if (partes.length !== 3) throw new Error("Token inválido.");
+    let payload = partes[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (payload.length % 4 !== 0) payload += "=";
+    return JSON.parse(decodeURIComponent(atob(payload).split("").map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join("")));
+}
 
-/* =========================================================
-   SALVAR SMS
-========================================================= */
+function obterDataHoraAtual() {
+    const agora = new Date();
+    return String(agora.getDate()).padStart(2, "0") + "/" +
+        String(agora.getMonth() + 1).padStart(2, "0") + "/" +
+        agora.getFullYear() + " " +
+        String(agora.getHours()).padStart(2, "0") + ":" +
+        String(agora.getMinutes()).padStart(2, "0") + ":" +
+        String(agora.getSeconds()).padStart(2, "0");
+}
 
-async function salvarSMS() {
+async function salvarSMS(event) {
+    event.preventDefault();
 
-    logStatus("Iniciando salvamento...");
+    const btn = document.getElementById("btnSalvar");
+    btn.disabled = true;
+    btn.textContent = "Salvando...";
+    limparStatus();
 
     try {
+        const realizadoPor = document.getElementById("realizadoPor").value.trim();
+        const empresa = document.getElementById("empresa").value.trim();
+        const qtde = document.getElementById("qtde").value.trim();
+        const supervisor = document.getElementById("supervisor").value.trim();
+        const obs = document.getElementById("obs").value.trim();
+        const nomeMensagem = document.getElementById("mensagem").value;
+        const textoMensagem = document.getElementById("textoMensagem").value;
 
-        /*
-         * CAPTURA DOS CAMPOS
-         */
-
-        const empresa =
-            obterValor("empresa");
-
-        const qtde =
-            obterValor("qtde");
-
-        const supervisor =
-            obterValor("supervisor");
-
-        const obs =
-            obterValor("obs");
-
-        const mensagemSelect =
-            document.getElementById("mensagem");
-
-        const textoMensagem =
-            obterValor("textoMensagem");
-
-        let nomeMensagem = "";
-
-        if (mensagemSelect) {
-            nomeMensagem =
-                mensagemSelect.value.trim();
-        }
-
-
-        /*
-         * VALIDAÇÕES
-         */
-
-        if (!empresa) {
-            logStatus("Informe a empresa.");
-            return;
-        }
-
-        if (!qtde) {
-            logStatus("Informe a quantidade.");
-            return;
-        }
-
-        const quantidadeNumero =
-            Number(qtde);
-
-        if (
-            !Number.isInteger(quantidadeNumero) ||
-            quantidadeNumero <= 0
-        ) {
-            logStatus(
-                "A quantidade deve ser um número inteiro maior que zero."
-            );
-            return;
-        }
-
-        if (!supervisor) {
-            logStatus("Informe o supervisor.");
-            return;
-        }
-
-        if (!textoMensagem) {
-            logStatus("Informe a mensagem.");
-            return;
-        }
-
-        if (textoMensagem.length > 160) {
-
-            logStatus(
-                "A mensagem possui " +
-                textoMensagem.length +
-                " caracteres. O limite é 160."
-            );
-
-            return;
-        }
-
-
-        /*
-         * REALIZADO POR
-         */
-
-        let realizadoPor =
-            obterValor("realizadoPor");
-
-        /*
-         * Tenta pegar automaticamente
-         * a conta Microsoft logada.
-         */
-
-        if (!realizadoPor) {
-
-            try {
-
-                const token =
-                    await OfficeRuntime.auth.getAccessToken({
-                        allowSignInPrompt: true,
-                        allowConsentPrompt: true
-                    });
-
-                if (token) {
-
-                    /*
-                     * O token existe, mas não precisamos
-                     * decodificar aqui.
-                     *
-                     * Se o campo estiver vazio,
-                     * mantemos a possibilidade de
-                     * preenchimento manual.
-                     */
-
-                    console.log(
-                        "Token Microsoft obtido."
-                    );
-                }
-
-            } catch (erroSSO) {
-
-                console.warn(
-                    "Não foi possível obter o usuário automaticamente.",
-                    erroSSO
-                );
-            }
-        }
-
-
-        /*
-         * DATA + HORA
-         */
-
-        const agora =
-            new Date();
-
-        const dataHora =
-            formatarDataHora(agora);
-
-
-        logStatus("1/4 - Preparando dados...");
-
-
-        /*
-         * SALVAR NA ABA SMS
-         */
+        if (!empresa) throw new Error("Informe a empresa.");
+        if (!qtde || Number(qtde) <= 0 || !Number.isInteger(Number(qtde))) throw new Error("A Qtde deve ser um número inteiro maior que zero.");
+        if (!supervisor) throw new Error("Informe o Supervisor.");
+        if (!nomeMensagem) throw new Error("Selecione uma mensagem.");
+        if (!textoMensagem) throw new Error("A mensagem selecionada não possui texto.");
+        if (textoMensagem.length > limiteSMS) throw new Error("A mensagem possui " + textoMensagem.length + " caracteres. O limite é " + limiteSMS + ".");
 
         await Excel.run(async function (context) {
-
-            const sheet =
-                context.workbook.worksheets.getItem("SMS");
-
-            /*
-             * Descobre a próxima linha usada.
-             */
-
-            const usado =
-                sheet.getUsedRangeOrNullObject(true);
-
-            usado.load([
-                "isNullObject",
-                "rowIndex",
-                "rowCount"
-            ]);
-
-            await context.sync();
-
-            let linhaDestino;
-
-            if (usado.isNullObject) {
-
-                /*
-                 * Linha 3
-                 * índice zero-based = 2
-                 */
-
-                linhaDestino = 2;
-
-            } else {
-
-                /*
-                 * Próxima linha depois da usada.
-                 */
-
-                linhaDestino =
-                    usado.rowIndex +
-                    usado.rowCount;
-
-                /*
-                 * Nunca salvar acima da linha 3.
-                 */
-
-                if (linhaDestino < 2) {
-                    linhaDestino = 2;
-                }
-            }
-
-
-            logStatus("2/4 - Salvando na aba SMS...");
-
-
-            /*
-             * A:G
-             *
-             * A Data
-             * B Realizado por
-             * C Empresa
-             * D Qtde
-             * E Supervisor
-             * F Obs
-             * G Mensagem
-             */
-
-            const destino =
-                sheet.getRangeByIndexes(
-                    linhaDestino,
-                    0,
-                    1,
-                    7
-                );
-
-            destino.values = [[
-                dataHora,
+            await adicionarRegistroSMS(context, {
                 realizadoPor,
                 empresa,
-                quantidadeNumero,
+                qtde: Number(qtde),
                 supervisor,
                 obs,
                 textoMensagem
-            ]];
+            });
+
+            await atualizarConfigSMS(context, {
+                empresa,
+                supervisor,
+                realizadoPor
+            });
 
             await context.sync();
-
-
-            /*
-             * Confirma a gravação.
-             */
-
-            destino.load("values");
-
-            await context.sync();
-
-            console.log(
-                "SMS salvo:",
-                destino.values
-            );
-
-
-            logStatus("3/4 - Atualizando Config...");
-
         });
 
-
-        /*
-         * ATUALIZAR CONFIG
-         */
-
-        await adicionarConfig(
-            "EMPRESAS",
-            empresa
-        );
-
-        await adicionarConfig(
-            "SUPERVISORES",
-            supervisor
-        );
-
-        if (realizadoPor) {
-
-            await adicionarConfig(
-                "REALIZADO POR",
-                realizadoPor
-            );
-        }
-
-
-        logStatus(
-            "4/4 - SMS salvo com sucesso!"
-        );
-
-
-        /*
-         * LIMPA O FORMULÁRIO
-         */
-
-        limparFormulario();
-
-
+        mostrarStatus("✓ Registro de SMS salvo!", "sucesso");
+        document.getElementById("formSms").reset();
+        document.getElementById("mensagem").selectedIndex = 0;
+        document.getElementById("textoMensagem").value = "";
+        atualizarContador();
+        await identificarUsuario();
     } catch (erro) {
-
-        console.error(
-            "ERRO AO SALVAR SMS:",
-            erro
-        );
-
-        logStatus(
-            "Erro ao salvar: " +
-            (erro.message || erro)
-        );
+        console.error(erro);
+        mostrarStatus(erro.message || "Erro ao salvar.", "erro");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Salvar";
     }
 }
 
+async function adicionarRegistroSMS(context, dados) {
+    const folha = context.workbook.worksheets.getItem("SMS");
+    const usado = folha.getUsedRangeOrNullObject();
+    usado.load(["values", "rowCount", "columnCount", "isNullObject", "rowIndex"]);
+    await context.sync();
 
-/* =========================================================
-   ADICIONAR VALOR NA CONFIG
-========================================================= */
+    let linhaCabecalho = -1;
+    let mapa = {};
 
-async function adicionarConfig(
-    coluna,
-    valor
-) {
-
-    if (!valor) {
-        return;
-    }
-
-    await Excel.run(async function (context) {
-
-        const config =
-            context.workbook.worksheets.getItem("Config");
-
-        /*
-         * Define a coluna pela estrutura fixa.
-         */
-
-        let numeroColuna;
-
-        if (coluna === "EMPRESAS") {
-
-            numeroColuna = 0;
-
-        } else if (coluna === "SUPERVISORES") {
-
-            numeroColuna = 2;
-
-        } else if (coluna === "REALIZADO POR") {
-
-            numeroColuna = 3;
-
-        } else {
-
-            return;
-        }
-
-
-        /*
-         * Lê a coluna usada para verificar duplicidade.
-         */
-
-        const usado =
-            config.getUsedRangeOrNullObject(true);
-
-        usado.load([
-            "isNullObject",
-            "rowIndex",
-            "rowCount",
-            "values"
-        ]);
-
-        await context.sync();
-
-
-        /*
-         * Verifica se já existe.
-         */
-
-        if (!usado.isNullObject) {
-
-            const valores =
-                usado.values || [];
-
-            for (
-                let i = 0;
-                i < valores.length;
-                i++
-            ) {
-
-                /*
-                 * Converte o índice da coluna
-                 * dentro do UsedRange.
-                 */
-
-                const indiceColuna =
-                    numeroColuna -
-                    usado.columnIndex;
-
-                if (
-                    indiceColuna >= 0 &&
-                    indiceColuna <
-                    valores[i].length
-                ) {
-
-                    const existente =
-                        String(
-                            valores[i][indiceColuna] || ""
-                        )
-                        .trim()
-                        .toLowerCase();
-
-                    if (
-                        existente ===
-                        String(valor)
-                            .trim()
-                            .toLowerCase()
-                    ) {
-
-                        console.log(
-                            valor +
-                            " já existe em " +
-                            coluna
-                        );
-
-                        return;
-                    }
+    if (!usado.isNullObject) {
+        for (let linha = 0; linha < Math.min(usado.values.length, 20); linha++) {
+            const atual = {};
+            usado.values[linha].forEach(function (valor, indice) {
+                if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
+                    atual[normalizar(valor)] = indice;
                 }
+            });
+            if (atual["EMPRESA"] !== undefined && (atual["DATA"] !== undefined || atual["REALIZADO POR"] !== undefined)) {
+                linhaCabecalho = linha;
+                mapa = atual;
+                break;
             }
         }
+    }
 
+    if (linhaCabecalho === -1) {
+        folha.getRange("A1:G1").values = [["Data", "Realizado por", "Empresa", "Qtde", "Supervisor", "Obs.", "Mensagem"]];
+        linhaCabecalho = 0;
+        ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "SUPERVISOR", "OBS.", "MENSAGEM"].forEach(function (nome, indice) {
+            mapa[nome] = indice;
+        });
+    }
 
-        /*
-         * Próxima linha disponível.
-         */
+    const numeroColunas = Math.max(7, usado.isNullObject ? 7 : usado.columnCount);
+    const valores = new Array(numeroColunas).fill("");
 
-        let linhaDestino;
+    function colocar(nomes, valor) {
+        const indice = obterIndice(mapa, nomes);
+        if (indice !== -1) valores[indice] = valor;
+    }
 
-        if (usado.isNullObject) {
+    colocar(["DATA"], obterDataHoraAtual());
+    colocar(["REALIZADO POR"], dados.realizadoPor);
+    colocar(["EMPRESA"], dados.empresa);
+    colocar(["QTDE"], dados.qtde);
+    colocar(["SUPERVISOR"], dados.supervisor);
+    colocar(["OBS", "OBS."], dados.obs);
+    colocar(["MENSAGEM"], dados.textoMensagem);
 
-            /*
-             * Linha 3
-             */
-
-            linhaDestino = 2;
-
-        } else {
-
-            linhaDestino =
-                usado.rowIndex +
-                usado.rowCount;
-
-            if (linhaDestino < 2) {
-                linhaDestino = 2;
-            }
-        }
-
-
-        const destino =
-            config.getRangeByIndexes(
-                linhaDestino,
-                numeroColuna,
-                1,
-                1
-            );
-
-        destino.values = [[valor]];
-
-        await context.sync();
-
-        console.log(
-            "Config atualizada:",
-            coluna,
-            valor
-        );
-    });
+    const proximaLinha = usado.isNullObject ? 1 : usado.rowIndex + usado.rowCount;
+    folha.getRangeByIndexes(proximaLinha, 0, 1, numeroColunas).values = [valores];
 }
 
+async function atualizarConfigSMS(context, dados) {
+    const folha = context.workbook.worksheets.getItem("Config");
+    const usado = folha.getUsedRangeOrNullObject();
+    usado.load(["values", "rowCount", "isNullObject", "rowIndex", "columnIndex"]);
+    await context.sync();
+    if (usado.isNullObject) return;
 
-/* =========================================================
-   DATA E HORA
-========================================================= */
+    const info = encontrarCabecalho(usado.values);
+    if (!info) return;
 
-function formatarDataHora(data) {
-
-    const dia =
-        String(data.getDate()).padStart(2, "0");
-
-    const mes =
-        String(data.getMonth() + 1).padStart(2, "0");
-
-    const ano =
-        data.getFullYear();
-
-    const hora =
-        String(data.getHours()).padStart(2, "0");
-
-    const minuto =
-        String(data.getMinutes()).padStart(2, "0");
-
-    const segundo =
-        String(data.getSeconds()).padStart(2, "0");
-
-    return (
-        dia +
-        "/" +
-        mes +
-        "/" +
-        ano +
-        " " +
-        hora +
-        ":" +
-        minuto +
-        ":" +
-        segundo
-    );
-}
-
-
-/* =========================================================
-   LIMPAR FORMULÁRIO
-========================================================= */
-
-function limparFormulario() {
-
-    const ids = [
-        "empresa",
-        "qtde",
-        "supervisor",
-        "obs",
-        "textoMensagem"
+    const campos = [
+        { nomes: ["EMPRESAS", "EMPRESA"], valor: dados.empresa },
+        { nomes: ["SUPERVISORES", "SUPERVISOR"], valor: dados.supervisor },
+        { nomes: ["REALIZADO POR", "REALIZADO_POR", "REALIZADOPOR"], valor: dados.realizadoPor }
     ];
 
-    ids.forEach(function (id) {
+    for (const campo of campos) {
+        if (!campo.valor) continue;
+        const coluna = obterIndice(info.mapa, campo.nomes);
+        if (coluna === -1) continue;
 
-        const campo =
-            document.getElementById(id);
-
-        if (campo) {
-            campo.value = "";
+        let existe = false;
+        for (let linha = info.linha + 1; linha < usado.values.length; linha++) {
+            if (normalizar(usado.values[linha][coluna]) === normalizar(campo.valor)) {
+                existe = true;
+                break;
+            }
         }
-    });
+        if (existe) continue;
 
+        let linhaDestino = info.linha + 1;
+        while (linhaDestino < usado.values.length && String(usado.values[linhaDestino][coluna] || "").trim() !== "") {
+            linhaDestino++;
+        }
 
-    const mensagem =
-        document.getElementById("mensagem");
-
-    if (mensagem) {
-        mensagem.selectedIndex = 0;
+        folha.getRangeByIndexes(usado.rowIndex + linhaDestino, coluna, 1, 1).values = [[campo.valor]];
     }
-
-
-    atualizarContador();
-
-
-    logStatus("Formulário limpo.");
 }
