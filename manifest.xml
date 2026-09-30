@@ -12,8 +12,8 @@
   <ProviderName>Excelência Cobrança</ProviderName>
   <DefaultLocale>pt-BR</DefaultLocale>
 
-  <DisplayName DefaultValue="Registro de Envio"/>
-  <Description DefaultValue="Painel para registrar envios feitos no Konfiansa de Email e SMS do Campo CAMPANHA onde consta os campos Email em lote e SMS/Ura em Lote."/>
+  <DisplayName DefaultValue="Registros de Envios"/>
+  <Description DefaultValue="Painel para registrar envios de Email."/>
 
   <IconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-80.png"/>
