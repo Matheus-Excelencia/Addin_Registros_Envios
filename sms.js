@@ -293,12 +293,14 @@ async function salvarSMS(event) {
         const qtde = document.getElementById("qtde").value.trim();
         const supervisor = document.getElementById("supervisor").value.trim();
         const obs = document.getElementById("obs").value.trim();
+        const historicoExterno = document.getElementById("historicoExterno").value.trim();
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
 
         if (!empresa) throw new Error("Informe a empresa.");
         if (!qtde || Number(qtde) <= 0 || !Number.isInteger(Number(qtde))) throw new Error("A Qtde deve ser um número inteiro maior que zero.");
         if (!supervisor) throw new Error("Informe o Supervisor.");
+        if (!historicoExterno) throw new Error("Informe o Histórico Externo.");
         if (!nomeMensagem) throw new Error("Selecione uma mensagem.");
         if (!textoMensagem) throw new Error("A mensagem selecionada não possui texto.");
         if (textoMensagem.length > limiteSMS) throw new Error("A mensagem possui " + textoMensagem.length + " caracteres. O limite é " + limiteSMS + ".");
@@ -310,6 +312,7 @@ async function salvarSMS(event) {
                 qtde: Number(qtde),
                 supervisor,
                 obs,
+                historicoExterno,
                 textoMensagem
             });
 
@@ -363,14 +366,14 @@ async function adicionarRegistroSMS(context, dados) {
     }
 
     if (linhaCabecalho === -1) {
-        folha.getRange("A1:G1").values = [["Data", "Realizado por", "Empresa", "Qtde", "Supervisor", "Obs.", "Mensagem"]];
+        folha.getRange("A1:H1").values = [["Data", "Realizado por", "Empresa", "Qtde", "Supervisor", "Obs.", "Historico Externo", "Mensagem"]];
         linhaCabecalho = 0;
-        ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "SUPERVISOR", "OBS.", "MENSAGEM"].forEach(function (nome, indice) {
+        ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "SUPERVISOR", "OBS.", "HISTORICO EXTERNO", "MENSAGEM"].forEach(function (nome, indice) {
             mapa[nome] = indice;
         });
     }
 
-    const numeroColunas = Math.max(7, usado.isNullObject ? 7 : usado.columnCount);
+    const numeroColunas = Math.max(8, usado.isNullObject ? 8 : usado.columnCount);
     const valores = new Array(numeroColunas).fill("");
 
     function colocar(nomes, valor) {
@@ -384,6 +387,7 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["QTDE"], dados.qtde);
     colocar(["SUPERVISOR"], dados.supervisor);
     colocar(["OBS", "OBS."], dados.obs);
+    colocar(["HISTORICO EXTERNO", "HISTÓRICO EXTERNO", "HISTORICOEXTERNO", "HISTÓRICOEXTERNO"], dados.historicoExterno);
     colocar(["MENSAGEM"], dados.textoMensagem);
 
     const proximaLinha = usado.isNullObject ? 1 : usado.rowIndex + usado.rowCount;
