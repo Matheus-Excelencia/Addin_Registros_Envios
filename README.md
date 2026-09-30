@@ -543,28 +543,3 @@ Dados auxiliares e mensagens
 Alterações futuras devem respeitar essa separação para reduzir o risco de impactos entre os módulos.
 
 ---
-
-# ✅ Checklist de funcionamento
-
-Antes de considerar uma nova versão pronta:
-
-- [ ] Add-in abre no Excel Web
-- [ ] Tela inicial funciona
-- [ ] Módulo E-mail abre
-- [ ] Módulo SMS abre
-- [ ] Data e hora são registradas
-- [ ] Identificação do usuário funciona
-- [ ] Campo Empresa funciona
-- [ ] Campo Supervisor funciona
-- [ ] Campo Email Resposta funciona
-- [ ] Historico Externo funciona
-- [ ] Campo Mensagem funciona
-- [ ] Campo Assunto funciona
-- [ ] Campo Quantidade funciona
-- [ ] Limite de 160 caracteres do SMS funciona
-- [ ] Registro é salvo na aba correta
-- [ ] Config é atualizada corretamente quando necessário
-- [ ] Mensagens de E-mail e SMS continuam independentes
-- [ ] Registros anteriores não são sobrescritos
-- [ ] README está atualizado
-- [ ] Alterações foram registradas no Git
