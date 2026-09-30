@@ -1,278 +1,136 @@
-# 📋 Add-in — Registros de Envios
+# Registro de Envios — Office Add-in para Excel Web
 
-Office Add-in para **Excel Web** desenvolvido para registrar e organizar os envios de E-mail e SMS/URA realizados no sistema **Konfiansa**.
+Office Add-in desenvolvido para **Excel Web / Microsoft 365** com o objetivo de registrar, padronizar e centralizar os envios de **E-mail** e **SMS/URA** realizados no sistema **Konfiansa**.
 
-O Add-in disponibiliza um painel lateral dentro do Excel para registrar os envios realizados e manter um histórico centralizado no arquivo `Registros de Envios.xlsx`.
+O projeto utiliza uma arquitetura baseada em **Office Add-ins**, com **Task Pane**, JavaScript e integração direta com a pasta de trabalho do Excel por meio da **Excel JavaScript API**.
 
----
-
-# 🚀 Como instalar no Excel Web
-
-## 1. Abra o Excel Web
-
-Abra o **Excel para a Web / Microsoft 365** e o arquivo:
-
-```
-Registros de Envios.xlsx
-```
-
-## 2. Abra os Suplementos
-
-No Excel Web, acesse:
-
-**Início → Suplementos → Avançado**
-
-Dependendo da versão do Excel, a opção também pode aparecer em:
-
-**Inserir → Suplementos → Mais Suplementos**
-
-## 3. Carregue o Add-in
-
-Selecione:
-
-**Carregar meu suplemento**
-
-Depois escolha:
-
-**Carregar de um arquivo**
-
-## 4. Selecione o `manifest.xml`
-
-Selecione o arquivo `manifest.xml` localizado na pasta principal do projeto.
-
-O manifesto contém as configurações do Add-in e o endereço da aplicação web hospedada.
-
-## 5. Abra o Add-in
-
-Depois de carregá-lo, abra **Registros de Envios**.
-
-O painel lateral apresenta:
-
-- 📧 **E-mail**
-- 📱 **SMS**
-
-> Caso a opção **Carregar meu suplemento** não esteja disponível, o carregamento de Add-ins personalizados pode estar restrito pelas configurações do Microsoft 365 da organização.
+> **Documentação técnica do projeto:** [Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQCWHNmJGBi_R5tA79npAMo9AdartnTpMtqaM0UFbAeXiAk?e=tDYYkV)
 
 ---
 
-# 🎯 Objetivo do projeto
+## 1. Visão geral
 
-O objetivo do projeto é manter um controle centralizado dos envios realizados no **Konfiansa**, especificamente através da área **CAMPANHA**:
+O Add-in funciona como uma camada de registro operacional após a execução dos disparos no Konfiansa.
 
-- 📧 **E-mail em Lote**
-- 📱 **SMS/URA em Lote**
+O disparo das mensagens **não é realizado pelo Add-in**. O processo de envio permanece no Konfiansa, enquanto o Add-in é responsável pelo registro estruturado das informações no arquivo `Registros de Envios.xlsx`.
 
-O Add-in **não realiza o disparo das mensagens no Konfiansa**. O envio continua sendo realizado diretamente no sistema Konfiansa.
-
-O Add-in é utilizado para:
-
-- Registrar os envios realizados;
-- Padronizar os registros;
-- Manter histórico;
-- Organizar as informações;
-- Facilitar consultas futuras;
-- Centralizar os registros de E-mail e SMS no Excel.
-
----
-
-# 🔄 Fluxo do processo
+### Fluxo de negócio
 
 ```
-                         KONFIANSA
-                             │
-                             ▼
-                          CAMPANHA
-                             │
-                  ┌──────────┴──────────┐
-                  ▼                     ▼
-             E-mail em Lote       SMS/URA em Lote
-                  │                     │
-                  ▼                     ▼
-             Envio realizado       Envio realizado
-                  │                     │
-                  └──────────┬──────────┘
-                             ▼
-                    REGISTROS DE ENVIOS
-                             │
-                  ┌──────────┴──────────┐
-                  ▼                     ▼
-               Aba Email             Aba SMS
+Konfiansa
+   │
+   ▼
+CAMPANHA
+   ├── E-mail em Lote
+   └── SMS/URA em Lote
+          │
+          ▼
+      Envio realizado
+          │
+          ▼
+   Registros de Envios
+          │
+     ┌────┴────┐
+     ▼         ▼
+   Email      SMS
 ```
 
 ---
 
-# 📧 E-mail em Lote
+## 2. Objetivos técnicos
 
-No Konfiansa:
+O projeto foi estruturado para:
 
-```
-CAMPANHA → E-mail em Lote
-```
-
-Após realizar o envio, o usuário abre:
-
-```
-Registros de Envios
-        ↓
-      E-mail
-```
-
-O envio realizado é então registrado na aba **Email**.
-
-## Estrutura da aba Email
-
-| Coluna | Campo |
-|---|---|
-| A | Data |
-| B | Realizado por |
-| C | Empresa |
-| D | Qtde |
-| E | Email Resposta |
-| F | Supervisor |
-| G | Obs |
-| H | Historico Externo |
-| I | Mensagem |
-| J | Assunto |
-
-## Regras do formulário de E-mail
-
-- **Data:** registra automaticamente a data e a hora no momento do salvamento.
-- **Realizado por:** tenta identificar automaticamente o usuário conectado ao Microsoft 365.
-- **Empresa:** obrigatório; permite selecionar uma empresa existente ou informar uma nova.
-- **Qtde:** quantidade obrigatória.
-- **Email Resposta:** obrigatório; permite selecionar um e-mail existente ou informar um novo.
-- **Supervisor:** obrigatório; permite selecionar um supervisor existente ou informar um novo.
-- **Obs:** opcional.
-- **Historico Externo:** obrigatório.
-- **Mensagem:** obrigatória; o usuário seleciona o nome da mensagem e o texto completo configurado é armazenado.
-- **Assunto:** obrigatório.
+- Centralizar os registros de disparos realizados;
+- Padronizar os dados armazenados no Excel;
+- Separar a operação de E-mail da operação de SMS;
+- Utilizar uma configuração centralizada na aba `Config`;
+- Reduzir digitação repetitiva por meio de listas configuráveis;
+- Registrar automaticamente data e hora;
+- Identificar o usuário do Microsoft 365 quando a plataforma disponibilizar essa informação;
+- Validar os dados antes da gravação;
+- Preservar registros existentes durante novas inserções;
+- Permitir manutenção e evolução independente dos módulos.
 
 ---
 
-# 📱 SMS/URA em Lote
+# 3. Plataforma e arquitetura
 
-No Konfiansa:
+### Plataforma oficial
 
-```
-CAMPANHA → SMS/URA em Lote
-```
+O projeto é destinado ao:
 
-Após realizar o envio, o usuário abre:
+**Excel para a Web / Microsoft 365**
 
-```
-Registros de Envios
-        ↓
-       SMS
-```
+A aplicação utiliza um **Office Add-in** carregado como painel lateral dentro do Excel.
 
-O envio realizado é então registrado na aba **SMS**.
-
-## Estrutura da aba SMS
-
-| Coluna | Campo |
-|---|---|
-| A | Data |
-| B | Realizado por |
-| C | Empresa |
-| D | Qtde |
-| E | Supervisor |
-| F | Obs |
-| G | Historico Externo |
-| H | Mensagem |
-
-## Regras do formulário de SMS
-
-- **Data:** registra automaticamente a data e a hora no momento do salvamento.
-- **Realizado por:** tenta identificar automaticamente o usuário conectado ao Microsoft 365.
-- **Empresa:** obrigatório; permite selecionar uma empresa existente ou informar uma nova.
-- **Qtde:** quantidade obrigatória.
-- **Supervisor:** obrigatório; permite selecionar um supervisor existente ou informar um novo.
-- **Obs:** opcional.
-- **Historico Externo:** obrigatório e armazenado na coluna G.
-- **Mensagem:** obrigatória e armazenada na coluna H.
-
-## Limite de caracteres do SMS
-
-O módulo de SMS possui limite máximo de:
+### Componentes
 
 ```
-160 caracteres
+Excel Web
+   │
+   ├── Office Add-in
+   │      │
+   │      ├── Manifest
+   │      ├── Task Pane
+   │      ├── Módulo E-mail
+   │      └── Módulo SMS
+   │
+   └── Excel JavaScript API
+          │
+          ▼
+   Registros de Envios.xlsx
+          │
+          ├── Email
+          ├── SMS
+          └── Config
 ```
 
-O formulário apresenta um contador de caracteres.
+### Hospedagem
 
-Quando a mensagem ultrapassa 160 caracteres:
+A aplicação web do Add-in é hospedada na **Vercel**:
 
-- O salvamento é bloqueado;
-- A mensagem não é cortada automaticamente;
-- O usuário precisa corrigir o texto ou selecionar outra mensagem.
+```
+https://addin-registros-envios.vercel.app/
+```
 
-> Mensagens que possuem variáveis, como `[NomCliente]`, podem ficar maiores após a substituição pelo valor real.
+O `manifest.xml` referencia a aplicação hospedada e define as configurações utilizadas pelo Office para carregar o Add-in.
 
 ---
 
-# ⚙️ Aba Config
+# 4. Instalação no Excel Web
 
-A aba `Config` centraliza as informações utilizadas pelos formulários.
+## Pré-requisitos
 
-| Coluna | Campo |
-|---|---|
-| A | EMPRESAS |
-| B | EMAIL RESPOSTA |
-| C | SUPERVISORES |
-| D | REALIZADO POR |
-| E | NOME MENSAGEM EMAIL |
-| F | TEXTO MENSAGEM EMAIL |
-| G | NOME MENSAGEM SMS |
-| H | TEXTO MENSAGEM SMS |
-| I | LIMITE SMS |
+- Microsoft 365;
+- Excel para a Web;
+- Acesso ao arquivo `Registros de Envios.xlsx`;
+- Arquivo `manifest.xml` do projeto;
+- Permissão para carregar Add-ins personalizados na organização.
 
-## Atualização da Config
+## Instalação
 
-Quando suportado pelo formulário, novos:
+1. Abrir o **Excel Web**.
+2. Abrir o arquivo `Registros de Envios.xlsx`.
+3. Acessar **Início → Suplementos → Avançado**.
+4. Selecionar **Carregar meu suplemento**.
+5. Escolher **Carregar de um arquivo**.
+6. Selecionar o arquivo `manifest.xml`.
+7. Abrir o Add-in **Registros de Envios**.
+8. O painel lateral deverá apresentar as opções:
+   - **E-mail**
+   - **SMS**
 
-- Empresas;
-- Supervisores;
-- E-mails de resposta;
+Dependendo da configuração do Microsoft 365, os menus podem aparecer em **Inserir → Suplementos → Mais Suplementos**.
 
-podem ser adicionados à aba `Config` para utilização futura.
-
----
-
-# 💬 Mensagens
-
-As mensagens de E-mail e SMS são independentes.
-
-## Mensagens de E-mail
-
-Utilizam:
-
-```
-NOME MENSAGEM EMAIL
-TEXTO MENSAGEM EMAIL
-```
-
-O formulário apresenta o nome da mensagem e armazena o texto completo configurado.
-
-## Mensagens de SMS
-
-Utilizam:
-
-```
-NOME MENSAGEM SMS
-TEXTO MENSAGEM SMS
-```
-
-O formulário apresenta o nome da mensagem e armazena o texto completo configurado.
-
-As mensagens de SMS estão sujeitas à validação de 160 caracteres.
+> Se a opção de carregamento de Add-ins personalizados não estiver disponível, a organização pode possuir uma política administrativa restringindo esse recurso.
 
 ---
 
-# 📁 Estrutura do projeto
+# 5. Estrutura do repositório
 
 ```
-Addin-Registros-Envios/
+Addin_Registros_Envios/
 │
 ├── manifest.xml
 │
@@ -301,245 +159,520 @@ Addin-Registros-Envios/
 
 ---
 
-# 🧩 Principais arquivos
+# 6. Responsabilidade dos arquivos
 
-### `manifest.xml`
+## `manifest.xml`
 
-Arquivo principal de configuração do Office Add-in. Define identidade, permissões, ícones, URLs e configurações de integração com o Excel.
+Arquivo principal de configuração do Office Add-in.
 
-### `taskpane.html`
+Define, entre outros itens:
 
-Tela inicial do painel lateral, onde o usuário escolhe entre E-mail e SMS.
+- Identidade do Add-in;
+- Nome e descrição;
+- Ícones;
+- URLs da aplicação;
+- Permissões;
+- Requisitos de API;
+- Configuração de autenticação;
+- Comandos e elementos da interface do Excel;
+- Localização do Task Pane.
 
-### `taskpane.css`
+O manifesto utiliza a ação `ShowTaskpane` para abrir a interface principal do Add-in.
 
-Contém os estilos da tela inicial.
+## `taskpane.html`
 
-### `taskpane.js`
+Tela inicial do Add-in.
 
-Controla a navegação inicial e a abertura dos módulos de E-mail e SMS.
+Responsável pela seleção do tipo de registro:
 
-### `email.html / email.css / email.js`
+- E-mail;
+- SMS.
 
-Módulo completo de registro de E-mail.
+## `taskpane.js`
 
-Responsável por carregar as configurações, validar os campos, identificar o usuário, registrar data/hora, salvar o registro e atualizar as configurações quando necessário.
+Responsável pela inicialização do Office e pela navegação entre os módulos.
 
-### `sms.html / sms.css / sms.js`
+## `email.html / email.css / email.js`
 
-Módulo completo de registro de SMS.
+Implementam o fluxo completo de registro de E-mail.
 
-Responsável por carregar as configurações, validar os campos, controlar o limite de 160 caracteres, registrar data/hora, salvar o registro e atualizar as configurações quando necessário.
+Responsabilidades principais:
 
-### `commands.html / commands.js`
+- Carregar configurações;
+- Carregar mensagens;
+- Identificar usuário;
+- Validar campos;
+- Registrar data e hora;
+- Inserir dados na aba `Email`;
+- Atualizar a aba `Config` quando necessário.
 
-Arquivos relacionados aos comandos configurados no Office Add-in.
+## `sms.html / sms.css / sms.js`
 
-### `assets/`
+Implementam o fluxo completo de registro de SMS.
 
-Contém os ícones utilizados pelo manifesto do Add-in.
+Responsabilidades principais:
 
----
+- Carregar configurações;
+- Carregar mensagens específicas de SMS;
+- Controlar limite de caracteres;
+- Validar campos;
+- Registrar data e hora;
+- Inserir dados na aba `SMS`;
+- Atualizar a aba `Config` quando necessário.
 
-# 📝 Fluxo completo
+## `commands.html / commands.js`
 
-```
-1. Realizar o envio no Konfiansa
-                 ↓
-2. Acessar CAMPANHA
-                 ↓
-3. Selecionar:
-   - E-mail em Lote
-   - SMS/URA em Lote
-                 ↓
-4. Envio realizado
-                 ↓
-5. Abrir Registros de Envios no Excel
-                 ↓
-6. Selecionar E-mail ou SMS
-                 ↓
-7. Preencher o formulário
-                 ↓
-8. Salvar
-                 ↓
-9. Registro armazenado na aba correspondente
-```
+Arquivos relacionados à configuração de comandos do Office Add-in.
 
----
+O manifesto mantém a referência ao `FunctionFile`, embora o botão principal atualmente utilize `ShowTaskpane`.
 
-# ☁️ Hospedagem
+## `assets/`
 
-A aplicação web do Add-in é hospedada na **Vercel**.
-
-O Excel utiliza o `manifest.xml` para identificar e carregar a aplicação hospedada.
-
-Arquitetura:
-
-```
-Excel Web
-    ↓
-manifest.xml
-    ↓
-Aplicação Web hospedada
-    ↓
-Task Pane
-    ↓
-E-mail / SMS
-    ↓
-Pasta de trabalho do Excel
-```
+Contém os ícones utilizados pelo manifesto e pela interface do Add-in.
 
 ---
 
-# 🛠️ Manutenção
+# 7. Modelo de dados do workbook
 
-Antes de realizar alterações:
+O arquivo utilizado pela aplicação é:
 
-1. Fazer uma cópia ou utilizar o controle de versão do Git.
-2. Alterar somente o módulo necessário.
-3. Testar a alteração no Excel Web.
-4. Testar o E-mail.
-5. Testar o SMS.
-6. Testar o salvamento.
-7. Conferir as colunas do Excel.
-8. Conferir a aba `Config`.
-9. Confirmar que os registros anteriores não foram sobrescritos.
-10. Fazer o commit após os testes.
+```
+Registros de Envios.xlsx
+```
+
+As principais planilhas são:
+
+- `Email`
+- `SMS`
+- `Config`
 
 ---
 
-# ⚠️ Observações importantes
+## 7.1 Aba Email
 
-## Estrutura das planilhas
+Estrutura atual:
 
-Não alterar a ordem das colunas das abas `Email` ou `SMS` sem revisar o código JavaScript.
+| Coluna | Campo |
+|---|---|
+| A | Data |
+| B | Realizado por |
+| C | Empresa |
+| D | Qtde |
+| E | Email Resposta |
+| F | Supervisor |
+| G | Obs |
+| H | Historico Externo |
+| I | Mensagem |
+| J | Assunto |
 
-## E-mail e SMS são independentes
+### Regras
 
-Não misturar:
+**Data**
+
+Gerada automaticamente no momento do salvamento.
+
+**Realizado por**
+
+O Add-in tenta identificar automaticamente o usuário conectado ao Microsoft 365.
+
+**Empresa**
+
+Obrigatória. Pode ser selecionada a partir da configuração existente ou informada manualmente.
+
+**Qtde**
+
+Obrigatória e deve representar uma quantidade inteira positiva.
+
+**Email Resposta**
+
+Obrigatório.
+
+**Supervisor**
+
+Obrigatório.
+
+**Obs**
+
+Campo opcional.
+
+**Historico Externo**
+
+Obrigatório.
+
+**Mensagem**
+
+Obrigatória. O usuário seleciona o nome da mensagem e o Add-in grava o texto completo configurado.
+
+**Assunto**
+
+Obrigatório.
+
+---
+
+# 8. Módulo SMS
+
+## 8.1 Aba SMS
+
+Estrutura atual:
+
+| Coluna | Campo |
+|---|---|
+| A | Data |
+| B | Realizado por |
+| C | Empresa |
+| D | Qtde |
+| E | Supervisor |
+| F | Obs |
+| G | Historico Externo |
+| H | Mensagem |
+
+### Regras
+
+- Data gerada automaticamente;
+- Identificação automática do usuário quando disponível;
+- Empresa obrigatória;
+- Quantidade obrigatória;
+- Supervisor obrigatório;
+- Observação opcional;
+- Histórico Externo obrigatório;
+- Mensagem obrigatória.
+
+---
+
+## 8.2 Limite de caracteres
+
+O módulo SMS utiliza um limite padrão de:
+
+```
+160 caracteres
+```
+
+O valor pode ser configurado pela coluna `LIMITE SMS` da aba `Config`.
+
+O formulário:
+
+- Exibe contador de caracteres;
+- Bloqueia o salvamento quando o limite é excedido;
+- Não corta automaticamente o conteúdo;
+- Permite que o usuário corrija o texto ou selecione outra mensagem.
+
+Mensagens contendo variáveis, como `[NomCliente]`, devem ser avaliadas considerando o tamanho final após a substituição.
+
+---
+
+# 9. Aba Config
+
+A aba `Config` funciona como fonte central de dados auxiliares e mensagens.
+
+Estrutura atual:
+
+| Coluna | Campo |
+|---|---|
+| A | EMPRESAS |
+| B | EMAIL RESPOSTA |
+| C | SUPERVISORES |
+| D | REALIZADO POR |
+| E | NOME MENSAGEM EMAIL |
+| F | TEXTO MENSAGEM EMAIL |
+| G | NOME MENSAGEM SMS |
+| H | TEXTO MENSAGEM SMS |
+| I | LIMITE SMS |
+
+## Atualização automática
+
+Durante o uso dos formulários, novos valores podem ser adicionados à configuração quando ainda não estiverem cadastrados.
+
+A lógica contempla principalmente:
+
+- Empresas;
+- Supervisores;
+- E-mails de resposta;
+- Usuários de realização.
+
+A comparação utiliza normalização para evitar duplicações causadas por diferenças de maiúsculas/minúsculas ou espaços.
+
+---
+
+# 10. Arquitetura de mensagens
+
+As mensagens são separadas por módulo.
+
+## E-mail
+
+Utiliza:
 
 ```
 NOME MENSAGEM EMAIL
 TEXTO MENSAGEM EMAIL
 ```
 
-com:
+O usuário seleciona o nome da mensagem e o sistema recupera o texto correspondente.
+
+## SMS
+
+Utiliza:
 
 ```
 NOME MENSAGEM SMS
 TEXTO MENSAGEM SMS
 ```
 
-Cada módulo possui sua própria configuração de mensagens.
+A seleção de SMS não utiliza as mensagens configuradas para E-mail.
 
-## Historico Externo
-
-O campo `Historico Externo` faz parte dos dois módulos:
-
-- E-mail → coluna H
-- SMS → coluna G
-
-## Validação do SMS
-
-A validação de 160 caracteres deve permanecer ativa, salvo se a regra de negócio for alterada intencionalmente.
+Essa separação evita que alterações em uma categoria afetem a outra.
 
 ---
 
-# 🔐 Segurança
+# 11. Integração com Excel
 
-Nunca armazenar diretamente no código-fonte:
+A comunicação com o workbook utiliza:
+
+```
+Office.js
+Excel JavaScript API
+Excel.run()
+```
+
+O código acessa as planilhas por nome e identifica dinamicamente a estrutura dos cabeçalhos quando necessário.
+
+A inserção dos registros ocorre na próxima linha disponível da tabela de dados utilizada, preservando os registros existentes.
+
+Quando uma planilha ainda não possui cabeçalho reconhecível, o módulo pode inicializar a estrutura esperada antes da inserção.
+
+---
+
+# 12. Identificação do usuário
+
+O módulo utiliza a API de autenticação do Office quando disponível:
+
+```
+Office.auth.getAccessToken()
+```
+
+O token é utilizado para tentar obter informações do usuário conectado, priorizando campos como:
+
+- `name`;
+- `preferred_username`;
+- `email`;
+- `upn`.
+
+Caso a identificação automática não esteja disponível no ambiente, o formulário mantém comportamento de contingência para permitir o preenchimento manual quando aplicável.
+
+---
+
+# 13. Validação e integridade dos dados
+
+As validações ocorrem antes da gravação no Excel.
+
+Entre as principais regras:
+
+- Campos obrigatórios não podem permanecer vazios;
+- Quantidades devem ser inteiras e positivas;
+- Mensagens devem existir na configuração;
+- SMS não pode ultrapassar o limite configurado;
+- Registros são adicionados na próxima linha disponível;
+- A estrutura das colunas deve permanecer compatível com o código.
+
+A validação no front-end reduz registros inconsistentes antes da chamada à Excel JavaScript API.
+
+---
+
+# 14. Fluxo operacional completo
+
+```
+1. Realizar o disparo no Konfiansa
+                 ↓
+2. Acessar CAMPANHA
+                 ↓
+3. Selecionar E-mail em Lote
+   ou SMS/URA em Lote
+                 ↓
+4. Concluir o envio
+                 ↓
+5. Abrir Registros de Envios no Excel Web
+                 ↓
+6. Selecionar E-mail ou SMS
+                 ↓
+7. Preencher os dados
+                 ↓
+8. Executar a validação
+                 ↓
+9. Salvar
+                 ↓
+10. Registrar na aba correspondente
+                 ↓
+11. Atualizar Config quando necessário
+```
+
+---
+
+# 15. Segurança
+
+O código-fonte não deve conter:
 
 - Senhas;
-- Tokens de acesso;
+- Tokens permanentes;
 - Chaves privadas;
-- Credenciais de API;
-- Informações sensíveis de autenticação.
+- Credenciais;
+- Segredos de APIs;
+- Dados pessoais desnecessários.
 
-As credenciais devem ser armazenadas de forma segura e fora do código-fonte.
+Informações de autenticação devem ser tratadas pelos mecanismos oficiais da plataforma e mantidas fora do código-fonte sempre que aplicável.
+
+O repositório também não deve receber credenciais reais em commits, arquivos de configuração ou documentação.
 
 ---
 
-# 📦 Versionamento
+# 16. Desenvolvimento e manutenção
+
+Antes de alterar o projeto, deve-se identificar o módulo afetado e preservar a separação entre:
+
+```
+Task Pane
+   │
+   ├── E-mail
+   │
+   └── SMS
+```
+
+Alterações estruturais no workbook devem ser tratadas com atenção, principalmente nas abas:
+
+```
+Email
+SMS
+Config
+```
+
+Mudanças de nomes de colunas, ordem dos campos ou nomes das planilhas podem exigir alterações no JavaScript.
+
+### Recomendações de manutenção
+
+- Alterar somente o módulo necessário;
+- Evitar lógica duplicada;
+- Manter mensagens de E-mail e SMS separadas;
+- Preservar as validações existentes;
+- Testar o salvamento após alterações;
+- Verificar se registros antigos permanecem intactos;
+- Validar a integração com a aba `Config`;
+- Atualizar a documentação quando houver alteração funcional ou arquitetural.
+
+---
+
+# 17. Versionamento
 
 O projeto é mantido em Git/GitHub.
 
-Padrões recomendados para commits:
+Repositório:
 
 ```
-feat: nova funcionalidade
-fix: correção de erro
-docs: alterações na documentação
-refactor: reestruturação do código
-chore: manutenção
+Matheus-Excelencia/Addin_Registros_Envios
 ```
 
-Exemplo:
+Os commits devem utilizar mensagens objetivas e em inglês, seguindo uma convenção semelhante a:
 
 ```
-docs: update README with installation and Konfiansa workflow
+feat: add new feature
+fix: correct validation issue
+docs: update project documentation
+refactor: reorganize module
+chore: maintenance change
+```
+
+Exemplos:
+
+```
+feat: add SMS character limit configuration
+fix: correct SMS form save handler
+docs: update project documentation
 ```
 
 ---
 
-# 📝 Histórico de alterações
+# 18. Deploy
 
-## Versão atual
+O projeto utiliza a Vercel para disponibilizar a aplicação web.
 
-- Estrutura inicial do Add-in para Excel Web;
-- Painel lateral;
-- Cadastro de E-mail;
-- Cadastro de SMS;
-- Integração com a aba `Config`;
+Fluxo simplificado:
+
+```
+Alteração no código
+       ↓
+Git / GitHub
+       ↓
+Deploy
+       ↓
+Vercel
+       ↓
+Aplicação Web
+       ↓
+Excel Web
+```
+
+O `manifest.xml` deve permanecer apontando para os endereços válidos da aplicação publicada.
+
+Após alterações relevantes, deve-se validar o carregamento do Task Pane e os módulos E-mail e SMS no Excel Web.
+
+---
+
+# 19. Compatibilidade
+
+A plataforma considerada oficialmente para este projeto é:
+
+**Excel Web / Microsoft 365**
+
+A solução foi estruturada considerando as limitações e o modelo de execução de Office Add-ins no Excel para a Web.
+
+O projeto não depende de VBA ou UserForms tradicionais do Excel Desktop.
+
+---
+
+# 20. Estado atual da implementação
+
+A implementação atual contempla:
+
+- Office Add-in para Excel Web;
+- Task Pane;
+- Seleção entre E-mail e SMS;
+- Registro de E-mail;
+- Registro de SMS;
+- Integração com `Email`, `SMS` e `Config`;
 - Registro automático de data e hora;
-- Identificação do usuário do Microsoft 365;
-- Cadastro de empresas;
-- Cadastro de supervisores;
-- Cadastro de e-mails de resposta;
+- Tentativa de identificação do usuário Microsoft 365;
+- Cadastro dinâmico de empresas;
+- Cadastro dinâmico de supervisores;
+- Cadastro dinâmico de e-mails de resposta;
 - Mensagens independentes para E-mail e SMS;
-- Validação de 160 caracteres para SMS;
-- Campo Historico Externo no E-mail;
-- Campo Historico Externo no SMS;
-- Histórico Externo do SMS salvo na coluna G;
-- Mensagem do SMS salva na coluna H;
-- Documentação do fluxo Konfiansa → CAMPANHA → Registros de Envios.
+- Limite configurável de caracteres para SMS;
+- Contador de caracteres;
+- Validação antes do salvamento;
+- Registro de Histórico Externo;
+- Persistência do texto completo das mensagens;
+- Hospedagem da aplicação na Vercel.
 
 ---
 
-# 📌 Informações do projeto
+# 21. Referência técnica
 
-**Projeto:** Registros de Envios  
-**Plataforma principal:** Excel Web / Microsoft 365  
-**Interface:** Office Add-in / Task Pane  
-**Sistema de origem:** Konfiansa  
-**Processos:** E-mail em Lote e SMS/URA em Lote  
-**Módulos:** E-mail e SMS  
-**Hospedagem:** Vercel  
-**Repositório:** Matheus-Excelencia/Addin_Registros_Envios
-
----
-
-# 👨‍💻 Estrutura de desenvolvimento
-
-O projeto deve manter a separação entre os módulos:
-
-```
-taskpane
-    ↓
-Navegação inicial
-
-email
-    ↓
-Registro de E-mail
-
-sms
-    ↓
-Registro de SMS
-
-Config
-    ↓
-Dados auxiliares e mensagens
-```
-
-Alterações futuras devem respeitar essa separação para reduzir o risco de impactos entre os módulos.
+| Item | Valor |
+|---|---|
+| Projeto | Registro de Envios |
+| Plataforma | Excel Web / Microsoft 365 |
+| Tecnologia | Office Add-in |
+| Interface | Task Pane |
+| API | Office.js / Excel JavaScript API |
+| Sistema de origem | Konfiansa |
+| Processos | E-mail em Lote / SMS/URA em Lote |
+| Módulos | E-mail / SMS |
+| Workbook | Registros de Envios.xlsx |
+| Hospedagem | Vercel |
+| Repositório | Matheus-Excelencia/Addin_Registros_Envios |
 
 ---
+
+## Documentação completa
+
+A documentação técnica detalhada do projeto está disponível no SharePoint:
+
+**[Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQCWHNmJGBi_R5tA79npAMo9AdartnTpMtqaM0UFbAeXiAk?e=tDYYkV)**
+
+A documentação contém detalhes de instalação, arquitetura, estrutura dos arquivos, modelo de dados, regras dos módulos, autenticação, manutenção e operação do projeto.
