@@ -1070,7 +1070,7 @@ async function adicionarRegistroEmail(
 
 
     const usado =
-        folha.getUsedRangeOrNullObject();
+        folha.getUsedRangeOrNullObject(true);
 
 
     usado.load([
