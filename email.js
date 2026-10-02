@@ -336,15 +336,12 @@ async function carregarDados() {
 
 
                 const usado =
-                    folha.getUsedRangeOrNullObject();
+                    folha.getUsedRangeOrNullObject(true);
 
 
                 usado.load([
                     "values",
-                    "rowCount",
-                    "columnCount",
                     "rowIndex",
-                    "columnIndex",
                     "isNullObject"
                 ]);
 
@@ -1042,13 +1039,15 @@ async function salvarEmail(event) {
 }
 
 
-function validarEstruturaRegistro(mapa, camposObrigatorios) {
+function validarEstruturaRegistro(mapa, camposObrigatorios, quantidadeColunasEsperadas) {
     const ausentes = camposObrigatorios.filter(function (nomes) {
-        return obterIndice(mapa, nomes) === -1;
+        const indice = obterIndice(mapa, nomes);
+        return indice === -1 || indice >= quantidadeColunasEsperadas;
     });
+
     if (ausentes.length > 0) {
         throw new Error(
-            "A estrutura da aba não corresponde ao padrão esperado. Coluna(s) ausente(s): " +
+            "A estrutura da aba não corresponde ao padrão esperado. Coluna(s) ausente(s) ou fora da estrutura: " +
             ausentes.map(function (nomes) { return nomes[0]; }).join(", ")
         );
     }
@@ -1183,6 +1182,8 @@ async function adicionarRegistroEmail(
     }
 
 
+    const numeroColunas = 10;
+
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
@@ -1194,16 +1195,7 @@ async function adicionarRegistroEmail(
         ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
         ["MENSAGEM"],
         ["ASSUNTO"]
-    ]);
-
-
-    const numeroColunas =
-        Math.max(
-            10,
-            usado.isNullObject
-                ? 10
-                : usado.columnCount
-        );
+    ], numeroColunas);
 
 
     const valores =
@@ -1294,9 +1286,14 @@ async function adicionarRegistroEmail(
 
     intervaloRegistro.values = [valores];
 
-    // Mantém a coluna Data como data/hora real do Excel e desativa a quebra automática de texto no registro.
+    // Mantém a coluna Data como data/hora real do Excel.
     intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
-    intervaloRegistro.format.wrapText = false;
+
+    // Desativa a quebra automática somente na célula da Mensagem.
+    const indiceMensagem = obterIndice(mapa, ["MENSAGEM"]);
+    if (indiceMensagem !== -1) {
+        intervaloRegistro.getCell(0, indiceMensagem).format.wrapText = false;
+    }
 }
 
 
