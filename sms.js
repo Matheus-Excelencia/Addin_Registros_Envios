@@ -367,7 +367,7 @@ function validarEstruturaRegistro(mapa, camposObrigatorios, quantidadeColunasEsp
 
 async function adicionarRegistroSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("SMS");
-    const usado = folha.getUsedRangeOrNullObject();
+    const usado = folha.getUsedRangeOrNullObject(true);
     usado.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
     await context.sync();
 
