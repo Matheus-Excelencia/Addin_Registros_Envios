@@ -306,7 +306,6 @@ async function salvarSMS(event) {
         const supervisor = document.getElementById("supervisor").value.trim();
         const obs = document.getElementById("obs").value.trim();
         const historicoExterno = document.getElementById("historicoExterno").value.trim();
-        const referenciaCampanha = document.getElementById("referenciaCampanha").value.trim();
         const idRegistro = gerarIdRegistro();
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
@@ -328,7 +327,6 @@ async function salvarSMS(event) {
                 obs,
                 historicoExterno,
                 textoMensagem,
-                referenciaCampanha,
                 idRegistro
             });
 
@@ -415,8 +413,7 @@ async function adicionarRegistroSMS(context, dados) {
         ["OBS", "OBS."],
         ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
         ["MENSAGEM"],
-        ["ID REGISTRO"],
-        ["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"]
+        ["ID REGISTRO"]
     ], numeroColunas);
 
 
@@ -436,8 +433,6 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["HISTORICO EXTERNO", "HISTÓRICO EXTERNO", "HISTORICOEXTERNO", "HISTÓRICOEXTERNO"], dados.historicoExterno);
     colocar(["MENSAGEM"], dados.textoMensagem);
     colocar(["ID REGISTRO"], dados.idRegistro);
-    colocar(["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"], dados.referenciaCampanha);
-
     const proximaLinha = obterProximaLinhaDados(usado, 8);
     const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
     const intervaloRegistro = folha.getRangeByIndexes(
@@ -521,7 +516,7 @@ function preencherDuplicacao() {
     try {
         const d = JSON.parse(bruto);
         if (d.tipo !== "sms") return;
-        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno",referenciaCampanha:"referenciaCampanha"};
+        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno":"referenciaCampanha"};
         Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
         const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
