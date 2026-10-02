@@ -985,8 +985,6 @@ async function salvarEmail(event) {
         );
 
 
-        mostrarStatus("✓ Registro de E-mail salvo!\nID: " + idRegistro + (referenciaCampanha ? "\nCampanha: " + referenciaCampanha : ""), "sucesso");
-
 
         document
             .getElementById(
@@ -1003,8 +1001,6 @@ async function salvarEmail(event) {
 
 
         document.getElementById("textoMensagem").value = "";
-        document.getElementById("referenciaCampanha").value = "";
-
 
         await identificarUsuario();
 
@@ -1173,7 +1169,7 @@ async function adicionarRegistroEmail(
 
 
     const numeroColunas = 12;
-    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(usado.rowIndex + linhaCabecalho, usado.columnIndex + 10, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 10; mapa["REFERÊNCIA CAMPANHA"] = 11; mapa["REFERENCIA CAMPANHA"] = 11; }
+
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
@@ -1477,7 +1473,7 @@ function preencherDuplicacao() {
     try {
         const d = JSON.parse(bruto);
         if (d.tipo !== "email") return;
-        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",emailResposta:"emailResposta",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno":"referenciaCampanha",assunto:"assunto"};
+
         Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
         const opcao = mensagensEmail.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
