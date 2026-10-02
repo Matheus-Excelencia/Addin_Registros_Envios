@@ -1294,8 +1294,9 @@ async function adicionarRegistroEmail(
 
     intervaloRegistro.values = [valores];
 
-    // Mantém a coluna Data como data/hora real do Excel e evita inversão dia/mês.
+    // Mantém a coluna Data como data/hora real do Excel e desativa a quebra automática de texto no registro.
     intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+    intervaloRegistro.format.wrapText = false;
 }
 
 
