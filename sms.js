@@ -14,6 +14,7 @@ Office.onReady(async function () {
 
     prepararLog();
     await carregarDados();
+    preencherDuplicacao();
 });
 
 function prepararLog() {
@@ -60,6 +61,7 @@ function limparFormulario() {
     document.getElementById("formSms").reset();
     document.getElementById("mensagem").selectedIndex = 0;
     document.getElementById("textoMensagem").value = "";
+        document.getElementById("referenciaCampanha").value = "";
     atualizarContador();
     limparStatus();
     identificarUsuario();
@@ -304,6 +306,7 @@ async function salvarSMS(event) {
         const supervisor = document.getElementById("supervisor").value.trim();
         const obs = document.getElementById("obs").value.trim();
         const historicoExterno = document.getElementById("historicoExterno").value.trim();
+        const referenciaCampanha = document.getElementById("referenciaCampanha").value.trim();
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
 
@@ -323,7 +326,9 @@ async function salvarSMS(event) {
                 supervisor,
                 obs,
                 historicoExterno,
-                textoMensagem
+                textoMensagem,
+                referenciaCampanha,
+                idRegistro: gerarIdRegistro()
             });
 
             await atualizarConfigSMS(context, {
@@ -398,8 +403,8 @@ async function adicionarRegistroSMS(context, dados) {
         });
     }
 
-    const numeroColunas = 8;
-
+    const numeroColunas = 10;
+    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(linhaCabecalho, 8, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 8; mapa["REFERÊNCIA CAMPANHA"] = 9; mapa["REFERENCIA CAMPANHA"] = 9; }
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
@@ -408,7 +413,9 @@ async function adicionarRegistroSMS(context, dados) {
         ["SUPERVISOR"],
         ["OBS", "OBS."],
         ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
-        ["MENSAGEM"]
+        ["MENSAGEM"],
+        ["ID REGISTRO"],
+        ["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"]
     ], numeroColunas);
 
 
@@ -427,6 +434,8 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["OBS", "OBS."], dados.obs);
     colocar(["HISTORICO EXTERNO", "HISTÓRICO EXTERNO", "HISTORICOEXTERNO", "HISTÓRICOEXTERNO"], dados.historicoExterno);
     colocar(["MENSAGEM"], dados.textoMensagem);
+    colocar(["ID REGISTRO"], dados.idRegistro);
+    colocar(["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"], dados.referenciaCampanha);
 
     const proximaLinha = obterProximaLinhaDados(usado, 8);
     const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
@@ -441,6 +450,12 @@ async function adicionarRegistroSMS(context, dados) {
 
     // Mantém a coluna Data como data/hora real do Excel e evita inversão dia/mês.
     intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+}
+
+function gerarIdRegistro() {
+    const agora = new Date();
+    const parte = Math.random().toString(36).slice(2, 7).toUpperCase();
+    return "ENV-" + agora.getFullYear() + String(agora.getMonth()+1).padStart(2,"0") + String(agora.getDate()).padStart(2,"0") + "-" + Date.now().toString().slice(-6) + "-" + parte;
 }
 
 function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
@@ -497,4 +512,17 @@ async function atualizarConfigSMS(context, dados) {
 
         folha.getRangeByIndexes(usado.rowIndex + linhaDestino, usado.columnIndex + coluna, 1, 1).values = [[campo.valor]];
     }
+}
+
+function preencherDuplicacao() {
+    const bruto = localStorage.getItem("registroDuplicado");
+    if (!bruto) return;
+    try {
+        const d = JSON.parse(bruto);
+        if (d.tipo !== "sms") return;
+        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno",referenciaCampanha:"referenciaCampanha"};
+        Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
+        localStorage.removeItem("registroDuplicado");
+        mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
+    } catch(e) { localStorage.removeItem("registroDuplicado"); }
 }
