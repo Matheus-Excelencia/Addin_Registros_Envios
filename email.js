@@ -895,7 +895,6 @@ async function salvarEmail(event) {
 
 
         const assunto = document.getElementById("assunto").value.trim();
-        const referenciaCampanha = document.getElementById("referenciaCampanha").value.trim();
         const idRegistro = gerarIdRegistro();
 
 
@@ -965,7 +964,6 @@ async function salvarEmail(event) {
                         historicoExterno,
                         textoMensagem,
                         assunto,
-                        referenciaCampanha,
                         idRegistro
                     }
                 );
@@ -1187,8 +1185,7 @@ async function adicionarRegistroEmail(
         ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
         ["MENSAGEM"],
         ["ASSUNTO"],
-        ["ID REGISTRO"],
-        ["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"]
+        ["ID REGISTRO"]
     ], numeroColunas);
 
 
@@ -1266,9 +1263,6 @@ async function adicionarRegistroEmail(
 
     colocar(["ASSUNTO"], dados.assunto);
     colocar(["ID REGISTRO"], dados.idRegistro);
-    colocar(["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"], dados.referenciaCampanha);
-
-
     const proximaLinha = obterProximaLinhaDados(usado, 10);
     const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
     const intervaloRegistro = folha.getRangeByIndexes(
@@ -1483,7 +1477,7 @@ function preencherDuplicacao() {
     try {
         const d = JSON.parse(bruto);
         if (d.tipo !== "email") return;
-        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",emailResposta:"emailResposta",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno",referenciaCampanha:"referenciaCampanha",assunto:"assunto"};
+        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",emailResposta:"emailResposta",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno":"referenciaCampanha",assunto:"assunto"};
         Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
         const opcao = mensagensEmail.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
