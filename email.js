@@ -1177,7 +1177,7 @@ async function adicionarRegistroEmail(
 
 
     const numeroColunas = 12;
-    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(linhaCabecalho, 10, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 10; mapa["REFERÊNCIA CAMPANHA"] = 11; mapa["REFERENCIA CAMPANHA"] = 11; }
+    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(usado.rowIndex + linhaCabecalho, usado.columnIndex + 10, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 10; mapa["REFERÊNCIA CAMPANHA"] = 11; mapa["REFERENCIA CAMPANHA"] = 11; }
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
