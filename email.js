@@ -30,6 +30,7 @@ Office.onReady(async function () {
     prepararLog();
 
     await carregarDados();
+    preencherDuplicacao();
 });
 
 
@@ -893,10 +894,8 @@ async function salvarEmail(event) {
             ).value;
 
 
-        const assunto =
-            document.getElementById(
-                "assunto"
-            ).value.trim();
+        const assunto = document.getElementById("assunto").value.trim();
+        const referenciaCampanha = document.getElementById("referenciaCampanha").value.trim();
 
 
         if (!empresa)
@@ -947,10 +946,7 @@ async function salvarEmail(event) {
             );
 
 
-        if (!assunto)
-            throw new Error(
-                "Informe o assunto."
-            );
+        if (!assunto) throw new Error("Informe o assunto.");
 
 
         await Excel.run(
@@ -967,7 +963,9 @@ async function salvarEmail(event) {
                         obs,
                         historicoExterno,
                         textoMensagem,
-                        assunto
+                        assunto,
+                        referenciaCampanha,
+                        idRegistro: gerarIdRegistro()
                     }
                 );
 
@@ -1008,11 +1006,8 @@ async function salvarEmail(event) {
             .selectedIndex = 0;
 
 
-        document
-            .getElementById(
-                "textoMensagem"
-            )
-            .value = "";
+        document.getElementById("textoMensagem").value = "";
+        document.getElementById("referenciaCampanha").value = "";
 
 
         await identificarUsuario();
@@ -1181,8 +1176,8 @@ async function adicionarRegistroEmail(
     }
 
 
-    const numeroColunas = 10;
-
+    const numeroColunas = 12;
+    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(linhaCabecalho, 10, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 10; mapa["REFERÊNCIA CAMPANHA"] = 11; mapa["REFERENCIA CAMPANHA"] = 11; }
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
@@ -1193,7 +1188,9 @@ async function adicionarRegistroEmail(
         ["OBS"],
         ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
         ["MENSAGEM"],
-        ["ASSUNTO"]
+        ["ASSUNTO"],
+        ["ID REGISTRO"],
+        ["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"]
     ], numeroColunas);
 
 
@@ -1269,10 +1266,9 @@ async function adicionarRegistroEmail(
         dados.textoMensagem
     );
 
-    colocar(
-        ["ASSUNTO"],
-        dados.assunto
-    );
+    colocar(["ASSUNTO"], dados.assunto);
+    colocar(["ID REGISTRO"], dados.idRegistro);
+    colocar(["REFERENCIA CAMPANHA", "REFERÊNCIA CAMPANHA"], dados.referenciaCampanha);
 
 
     const proximaLinha = obterProximaLinhaDados(usado, 10);
@@ -1296,6 +1292,12 @@ async function adicionarRegistroEmail(
     }
 }
 
+
+function gerarIdRegistro() {
+    const agora = new Date();
+    const parte = Math.random().toString(36).slice(2, 7).toUpperCase();
+    return "ENV-" + agora.getFullYear() + String(agora.getMonth()+1).padStart(2,"0") + String(agora.getDate()).padStart(2,"0") + "-" + Date.now().toString().slice(-6) + "-" + parte;
+}
 
 function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
     if (usado.isNullObject) return 1;
@@ -1475,4 +1477,17 @@ async function atualizarConfig(
                 [campo.valor]
             ];
     }
+}
+
+function preencherDuplicacao() {
+    const bruto = localStorage.getItem("registroDuplicado");
+    if (!bruto) return;
+    try {
+        const d = JSON.parse(bruto);
+        if (d.tipo !== "email") return;
+        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",emailResposta:"emailResposta",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno",referenciaCampanha:"referenciaCampanha",assunto:"assunto"};
+        Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
+        localStorage.removeItem("registroDuplicado");
+        mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
+    } catch(e) { localStorage.removeItem("registroDuplicado"); }
 }
