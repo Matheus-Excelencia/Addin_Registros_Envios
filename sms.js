@@ -130,8 +130,8 @@ async function carregarDados() {
     try {
         await Excel.run(async function (context) {
             const folha = context.workbook.worksheets.getItem("Config");
-            const usado = folha.getUsedRangeOrNullObject();
-            usado.load(["values", "rowCount", "columnCount", "rowIndex", "columnIndex", "isNullObject"]);
+            const usado = folha.getUsedRangeOrNullObject(true);
+            usado.load(["values", "rowIndex", "isNullObject"]);
             await context.sync();
 
             if (usado.isNullObject) throw new Error("A aba Config está vazia.");
@@ -155,7 +155,7 @@ async function carregarDados() {
             if (indiceLimite !== -1) {
                 for (let linha = configInfo.linha + 1; linha < usado.values.length; linha++) {
                     const numero = Number(usado.values[linha][indiceLimite]);
-                    if (Number.isFinite(numero) && numero > 0) {
+                    if (Number.isInteger(numero) && numero > 0) {
                         limiteSMS = numero;
                         break;
                     }
@@ -350,13 +350,15 @@ async function salvarSMS(event) {
     }
 }
 
-function validarEstruturaRegistro(mapa, camposObrigatorios) {
+function validarEstruturaRegistro(mapa, camposObrigatorios, quantidadeColunasEsperadas) {
     const ausentes = camposObrigatorios.filter(function (nomes) {
-        return obterIndice(mapa, nomes) === -1;
+        const indice = obterIndice(mapa, nomes);
+        return indice === -1 || indice >= quantidadeColunasEsperadas;
     });
+
     if (ausentes.length > 0) {
         throw new Error(
-            "A estrutura da aba não corresponde ao padrão esperado. Coluna(s) ausente(s): " +
+            "A estrutura da aba não corresponde ao padrão esperado. Coluna(s) ausente(s) ou fora da estrutura: " +
             ausentes.map(function (nomes) { return nomes[0]; }).join(", ")
         );
     }
@@ -396,6 +398,8 @@ async function adicionarRegistroSMS(context, dados) {
         });
     }
 
+    const numeroColunas = 8;
+
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
@@ -405,10 +409,9 @@ async function adicionarRegistroSMS(context, dados) {
         ["OBS", "OBS."],
         ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
         ["MENSAGEM"]
-    ]);
+    ], numeroColunas);
 
 
-    const numeroColunas = Math.max(8, usado.isNullObject ? 8 : usado.columnCount);
     const valores = new Array(numeroColunas).fill("");
 
     function colocar(nomes, valor) {
