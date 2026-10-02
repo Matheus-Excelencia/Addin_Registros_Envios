@@ -307,6 +307,7 @@ async function salvarSMS(event) {
         const obs = document.getElementById("obs").value.trim();
         const historicoExterno = document.getElementById("historicoExterno").value.trim();
         const referenciaCampanha = document.getElementById("referenciaCampanha").value.trim();
+        const idRegistro = gerarIdRegistro();
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
 
@@ -328,7 +329,7 @@ async function salvarSMS(event) {
                 historicoExterno,
                 textoMensagem,
                 referenciaCampanha,
-                idRegistro: gerarIdRegistro()
+                idRegistro
             });
 
             await atualizarConfigSMS(context, {
@@ -340,7 +341,7 @@ async function salvarSMS(event) {
             await context.sync();
         });
 
-        mostrarStatus("✓ Registro de SMS salvo!", "sucesso");
+        mostrarStatus("✓ Registro de SMS salvo!\nID: " + idRegistro + (referenciaCampanha ? "\nCampanha: " + referenciaCampanha : ""), "sucesso");
         document.getElementById("formSms").reset();
         document.getElementById("mensagem").selectedIndex = 0;
         document.getElementById("textoMensagem").value = "";
