@@ -350,6 +350,19 @@ async function salvarSMS(event) {
     }
 }
 
+function validarEstruturaRegistro(mapa, camposObrigatorios) {
+    const ausentes = camposObrigatorios.filter(function (nomes) {
+        return obterIndice(mapa, nomes) === -1;
+    });
+    if (ausentes.length > 0) {
+        throw new Error(
+            "A estrutura da aba não corresponde ao padrão esperado. Coluna(s) ausente(s): " +
+            ausentes.map(function (nomes) { return nomes[0]; }).join(", ")
+        );
+    }
+}
+
+
 async function adicionarRegistroSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("SMS");
     const usado = folha.getUsedRangeOrNullObject();
@@ -383,6 +396,18 @@ async function adicionarRegistroSMS(context, dados) {
         });
     }
 
+    validarEstruturaRegistro(mapa, [
+        ["DATA"],
+        ["REALIZADO POR"],
+        ["EMPRESA"],
+        ["QTDE"],
+        ["SUPERVISOR"],
+        ["OBS", "OBS."],
+        ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
+        ["MENSAGEM"]
+    ]);
+
+
     const numeroColunas = Math.max(8, usado.isNullObject ? 8 : usado.columnCount);
     const valores = new Array(numeroColunas).fill("");
 
@@ -400,13 +425,30 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["HISTORICO EXTERNO", "HISTÓRICO EXTERNO", "HISTORICOEXTERNO", "HISTÓRICOEXTERNO"], dados.historicoExterno);
     colocar(["MENSAGEM"], dados.textoMensagem);
 
-    const proximaLinha = usado.isNullObject ? 1 : usado.rowIndex + usado.rowCount;
-    const intervaloRegistro = folha.getRangeByIndexes(proximaLinha, 0, 1, numeroColunas);
+    const proximaLinha = obterProximaLinhaDados(usado, 8);
+
     intervaloRegistro.values = [valores];
 
     // Mantém a coluna Data como data/hora real do Excel e evita inversão dia/mês.
     intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
 }
+
+function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
+    if (usado.isNullObject) return 1;
+    const valores = usado.values || [];
+    for (let linha = valores.length - 1; linha >= 0; linha--) {
+        const colunas = valores[linha] || [];
+        const limite = Math.min(quantidadeColunasEsperadas, colunas.length);
+        for (let coluna = 0; coluna < limite; coluna++) {
+            const valor = colunas[coluna];
+            if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
+                return usado.rowIndex + linha + 1;
+            }
+        }
+    }
+    return usado.rowIndex + 1;
+}
+
 
 async function atualizarConfigSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("Config");
