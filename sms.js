@@ -462,7 +462,7 @@ function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
 async function atualizarConfigSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("Config");
     const usado = folha.getUsedRangeOrNullObject();
-    usado.load(["values", "rowCount", "isNullObject", "rowIndex", "columnIndex"]);
+    usado.load(["values", "rowCount", "isNullObject", "rowIndex"]);
     await context.sync();
     if (usado.isNullObject) return;
 
