@@ -1285,10 +1285,9 @@ async function adicionarRegistroEmail(
 
 
     const proximaLinha = obterProximaLinhaDados(usado, 10);
-    const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
     const intervaloRegistro = folha.getRangeByIndexes(
         proximaLinha,
-        colunaInicial,
+        0,
         1,
         numeroColunas
     );
