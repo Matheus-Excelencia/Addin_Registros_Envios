@@ -801,30 +801,20 @@ function obterDataHoraAtual() {
 
     const agora = new Date();
 
-
-    return (
-        String(
-            agora.getDate()
-        ).padStart(2, "0")
-        + "/" +
-        String(
-            agora.getMonth() + 1
-        ).padStart(2, "0")
-        + "/" +
-        agora.getFullYear()
-        + " " +
-        String(
-            agora.getHours()
-        ).padStart(2, "0")
-        + ":" +
-        String(
-            agora.getMinutes()
-        ).padStart(2, "0")
-        + ":" +
-        String(
-            agora.getSeconds()
-        ).padStart(2, "0")
+    // Retorna um número serial do Excel usando a data/hora local do navegador.
+    // Isso evita que o Excel interprete "dd/mm/yyyy" como "mm/dd/yyyy".
+    const dataUTC = Date.UTC(
+        agora.getFullYear(),
+        agora.getMonth(),
+        agora.getDate(),
+        agora.getHours(),
+        agora.getMinutes(),
+        agora.getSeconds()
     );
+
+    const epochExcel = Date.UTC(1899, 11, 30);
+
+    return (dataUTC - epochExcel) / 86400000;
 }
 
 
@@ -1274,14 +1264,17 @@ async function adicionarRegistroEmail(
               usado.rowCount;
 
 
-    folha
-        .getRangeByIndexes(
-            proximaLinha,
-            0,
-            1,
-            numeroColunas
-        )
-        .values = [valores];
+    const intervaloRegistro = folha.getRangeByIndexes(
+        proximaLinha,
+        0,
+        1,
+        numeroColunas
+    );
+
+    intervaloRegistro.values = [valores];
+
+    // Mantém a coluna Data como data/hora real do Excel e evita inversão dia/mês.
+    intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
 }
 
 
