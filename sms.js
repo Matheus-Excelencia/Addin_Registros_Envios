@@ -404,7 +404,7 @@ async function adicionarRegistroSMS(context, dados) {
     }
 
     const numeroColunas = 10;
-    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(linhaCabecalho, 8, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 8; mapa["REFERÊNCIA CAMPANHA"] = 9; mapa["REFERENCIA CAMPANHA"] = 9; }
+    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(usado.rowIndex + linhaCabecalho, usado.columnIndex + 8, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 8; mapa["REFERÊNCIA CAMPANHA"] = 9; mapa["REFERENCIA CAMPANHA"] = 9; }
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
