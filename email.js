@@ -1075,10 +1075,9 @@ async function adicionarRegistroEmail(
 
     usado.load([
         "values",
-        "rowCount",
-        "columnCount",
         "isNullObject",
-        "rowIndex"
+        "rowIndex",
+        "columnIndex"
     ]);
 
 
@@ -1277,9 +1276,10 @@ async function adicionarRegistroEmail(
 
 
     const proximaLinha = obterProximaLinhaDados(usado, 10);
+    const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
     const intervaloRegistro = folha.getRangeByIndexes(
         proximaLinha,
-        0,
+        colunaInicial,
         1,
         numeroColunas
     );
@@ -1335,9 +1335,9 @@ async function atualizarConfig(
 
     usado.load([
         "values",
-        "rowCount",
         "isNullObject",
-        "rowIndex"
+        "rowIndex",
+        "columnIndex"
     ]);
 
 
@@ -1466,9 +1466,8 @@ async function atualizarConfig(
 
         folha
             .getRangeByIndexes(
-                usado.rowIndex +
-                linhaDestino,
-                coluna,
+                usado.rowIndex + linhaDestino,
+                usado.columnIndex + coluna,
                 1,
                 1
             )
