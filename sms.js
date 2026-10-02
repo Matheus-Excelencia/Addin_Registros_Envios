@@ -522,6 +522,8 @@ function preencherDuplicacao() {
         if (d.tipo !== "sms") return;
         const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno",referenciaCampanha:"referenciaCampanha"};
         Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
+        const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
+        if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
         localStorage.removeItem("registroDuplicado");
         mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
     } catch(e) { localStorage.removeItem("registroDuplicado"); }
