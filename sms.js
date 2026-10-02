@@ -368,7 +368,7 @@ function validarEstruturaRegistro(mapa, camposObrigatorios, quantidadeColunasEsp
 async function adicionarRegistroSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("SMS");
     const usado = folha.getUsedRangeOrNullObject();
-    usado.load(["values", "rowCount", "columnCount", "isNullObject", "rowIndex"]);
+    usado.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
     await context.sync();
 
     let linhaCabecalho = -1;
@@ -429,9 +429,10 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["MENSAGEM"], dados.textoMensagem);
 
     const proximaLinha = obterProximaLinhaDados(usado, 8);
+    const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
     const intervaloRegistro = folha.getRangeByIndexes(
         proximaLinha,
-        0,
+        colunaInicial,
         1,
         numeroColunas
     );
@@ -462,7 +463,7 @@ function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
 async function atualizarConfigSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("Config");
     const usado = folha.getUsedRangeOrNullObject();
-    usado.load(["values", "rowCount", "isNullObject", "rowIndex"]);
+    usado.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
     await context.sync();
     if (usado.isNullObject) return;
 
@@ -494,6 +495,6 @@ async function atualizarConfigSMS(context, dados) {
             linhaDestino++;
         }
 
-        folha.getRangeByIndexes(usado.rowIndex + linhaDestino, coluna, 1, 1).values = [[campo.valor]];
+        folha.getRangeByIndexes(usado.rowIndex + linhaDestino, usado.columnIndex + coluna, 1, 1).values = [[campo.valor]];
     }
 }
