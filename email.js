@@ -896,6 +896,7 @@ async function salvarEmail(event) {
 
         const assunto = document.getElementById("assunto").value.trim();
         const referenciaCampanha = document.getElementById("referenciaCampanha").value.trim();
+        const idRegistro = gerarIdRegistro();
 
 
         if (!empresa)
@@ -965,7 +966,7 @@ async function salvarEmail(event) {
                         textoMensagem,
                         assunto,
                         referenciaCampanha,
-                        idRegistro: gerarIdRegistro()
+                        idRegistro
                     }
                 );
 
@@ -986,10 +987,7 @@ async function salvarEmail(event) {
         );
 
 
-        mostrarStatus(
-            "✓ Registro de E-mail salvo!",
-            "sucesso"
-        );
+        mostrarStatus("✓ Registro de E-mail salvo!\nID: " + idRegistro + (referenciaCampanha ? "\nCampanha: " + referenciaCampanha : ""), "sucesso");
 
 
         document
