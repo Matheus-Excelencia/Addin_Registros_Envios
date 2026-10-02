@@ -61,7 +61,7 @@ function limparFormulario() {
     document.getElementById("formSms").reset();
     document.getElementById("mensagem").selectedIndex = 0;
     document.getElementById("textoMensagem").value = "";
-        document.getElementById("referenciaCampanha").value = "";
+
     atualizarContador();
     limparStatus();
     identificarUsuario();
@@ -339,7 +339,6 @@ async function salvarSMS(event) {
             await context.sync();
         });
 
-        mostrarStatus("✓ Registro de SMS salvo!\nID: " + idRegistro + (referenciaCampanha ? "\nCampanha: " + referenciaCampanha : ""), "sucesso");
         document.getElementById("formSms").reset();
         document.getElementById("mensagem").selectedIndex = 0;
         document.getElementById("textoMensagem").value = "";
@@ -403,7 +402,7 @@ async function adicionarRegistroSMS(context, dados) {
     }
 
     const numeroColunas = 10;
-    if (mapa["ID REGISTRO"] === undefined) { folha.getRangeByIndexes(usado.rowIndex + linhaCabecalho, usado.columnIndex + 8, 1, 2).values = [["ID Registro", "Referência Campanha"]]; mapa["ID REGISTRO"] = 8; mapa["REFERÊNCIA CAMPANHA"] = 9; mapa["REFERENCIA CAMPANHA"] = 9; }
+
     validarEstruturaRegistro(mapa, [
         ["DATA"],
         ["REALIZADO POR"],
@@ -516,7 +515,7 @@ function preencherDuplicacao() {
     try {
         const d = JSON.parse(bruto);
         if (d.tipo !== "sms") return;
-        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",obs:"obs",historicoExterno:"historicoExterno":"referenciaCampanha"};
+
         Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
         const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
