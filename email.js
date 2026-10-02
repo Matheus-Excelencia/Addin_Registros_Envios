@@ -1042,6 +1042,19 @@ async function salvarEmail(event) {
 }
 
 
+function validarEstruturaRegistro(mapa, camposObrigatorios) {
+    const ausentes = camposObrigatorios.filter(function (nomes) {
+        return obterIndice(mapa, nomes) === -1;
+    });
+    if (ausentes.length > 0) {
+        throw new Error(
+            "A estrutura da aba não corresponde ao padrão esperado. Coluna(s) ausente(s): " +
+            ausentes.map(function (nomes) { return nomes[0]; }).join(", ")
+        );
+    }
+}
+
+
 /* =========================================================
    ADICIONAR REGISTRO
 ========================================================= */
@@ -1170,6 +1183,20 @@ async function adicionarRegistroEmail(
     }
 
 
+    validarEstruturaRegistro(mapa, [
+        ["DATA"],
+        ["REALIZADO POR"],
+        ["EMPRESA"],
+        ["QTDE"],
+        ["EMAIL RESPOSTA", "E-MAIL RESPOSTA"],
+        ["SUPERVISOR"],
+        ["OBS"],
+        ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"],
+        ["MENSAGEM"],
+        ["ASSUNTO"]
+    ]);
+
+
     const numeroColunas =
         Math.max(
             10,
@@ -1257,16 +1284,11 @@ async function adicionarRegistroEmail(
     );
 
 
-    const proximaLinha =
-        usado.isNullObject
-            ? 1
-            : usado.rowIndex +
-              usado.rowCount;
-
-
+    const proximaLinha = obterProximaLinhaDados(usado, 10);
+    const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
     const intervaloRegistro = folha.getRangeByIndexes(
         proximaLinha,
-        0,
+        colunaInicial,
         1,
         numeroColunas
     );
@@ -1275,6 +1297,23 @@ async function adicionarRegistroEmail(
 
     // Mantém a coluna Data como data/hora real do Excel e evita inversão dia/mês.
     intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+}
+
+
+function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
+    if (usado.isNullObject) return 1;
+    const valores = usado.values || [];
+    for (let linha = valores.length - 1; linha >= 0; linha--) {
+        const colunas = valores[linha] || [];
+        const limite = Math.min(quantidadeColunasEsperadas, colunas.length);
+        for (let coluna = 0; coluna < limite; coluna++) {
+            const valor = colunas[coluna];
+            if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
+                return usado.rowIndex + linha + 1;
+            }
+        }
+    }
+    return usado.rowIndex + 1;
 }
 
 
