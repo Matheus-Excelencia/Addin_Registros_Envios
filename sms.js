@@ -426,6 +426,12 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["MENSAGEM"], dados.textoMensagem);
 
     const proximaLinha = obterProximaLinhaDados(usado, 8);
+    const intervaloRegistro = folha.getRangeByIndexes(
+        proximaLinha,
+        0,
+        1,
+        numeroColunas
+    );
 
     intervaloRegistro.values = [valores];
 
