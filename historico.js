@@ -85,7 +85,7 @@ async function carregar() {
             const ranges = nomes.map(nome => {
                 const sheet = context.workbook.worksheets.getItem(nome);
                 const range = sheet.getUsedRangeOrNullObject(true);
-                range.load(["values", "isNullObject"]);
+                range.load(["values", "isNullObject", "rowIndex"]);
                 return { nome, range };
             });
 
