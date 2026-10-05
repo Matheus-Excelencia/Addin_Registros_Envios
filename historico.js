@@ -77,6 +77,12 @@ function dataNumero(v) {
 }
 
 async function carregar() {
+    const carregando = document.getElementById("status");
+    if (carregando) {
+        carregando.textContent = "● Carregando histórico...";
+        carregando.className = "status aviso";
+        carregando.style.display = "block";
+    }
     try {
         todos = [];
 
@@ -127,7 +133,12 @@ async function carregar() {
 
         pesquisar();
         const status = document.getElementById("status");
-        if (status) status.style.display = "none";
+        if (status) {
+            status.textContent = "✓ Histórico atualizado.";
+            status.className = "status sucesso";
+            status.style.display = "block";
+            setTimeout(() => { status.style.display = "none"; }, 1200);
+        }
     } catch (e) {
         erro("Não foi possível carregar a consulta. " + (e?.message || "Verifique as abas Email, SMS e Config."));
     }
