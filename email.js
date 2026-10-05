@@ -1272,24 +1272,47 @@ async function adicionarRegistroEmail(
 
     colocar(["ASSUNTO"], dados.assunto);
     colocar(["ID REGISTRO"], dados.idRegistro);
-    const proximaLinha = obterProximaLinhaDados(usado, 10);
-    const colunaInicial = usado.isNullObject ? 0 : usado.columnIndex;
-    const intervaloRegistro = folha.getRangeByIndexes(
-        proximaLinha,
-        colunaInicial,
-        1,
-        numeroColunas
-    );
+    let confirmado = false;
 
-    intervaloRegistro.values = [valores];
+    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        const atual = folha.getUsedRangeOrNullObject(true);
+        atual.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
+        await context.sync();
 
-    // Mantém a coluna Data como data/hora real do Excel.
-    intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+        const proximaLinha = obterProximaLinhaDados(atual, 10);
+        const colunaInicial = atual.isNullObject ? 0 : atual.columnIndex;
+        const intervaloRegistro = folha.getRangeByIndexes(
+            proximaLinha,
+            colunaInicial,
+            1,
+            numeroColunas
+        );
 
-    // Desativa a quebra automática somente na célula da Mensagem.
-    const indiceMensagem = obterIndice(mapa, ["MENSAGEM"]);
-    if (indiceMensagem !== -1) {
-        intervaloRegistro.getCell(0, indiceMensagem).format.wrapText = false;
+        intervaloRegistro.values = [valores];
+
+        const indiceMensagem = obterIndice(mapa, ["MENSAGEM"]);
+        if (indiceMensagem !== -1) {
+            intervaloRegistro.getCell(0, indiceMensagem).format.wrapText = false;
+        }
+        intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+
+        const indiceId = obterIndice(mapa, ["ID REGISTRO"]);
+        if (indiceId === -1) {
+            throw new Error("A coluna ID REGISTRO não foi encontrada.");
+        }
+
+        const celulaId = intervaloRegistro.getCell(0, indiceId);
+        celulaId.load("values");
+        await context.sync();
+
+        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro)) {
+            confirmado = true;
+            break;
+        }
+    }
+
+    if (!confirmado) {
+        throw new Error("Não foi possível confirmar a gravação do registro. Nenhum dado adicional foi aceito.");
     }
 }
 
