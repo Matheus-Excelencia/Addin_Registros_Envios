@@ -5,21 +5,14 @@ function iniciarHistorico() {
     pronto = true;
 
     const v = document.getElementById("btnVoltar");
-    const o = document.getElementById("ordenacao");
     const p = document.getElementById("btnPesquisar");
     const l = document.getElementById("btnLimpar");
+    const o = document.getElementById("ordenacao");
 
-    if (v) v.onclick = () => { window.location.href = "taskpane.html"; };
-    if (p) p.onclick = () => pesquisar();
-    if (l) l.onclick = () => limpar();
-    if (o) o.onchange = () => render();
-
-    const status = document.getElementById("status");
-    if (status) {
-        status.textContent = "Carregando registros...";
-        status.className = "status";
-        status.style.display = "block";
-    }
+    if (v) v.addEventListener("click", () => window.location.href = "taskpane.html");
+    if (p) p.addEventListener("click", pesquisar);
+    if (l) l.addEventListener("click", limpar);
+    if (o) o.addEventListener("change", render);
 
     carregar();
 }
@@ -42,14 +35,13 @@ function indice(mapa, nomes) {
     return -1;
 }
 
-function encontrarCabecalho(valores) {
+function encontrarCabecalho(valores, obrigatorios) {
     for (let linha = 0; linha < Math.min(valores.length, 30); linha++) {
         const mapa = {};
         (valores[linha] || []).forEach((valor, coluna) => {
             if (String(valor ?? "").trim()) mapa[normalizar(valor)] = coluna;
         });
-
-        if (indice(mapa, ["EMPRESA"]) >= 0 && indice(mapa, ["DATA"]) >= 0) {
+        if (obrigatorios.every(nomes => indice(mapa, nomes) !== -1)) {
             return { linha, mapa };
         }
     }
@@ -77,23 +69,10 @@ function dataTexto(v) {
 
 function dataNumero(v) {
     if (typeof v === "number") return Date.UTC(1899, 11, 30) + v * 86400000;
-
     const texto = String(v || "").trim();
-    if (!texto) return 0;
-
     const br = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
-    if (br) {
-        return new Date(
-            Number(br[3]),
-            Number(br[2]) - 1,
-            Number(br[1]),
-            Number(br[4] || 0),
-            Number(br[5] || 0),
-            Number(br[6] || 0)
-        ).getTime();
-    }
-
-    const d = new Date(text);
+    if (br) return new Date(+br[3], +br[2] - 1, +br[1], +(br[4] || 0), +(br[5] || 0), +(br[6] || 0)).getTime();
+    const d = new Date(texto);
     return isNaN(d) ? 0 : d.getTime();
 }
 
@@ -106,55 +85,88 @@ async function carregar() {
             const ranges = nomes.map(nome => {
                 const sheet = context.workbook.worksheets.getItem(nome);
                 const range = sheet.getUsedRangeOrNullObject(true);
-                range.load("values,isNullObject");
+                range.load(["values", "isNullObject"]);
                 return { nome, range };
             });
 
+            const config = context.workbook.worksheets.getItem("Config");
+            const configRange = config.getUsedRangeOrNullObject(true);
+            configRange.load(["values", "isNullObject"]);
             await context.sync();
 
             for (const item of ranges) {
                 if (item.range.isNullObject) continue;
-
                 const valores = item.range.values || [];
-                const cabecalho = encontrarCabecalho(valores);
-                if (!cabecalho) continue;
+                const cab = encontrarCabecalho(valores, [["EMPRESA"], ["DATA"]]);
+                if (!cab) continue;
 
-                for (let i = cabecalho.linha + 1; i < valores.length; i++) {
-                    const registro = valores[i] || [];
-                    const empresa = String(valor(registro, cabecalho.mapa, ["EMPRESA"])).trim();
+                for (let i = cab.linha + 1; i < valores.length; i++) {
+                    const r = valores[i] || [];
+                    const empresa = String(valor(r, cab.mapa, ["EMPRESA"])).trim();
                     if (!empresa) continue;
 
                     todos.push({
                         tipo: item.nome,
-                        data: valor(registro, cabecalho.mapa, ["DATA"]),
+                        data: valor(r, cab.mapa, ["DATA"]),
                         empresa,
-                        realizadoPor: String(valor(registro, cabecalho.mapa, ["REALIZADO POR"])).trim(),
-                        supervisor: String(valor(registro, cabecalho.mapa, ["SUPERVISOR"])).trim(),
-                        qtde: String(valor(registro, cabecalho.mapa, ["QTDE"])).trim(),
-                        historico: String(valor(registro, cabecalho.mapa, ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"])).trim(),
-                        mensagem: String(valor(registro, cabecalho.mapa, ["MENSAGEM"])).trim(),
-                        assunto: String(valor(registro, cabecalho.mapa, ["ASSUNTO"])).trim(),
-                        id: String(valor(registro, cabecalho.mapa, ["ID REGISTRO"])).trim(),
-                        emailResposta: String(valor(registro, cabecalho.mapa, ["EMAIL RESPOSTA", "E-MAIL RESPOSTA"])).trim()
+                        realizadoPor: String(valor(r, cab.mapa, ["REALIZADO POR"])).trim(),
+                        supervisor: String(valor(r, cab.mapa, ["SUPERVISOR"])).trim(),
+                        qtde: String(valor(r, cab.mapa, ["QTDE"])).trim(),
+                        historico: String(valor(r, cab.mapa, ["HISTORICO EXTERNO", "HISTÓRICO EXTERNO"])).trim(),
+                        mensagem: String(valor(r, cab.mapa, ["MENSAGEM"])).trim(),
+                        assunto: String(valor(r, cab.mapa, ["ASSUNTO"])).trim(),
+                        id: String(valor(r, cab.mapa, ["ID REGISTRO"])).trim(),
+                        emailResposta: String(valor(r, cab.mapa, ["EMAIL RESPOSTA", "E-MAIL RESPOSTA"])).trim()
                     });
                 }
             }
+
+            if (!configRange.isNullObject) preencherListasConfig(configRange.values || []);
         });
 
-        preencherListas();
         pesquisar();
-
         const status = document.getElementById("status");
         if (status) status.style.display = "none";
     } catch (e) {
-        erro("Não foi possível carregar os registros. " + (e?.message || "Verifique se as planilhas Email e SMS estão disponíveis."));
+        erro("Não foi possível carregar a consulta. " + (e?.message || "Verifique as abas Email, SMS e Config."));
     }
+}
+
+function preencherListasConfig(valores) {
+    const cab = encontrarCabecalho(valores, [
+        ["EMPRESAS", "EMPRESA"],
+        ["SUPERVISORES", "SUPERVISOR"]
+    ]);
+    if (!cab) {
+        preencherListasFallback();
+        return;
+    }
+
+    const empresas = [], supervisores = [], realizados = [];
+    const ie = indice(cab.mapa, ["EMPRESAS", "EMPRESA"]);
+    const is = indice(cab.mapa, ["SUPERVISORES", "SUPERVISOR"]);
+    const ir = indice(cab.mapa, ["REALIZADO POR", "REALIZADO_POR", "REALIZADOPOR"]);
+
+    for (let i = cab.linha + 1; i < valores.length; i++) {
+        if (ie !== -1 && valores[i][ie]) empresas.push(String(valores[i][ie]).trim());
+        if (is !== -1 && valores[i][is]) supervisores.push(String(valores[i][is]).trim());
+        if (ir !== -1 && valores[i][ir]) realizados.push(String(valores[i][ir]).trim());
+    }
+
+    preencherSelect("empresa", empresas, "Todas");
+    preencherSelect("supervisor", supervisores, "Todos");
+    preencherSelect("realizadoPor", realizados, "Todos");
+}
+
+function preencherListasFallback() {
+    preencherSelect("empresa", todos.map(r => r.empresa), "Todas");
+    preencherSelect("supervisor", todos.map(r => r.supervisor), "Todos");
+    preencherSelect("realizadoPor", todos.map(r => r.realizadoPor), "Todos");
 }
 
 function preencherSelect(id, valores, padrao) {
     const select = document.getElementById(id);
     if (!select) return;
-
     const atual = select.value;
     select.innerHTML = "";
 
@@ -163,8 +175,8 @@ function preencherSelect(id, valores, padrao) {
     primeira.textContent = padrao;
     select.appendChild(primeira);
 
-    [...new Set(valores.filter(v => String(v).trim()))]
-        .sort((a, b) => String(a).localeCompare(String(b), "pt-BR"))
+    [...new Set(valores.map(v => String(v).trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "pt-BR"))
         .forEach(v => {
             const option = document.createElement("option");
             option.value = v;
@@ -173,12 +185,6 @@ function preencherSelect(id, valores, padrao) {
         });
 
     if ([...select.options].some(o => o.value === atual)) select.value = atual;
-}
-
-function preencherListas() {
-    preencherSelect("empresa", todos.map(r => r.empresa), "Todas");
-    preencherSelect("realizadoPor", todos.map(r => r.realizadoPor), "Todos");
-    preencherSelect("supervisor", todos.map(r => r.supervisor), "Todos");
 }
 
 function pesquisar() {
@@ -200,20 +206,32 @@ function pesquisar() {
             (!supervisor || normalizar(r.supervisor) === supervisor) &&
             (inicioMs === null || t >= inicioMs) &&
             (fimMs === null || t <= fimMs);
-    }).sort((a, b) => dataNumero(b.data) - dataNumero(a.data));
+    });
 
     render();
 }
 
-function ordenar(lista) {\n    const ordem = document.getElementById("ordenacao")?.value || "recente";\n    return lista.sort((a, b) => {\n        if (ordem === "antiga") return dataNumero(a.data) - dataNumero(b.data);\n        if (ordem === "empresa") return normalizar(a.empresa).localeCompare(normalizar(b.empresa), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);\n        if (ordem === "realizado") return normalizar(a.realizadoPor).localeCompare(normalizar(b.realizadoPor), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);\n        if (ordem === "supervisor") return normalizar(a.supervisor).localeCompare(normalizar(b.supervisor), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);\n        return dataNumero(b.data) - dataNumero(a.data);\n    });\n}\n\nfunction render() {
+function ordenar(lista) {
+    const ordem = document.getElementById("ordenacao")?.value || "recente";
+    return lista.sort((a, b) => {
+        if (ordem === "antiga") return dataNumero(a.data) - dataNumero(b.data);
+        if (ordem === "empresa") return normalizar(a.empresa).localeCompare(normalizar(b.empresa), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);
+        if (ordem === "realizado") return normalizar(a.realizadoPor).localeCompare(normalizar(b.realizadoPor), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);
+        if (ordem === "supervisor") return normalizar(a.supervisor).localeCompare(normalizar(b.supervisor), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);
+        return dataNumero(b.data) - dataNumero(a.data);
+    });
+}
+
+function render() {
     const lista = document.getElementById("lista");
     const contador = document.getElementById("contador");
     if (!lista || !contador) return;
 
-    contador.textContent = registros.length + (registros.length === 1 ? " registro" : " registros");
+    const ordenados = ordenar([...registros]);
+    contador.textContent = ordenados.length + (ordenados.length === 1 ? " registro" : " registros");
     lista.innerHTML = "";
 
-    ordenar(registros).slice(0, 300).forEach((r, i) => {
+    ordenados.slice(0, 300).forEach((r, i) => {
         const card = document.createElement("div");
         card.className = "registro";
         card.innerHTML =
@@ -228,19 +246,15 @@ function ordenar(lista) {\n    const ordem = document.getElementById("ordenacao"
             '<div><small>Assunto</small>' + escapar(r.assunto || "—") + '</div>' +
             '<div><small>Mensagem</small>' + escapar(r.mensagem || "—") + '</div>' +
             '<div><small>Histórico</small>' + escapar(r.historico || "—") + '</div>' +
-            '</div><div class="registro-acoes">' +
-            '<button type="button" class="btn-duplicar" data-i="' + i + '">Duplicar</button></div>';
-
+            '</div><div class="registro-acoes"><button type="button" class="btn-duplicar" data-index="' + i + '">Duplicar</button></div>';
         lista.appendChild(card);
     });
 
     lista.querySelectorAll(".btn-duplicar").forEach(button => {
-        button.onclick = () => duplicar(registros[Number(button.dataset.i)]);
+        button.addEventListener("click", () => duplicar(ordenados[Number(button.dataset.index)]));
     });
 
-    if (!registros.length) {
-        lista.innerHTML = '<div class="registro">Nenhum registro encontrado.</div>';
-    }
+    if (!ordenados.length) lista.innerHTML = '<div class="registro">Nenhum registro encontrado.</div>';
 }
 
 function duplicar(r) {
@@ -255,7 +269,6 @@ function duplicar(r) {
         assunto: r.assunto,
         mensagem: r.mensagem
     }));
-
     window.location.href = r.tipo === "Email" ? "email.html" : "sms.html";
 }
 
@@ -265,7 +278,9 @@ function limpar() {
     document.getElementById("dataFim").value = "";
     document.getElementById("empresa").value = "";
     document.getElementById("realizadoPor").value = "";
-    document.getElementById("supervisor").value = "";\n    const ordenacao = document.getElementById("ordenacao");\n    if (ordenacao) ordenacao.value = "recente";
+    document.getElementById("supervisor").value = "";
+    const ordenacao = document.getElementById("ordenacao");
+    if (ordenacao) ordenacao.value = "recente";
     pesquisar();
 }
 
