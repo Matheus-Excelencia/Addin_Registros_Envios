@@ -238,6 +238,13 @@ function atualizarContador() {
     campo.style.borderColor = quantidade > limiteSMS ? "red" : "";
 }
 
+function atualizarStatusUsuario(texto, tipo) {
+    const elemento = document.getElementById("statusUsuario");
+    if (!elemento) return;
+    elemento.textContent = texto;
+    elemento.className = "ajuda-usuario " + (tipo || "");
+}
+
 async function identificarUsuario() {
     const campo = document.getElementById("realizadoPor");
     try {
@@ -250,6 +257,7 @@ async function identificarUsuario() {
         if (nome) {
             campo.value = nome;
             campo.readOnly = false;
+            atualizarStatusUsuario("✓ Identificado automaticamente: " + nome, "ok");
             adicionarLog("✓ SSO: " + nome);
         } else {
             adicionarLog("⚠ SSO sem nome");
@@ -257,6 +265,7 @@ async function identificarUsuario() {
     } catch (erro) {
         console.error(erro);
         campo.readOnly = false;
+        atualizarStatusUsuario("⚠ Não foi possível identificar automaticamente. Você pode preencher manualmente.", "aviso");
         adicionarLog("⚠ SSO não identificado");
     }
 }
@@ -343,6 +352,10 @@ async function salvarSMS(event) {
         document.getElementById("mensagem").selectedIndex = 0;
         document.getElementById("textoMensagem").value = "";
         atualizarContador();
+        mostrarStatus(
+            "✓ Registro salvo com sucesso.\nID: " + idRegistro,
+            "sucesso"
+        );
         await identificarUsuario();
     } catch (erro) {
         console.error(erro);
