@@ -1,1 +1,12 @@
-Office.onReady(function(){const go=u=>window.location.assign(u);const n=document.getElementById("btnNovo"),h=document.getElementById("btnHistorico"),r=document.getElementById("btnResumo"),c=document.getElementById("btnConfig"),k=document.getElementById("btnContinuar");if(n)n.addEventListener("click",()=>document.getElementById("novoCard").hidden=false);if(h)h.addEventListener("click",()=>go("historico.html"));if(r)r.addEventListener("click",()=>go("resumo.html"));if(c)c.addEventListener("click",()=>go("config.html"));if(k)k.addEventListener("click",()=>go(document.getElementById("tipoRegistro").value==="email"?"email.html":"sms.html"))});
+Office.onReady(function(){
+    const go = u => window.location.assign(u);
+    const n = document.getElementById("btnNovo");
+    const h = document.getElementById("btnHistorico");
+    const r = document.getElementById("btnResumo");
+    const c = document.getElementById("btnConfig");
+
+    if (n) n.addEventListener("click", () => go("novo.html"));
+    if (h) h.addEventListener("click", () => go("historico.html"));
+    if (r) r.addEventListener("click", () => go("resumo.html"));
+    if (c) c.addEventListener("click", () => go("config.html"));
+});
