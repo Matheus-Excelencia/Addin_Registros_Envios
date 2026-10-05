@@ -133,7 +133,13 @@ function limparFormulario() {
    NORMALIZAÇÃO
 ========================================================= */
 
-function emailValido(valor) {\n\n    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(valor || "").trim());\n}\n\n\nfunction normalizar(valor) {
+function emailValido(valor) {
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(valor || "").trim());
+}
+
+
+function normalizar(valor) {
 
     return String(valor || "")
         .normalize("NFD")
