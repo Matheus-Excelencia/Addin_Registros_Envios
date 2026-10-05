@@ -678,6 +678,13 @@ function mostrarTextoMensagem() {
    SSO
 ========================================================= */
 
+function atualizarStatusUsuario(texto, tipo) {
+    const elemento = document.getElementById("statusUsuario");
+    if (!elemento) return;
+    elemento.textContent = texto;
+    elemento.className = "ajuda-usuario " + (tipo || "");
+}
+
 async function identificarUsuario() {
 
     const campo =
@@ -711,7 +718,7 @@ async function identificarUsuario() {
             campo.value = nome;
 
             campo.readOnly = false;
-
+            atualizarStatusUsuario("✓ Identificado automaticamente: " + nome, "ok");
 
             adicionarLog(
                 "✓ SSO: " + nome
@@ -731,6 +738,7 @@ async function identificarUsuario() {
         console.error(erro);
 
         campo.readOnly = false;
+        atualizarStatusUsuario("⚠ Não foi possível identificar automaticamente. Você pode preencher manualmente.", "aviso");
 
         adicionarLog(
             "⚠ SSO não identificado"
@@ -1001,6 +1009,11 @@ async function salvarEmail(event) {
 
 
         document.getElementById("textoMensagem").value = "";
+
+        mostrarStatus(
+            "✓ Registro salvo com sucesso.\nID: " + idRegistro,
+            "sucesso"
+        );
 
         await identificarUsuario();
 
