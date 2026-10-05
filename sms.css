@@ -171,3 +171,7 @@ button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.ajuda-usuario{display:block;margin-top:5px;font-size:11px;color:#666}
+.ajuda-usuario.ok{color:#1d6b3b}
+.ajuda-usuario.aviso{color:#7a5b00}
