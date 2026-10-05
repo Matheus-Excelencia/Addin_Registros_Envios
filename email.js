@@ -1181,7 +1181,23 @@ async function adicionarRegistroEmail(
     }
 
 
-    const numeroColunas = 12;
+    // Compatibilidade: versões anteriores da aba Email tinham apenas 10 colunas.
+    // Se ID REGISTRO ainda não existir, ele é criado automaticamente na próxima coluna.
+    let indiceId = obterIndice(mapa, ["ID REGISTRO"]);
+    if (indiceId === -1) {
+        const indices = Object.values(mapa).filter(function (valor) { return Number.isInteger(valor); });
+        indiceId = indices.length > 0 ? Math.max.apply(null, indices) + 1 : 10;
+        const colunaId = (usado.isNullObject ? 0 : usado.columnIndex) + indiceId;
+        folha.getRangeByIndexes(
+            (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
+            colunaId,
+            1,
+            1
+        ).values = [["ID REGISTRO"]];
+        mapa["ID REGISTRO"] = indiceId;
+    }
+
+    const numeroColunas = 11;
 
     validarEstruturaRegistro(mapa, [
         ["DATA"],
@@ -1279,7 +1295,7 @@ async function adicionarRegistroEmail(
         atual.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
         await context.sync();
 
-        const proximaLinha = obterProximaLinhaDados(atual, 10);
+        const proximaLinha = obterProximaLinhaDados(atual, 11);
         const colunaInicial = atual.isNullObject ? 0 : atual.columnIndex;
         const intervaloRegistro = folha.getRangeByIndexes(
             proximaLinha,
@@ -1295,11 +1311,6 @@ async function adicionarRegistroEmail(
             intervaloRegistro.getCell(0, indiceMensagem).format.wrapText = false;
         }
         intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
-
-        const indiceId = obterIndice(mapa, ["ID REGISTRO"]);
-        if (indiceId === -1) {
-            throw new Error("A coluna ID REGISTRO não foi encontrada.");
-        }
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
