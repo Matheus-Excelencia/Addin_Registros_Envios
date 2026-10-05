@@ -5,12 +5,14 @@ function iniciarHistorico() {
     pronto = true;
 
     const v = document.getElementById("btnVoltar");
+    const o = document.getElementById("ordenacao");
     const p = document.getElementById("btnPesquisar");
     const l = document.getElementById("btnLimpar");
 
     if (v) v.onclick = () => { window.location.href = "taskpane.html"; };
     if (p) p.onclick = () => pesquisar();
     if (l) l.onclick = () => limpar();
+    if (o) o.onchange = () => render();
 
     const status = document.getElementById("status");
     if (status) {
@@ -203,7 +205,7 @@ function pesquisar() {
     render();
 }
 
-function render() {
+function ordenar(lista) {\n    const ordem = document.getElementById("ordenacao")?.value || "recente";\n    return lista.sort((a, b) => {\n        if (ordem === "antiga") return dataNumero(a.data) - dataNumero(b.data);\n        if (ordem === "empresa") return normalizar(a.empresa).localeCompare(normalizar(b.empresa), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);\n        if (ordem === "realizado") return normalizar(a.realizadoPor).localeCompare(normalizar(b.realizadoPor), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);\n        if (ordem === "supervisor") return normalizar(a.supervisor).localeCompare(normalizar(b.supervisor), "pt-BR") || dataNumero(b.data) - dataNumero(a.data);\n        return dataNumero(b.data) - dataNumero(a.data);\n    });\n}\n\nfunction render() {
     const lista = document.getElementById("lista");
     const contador = document.getElementById("contador");
     if (!lista || !contador) return;
@@ -211,7 +213,7 @@ function render() {
     contador.textContent = registros.length + (registros.length === 1 ? " registro" : " registros");
     lista.innerHTML = "";
 
-    registros.slice(0, 300).forEach((r, i) => {
+    ordenar(registros).slice(0, 300).forEach((r, i) => {
         const card = document.createElement("div");
         card.className = "registro";
         card.innerHTML =
@@ -263,7 +265,7 @@ function limpar() {
     document.getElementById("dataFim").value = "";
     document.getElementById("empresa").value = "";
     document.getElementById("realizadoPor").value = "";
-    document.getElementById("supervisor").value = "";
+    document.getElementById("supervisor").value = "";\n    const ordenacao = document.getElementById("ordenacao");\n    if (ordenacao) ordenacao.value = "recente";
     pesquisar();
 }
 
