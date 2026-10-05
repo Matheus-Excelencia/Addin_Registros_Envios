@@ -676,3 +676,172 @@ A documentação técnica detalhada do projeto está disponível no SharePoint:
 **[Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQCWHNmJGBi_R5tA79npAMo9AdartnTpMtqaM0UFbAeXiAk?e=tDYYkV)**
 
 A documentação contém detalhes de instalação, arquitetura, estrutura dos arquivos, modelo de dados, regras dos módulos, autenticação, manutenção e operação do projeto.
+
+
+---
+
+# Atualização de implementação — 05/10/2026
+
+## Versão de referência
+
+- Linha de desenvolvimento: `main`
+- Versão estável anterior: `alpha-1.04`
+- Próxima versão estável de referência: `alpha-1.05`
+
+## Módulos incorporados à documentação
+
+A implementação atual passa a considerar oficialmente os seguintes módulos:
+
+- **Novo Registro** — tela separada para escolha entre E-mail e SMS;
+- **E-mail** — registro completo de disparos;
+- **SMS** — registro completo com limite configurável;
+- **Histórico** — consulta, filtros, ordenação, duplicação e navegação para a linha do registro;
+- **Resumo** — consolidação dos registros por período;
+- **Configurações** — fonte central das listas e parâmetros utilizados pelos formulários.
+
+## Histórico
+
+O Histórico consulta as abas `Email` e `SMS` e permite filtrar por:
+
+- Tipo;
+- Data inicial;
+- Data final;
+- Empresa;
+- Realizado por;
+- Supervisor;
+- Pesquisa.
+
+Também permite ordenar por:
+
+- Mais recente;
+- Mais antiga;
+- Empresa A-Z;
+- Realizado por A-Z;
+- Supervisor A-Z.
+
+Cada registro possui as ações **Duplicar** e **Ir para registro**.
+
+A navegação para a planilha utiliza a linha real do registro, portanto também funciona para registros antigos que ainda não possuam `ID REGISTRO`.
+
+A mensagem exibida no Histórico utiliza um campo redimensionável verticalmente para facilitar a leitura de textos maiores.
+
+## Resumo
+
+O módulo Resumo apresenta a consolidação dos registros de E-mail e SMS conforme o período selecionado.
+
+O carregamento do módulo possui indicação de status para diferenciar o carregamento da atualização concluída.
+
+## Configurações
+
+A aba `Config` permanece como fonte central para:
+
+- Empresas;
+- E-mails de resposta;
+- Supervisores;
+- Realizado por;
+- Mensagens de E-mail;
+- Mensagens de SMS;
+- Limite SMS.
+
+Os formulários utilizam essas listas como fonte de seleção e podem atualizar valores configuráveis quando necessário.
+
+## Identificação do usuário
+
+Os formulários tentam identificar automaticamente o usuário Microsoft 365.
+
+A interface informa visualmente:
+
+- identificação automática realizada; ou
+- necessidade de preenchimento manual quando a plataforma não disponibilizar a identificação.
+
+## Confirmação de gravação
+
+Após o salvamento, E-mail e SMS apresentam confirmação visual de sucesso e o `ID REGISTRO` gerado.
+
+## ID REGISTRO
+
+Os registros novos utilizam um identificador no padrão:
+
+`ENV-...`
+
+A estrutura atual é:
+
+### Email
+
+| Coluna | Campo |
+|---|---|
+| A | Data |
+| B | Realizado por |
+| C | Empresa |
+| D | Qtde |
+| E | Email Resposta |
+| F | Supervisor |
+| G | Obs |
+| H | Historico Externo |
+| I | Mensagem |
+| J | Assunto |
+| K | ID REGISTRO |
+
+### SMS
+
+| Coluna | Campo |
+|---|---|
+| A | Data |
+| B | Realizado por |
+| C | Empresa |
+| D | Qtde |
+| E | Supervisor |
+| F | Obs |
+| G | Historico Externo |
+| H | Mensagem |
+| I | ID REGISTRO |
+
+O código possui compatibilidade com planilhas existentes que ainda não tenham essa coluna: quando `ID REGISTRO` estiver ausente, o módulo cria o cabeçalho na próxima coluna disponível antes de gravar o novo registro.
+
+## Integridade de gravação
+
+A gravação de E-mail e SMS foi reforçada para cenários de uso simultâneo.
+
+O módulo recarrega o intervalo utilizado antes de inserir o registro e verifica se o `ID REGISTRO` gerado apareceu na célula esperada.
+
+Se a confirmação falhar, existem novas tentativas limitadas. Caso a gravação continue sem confirmação, o sistema informa o erro ao usuário em vez de apresentar um salvamento como concluído.
+
+Essa proteção reduz o risco de inconsistências em uso concorrente, mas não transforma o Excel em um banco de dados transacional.
+
+## Indicadores de carregamento
+
+Os módulos Configurações, Histórico e Resumo possuem indicação de carregamento e conclusão da atualização.
+
+Os formulários E-mail e SMS também mantêm seus estados de processamento durante operações de leitura e gravação.
+
+## Cache
+
+Os arquivos JavaScript principais utilizam versionamento de consulta para evitar que o Excel Web mantenha versões antigas dos scripts após um deploy.
+
+## Estado de validação
+
+Na validação funcional atual, os módulos:
+
+- E-mail;
+- SMS;
+- Histórico;
+- Resumo
+
+foram testados no Excel Web e estão funcionando.
+
+A etapa seguinte é concluir a validação funcional da tela de **Configurações** antes do fechamento definitivo da próxima versão estável.
+
+## Histórico de alterações
+
+### 05/10/2026
+
+- Documentação atualizada para refletir a arquitetura e os módulos atuais;
+- Histórico documentado com filtros, ordenação, duplicação e navegação;
+- Resumo documentado;
+- Configurações documentadas;
+- Identificação automática do usuário documentada;
+- Confirmação de gravação e `ID REGISTRO` documentados;
+- Compatibilidade com planilhas antigas documentada;
+- Proteção de gravação concorrente documentada;
+- Estado de validação registrado para a próxima versão alpha.
+
