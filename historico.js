@@ -107,6 +107,7 @@ async function carregar() {
 
                     todos.push({
                         tipo: item.nome,
+                        linhaPlanilha: item.range.rowIndex + i,
                         data: valor(r, cab.mapa, ["DATA"]),
                         empresa,
                         realizadoPor: String(valor(r, cab.mapa, ["REALIZADO POR"])).trim(),
@@ -244,10 +245,14 @@ function render() {
             '<div><small>Supervisor</small>' + escapar(r.supervisor || "—") + '</div>' +
             '<div><small>Qtde</small>' + escapar(r.qtde || "—") + '</div>' +
             '<div><small>Assunto</small>' + escapar(r.assunto || "—") + '</div>' +
-            '<div><small>Mensagem</small>' + escapar(r.mensagem || "—") + '</div>' +
+            '<div class="campo-mensagem"><small>Mensagem</small><textarea class="mensagem-historico" readonly>' + escapar(r.mensagem || "—") + '</textarea></div>' +
             '<div><small>Histórico</small>' + escapar(r.historico || "—") + '</div>' +
-            '</div><div class="registro-acoes"><button type="button" class="btn-duplicar" data-index="' + i + '">Duplicar</button></div>';
+            '</div><div class="registro-acoes"><button type="button" class="btn-ir" data-index="' + i + '">Ir para registro</button><button type="button" class="btn-duplicar" data-index="' + i + '">Duplicar</button></div>';
         lista.appendChild(card);
+    });
+
+    lista.querySelectorAll(".btn-ir").forEach(button => {
+        button.addEventListener("click", () => irParaRegistro(ordenados[Number(button.dataset.index)]));
     });
 
     lista.querySelectorAll(".btn-duplicar").forEach(button => {
@@ -255,6 +260,25 @@ function render() {
     });
 
     if (!ordenados.length) lista.innerHTML = '<div class="registro">Nenhum registro encontrado.</div>';
+}
+
+async function irParaRegistro(r) {
+    if (!r || !Number.isInteger(r.linhaPlanilha)) {
+        erro("Não foi possível localizar a linha deste registro.");
+        return;
+    }
+
+    try {
+        await Excel.run(async context => {
+            const sheet = context.workbook.worksheets.getItem(r.tipo);
+            const celula = sheet.getRangeByIndexes(r.linhaPlanilha, 0, 1, 1);
+            sheet.activate();
+            celula.select();
+            await context.sync();
+        });
+    } catch (e) {
+        erro("Não foi possível ir para o registro. " + (e?.message || ""));
+    }
 }
 
 function duplicar(r) {
