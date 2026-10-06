@@ -845,3 +845,127 @@ A etapa seguinte é concluir a validação funcional da tela de **Configuraçõe
 - Proteção de gravação concorrente documentada;
 - Estado de validação registrado para a próxima versão alpha.
 
+
+# Atualização de implementação — 06/10/2026
+
+## Fechamento da validação recente
+
+A validação funcional mais recente confirmou o funcionamento dos módulos principais no Excel Web:
+
+- E-mail;
+- SMS;
+- Histórico;
+- Resumo;
+- Configurações.
+
+O problema recente de identificação automática do usuário no módulo E-mail foi diagnosticado como **cache do navegador**. Após limpar o cache e testar em outro navegador, o SSO voltou a funcionar normalmente.
+
+**Conclusão:** não houve necessidade de alterar a lógica de autenticação, o manifest.xml ou a configuração do Microsoft 365/Entra ID para corrigir esse incidente.
+
+## Validação de e-mail
+
+O campo **E-mail Resposta** possui validação básica de formato antes do salvamento e também ao cadastrar novos valores na configuração.
+
+A regra aceita formatos normais como:
+
+    nome@empresa.com
+
+incluindo domínios como .com, .net, .org e outros formatos válidos segundo a verificação estrutural utilizada.
+
+A validação confirma o **formato**, não a existência real da caixa postal ou do domínio.
+
+Mensagem utilizada quando o formato não é aceito:
+
+    ⚠ Informe um e-mail válido. Exemplo: nome@empresa.com
+
+## Identificação automática e contingência
+
+O comportamento estabelecido para **Realizado por** permanece:
+
+1. Tentar identificar automaticamente o usuário Microsoft 365 por Office.auth.getAccessToken();
+2. Se a plataforma não disponibilizar a identificação, permitir preenchimento manual;
+3. Registrar o estado da identificação na interface;
+4. Não expor tokens, credenciais ou informações sensíveis.
+
+O incidente de cache de 06/10/2026 foi tratado como problema de ambiente/local e não como falha estrutural do SSO.
+
+## Compatibilidade com registros existentes
+
+A aplicação mantém compatibilidade com planilhas que ainda não possuam ID REGISTRO.
+
+Quando a coluna não existe, o módulo cria o cabeçalho na próxima coluna disponível antes de gravar o novo registro.
+
+Estruturas atuais:
+
+### Email
+
+| Coluna | Campo |
+|---|---|
+| A | Data |
+| B | Realizado por |
+| C | Empresa |
+| D | Qtde |
+| E | Email Resposta |
+| F | Supervisor |
+| G | Obs |
+| H | Historico Externo |
+| I | Mensagem |
+| J | Assunto |
+| K | ID REGISTRO |
+
+### SMS
+
+| Coluna | Campo |
+|---|---|
+| A | Data |
+| B | Realizado por |
+| C | Empresa |
+| D | Qtde |
+| E | Supervisor |
+| F | Obs |
+| G | Historico Externo |
+| H | Mensagem |
+| I | ID REGISTRO |
+
+## Controle de concorrência
+
+A gravação continua protegida por recarga do intervalo utilizado, geração do identificador e confirmação da célula esperada.
+
+O sistema realiza tentativas limitadas e somente apresenta o salvamento como concluído quando a gravação é confirmada.
+
+Essa proteção reduz conflitos em uso simultâneo, sem tratar o Excel como banco transacional.
+
+## Cache dos scripts
+
+Os arquivos JavaScript utilizam parâmetros de versionamento na URL para reduzir o risco de execução de versões antigas após deploy.
+
+Caso o navegador continue utilizando uma versão antiga, a limpeza de cache e/ou teste em outro navegador é uma medida operacional válida para confirmar o comportamento atual.
+
+## Versionamento Alpha
+
+A linha alpha-1.05 foi atualizada para incorporar o estado atual validado do projeto.
+
+O fechamento desta atualização inclui:
+
+- validação dos módulos principais;
+- validação do SSO após limpeza de cache;
+- validação de formato de e-mail;
+- compatibilidade com ID REGISTRO;
+- proteção de gravação;
+- Histórico;
+- Resumo;
+- Configurações;
+- separação de mensagens E-mail/SMS;
+- limite configurável de SMS;
+- operação exclusivamente no Excel Web.
+
+## Histórico de alterações
+
+### 06/10/2026
+
+- Atualização do estado documentado do projeto;
+- Confirmação do funcionamento do SSO após limpeza de cache;
+- Registro do incidente como problema de cache do navegador;
+- Documentação da validação de formato de e-mail;
+- Consolidação das regras de compatibilidade e gravação;
+- Atualização do estado da linha Alpha.
