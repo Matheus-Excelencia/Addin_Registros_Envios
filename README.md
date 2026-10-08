@@ -1,71 +1,66 @@
-# Registro de Envios — Repositório
+# Registro de Envios — Índice do repositório
 
-Repositório do Office Add-in para Excel Web. Esta branch `alpha-2.0-dev` mantém a aplicação-base herdada da Alpha 1.05 no diretório raiz e isola o trabalho novo da Alpha 2.0 em `alpha2-prototype/`.
+Este repositório contém a aplicação Office Add-in de Registro de Envios e o ambiente isolado de desenvolvimento da Alpha 2.0.
 
-> **Proteção da versão estável:** este README não altera a aplicação. A Alpha 1.05 e o deploy de produção devem continuar isolados; não mesclar a Alpha 2.0 sem autorização explícita.
+## 1. Aplicação-base (raiz)
 
-## Onde encontrar cada coisa
+Os arquivos de execução da aplicação-base ficam na raiz para preservar os caminhos relativos usados pelo manifesto e pelo deploy existente.
 
-| Caminho | Finalidade |
+| Grupo | Arquivos | Responsabilidade |
+|---|---|---|
+| Entrada | `manifest.xml`, `taskpane.html`, `taskpane.css`, `taskpane.js` | Manifesto e painel principal |
+| Novo registro | `novo.html`, `novo.css`, `novo.js` | Escolha do módulo E-mail ou SMS |
+| E-mail | `email.html`, `email.css`, `email.js` | Formulário e gravação de registros de E-mail |
+| SMS | `sms.html`, `sms.css`, `sms.js` | Formulário e gravação de registros SMS |
+| Histórico | `historico.html`, `historico.css`, `historico.js` | Consulta, filtros e ações sobre registros |
+| Resumo | `resumo.html`, `resumo.css`, `resumo.js` | Indicadores consolidados |
+| Configurações | `config.html`, `config.css`, `config.js` | Listas, mensagens e parâmetros |
+| Comandos Office | `commands.html`, `commands.js` | Arquivos referenciados pelo manifesto |
+| Recursos | `assets/` | Ícones da aplicação-base |
+
+> Não mova os arquivos de execução da raiz sem atualizar e testar todas as referências do `manifest.xml`, os links relativos entre HTML/CSS/JS e a configuração de hospedagem.
+
+## 2. Alpha 2.0 — desenvolvimento isolado
+
+A Alpha 2.0 fica em [`alpha2-prototype/`](alpha2-prototype/).
+
+| Caminho | Conteúdo |
 |---|---|
-| [`alpha2-prototype/`](alpha2-prototype/) | Ambiente isolado de desenvolvimento da Alpha 2.0 |
-| [`alpha2-prototype/index.html`](alpha2-prototype/index.html) | Protótipo navegável com dados fictícios |
-| [`alpha2-prototype/assets/`](alpha2-prototype/assets/) | Ícone e recursos visuais exclusivos da Alpha 2.0 |
-| [`alpha2-prototype/docs/`](alpha2-prototype/docs/) | Arquitetura, escopo e documentação do protótipo |
-| [`alpha2-prototype/tests/`](alpha2-prototype/tests/) | Roteiros de teste; usar apenas dados fictícios |
-| [`alpha2-prototype/manifest/`](alpha2-prototype/manifest/) | Local reservado ao manifesto separado de teste |
-| [`manifest.xml`](manifest.xml) | Manifesto da aplicação-base presente na raiz |
-| `taskpane.*`, `novo.*`, `email.*`, `sms.*`, `historico.*`, `resumo.*`, `config.*`, `commands.*` | Arquivos da aplicação-base herdada da Alpha 1.05 |
-| [`assets/`](assets/) | Ícones/recursos da aplicação-base; não misturar com o ícone da Alpha 2.0 |
+| [`alpha2-prototype/index.html`](alpha2-prototype/index.html) | Protótipo visual com dados fictícios |
+| [`alpha2-prototype/assets/`](alpha2-prototype/assets/) | Ícone e recursos visuais próprios |
+| [`alpha2-prototype/docs/`](alpha2-prototype/docs/) | Arquitetura, escopo e plano de trabalho |
+| [`alpha2-prototype/tests/`](alpha2-prototype/tests/) | Roteiros de validação |
+| [`alpha2-prototype/manifest/`](alpha2-prototype/manifest/) | Notas para o manifesto independente de teste |
 
-## Estrutura resumida
+### Documentação da Alpha 2.0
 
-```text
-Addin_Registros_Envios/
-├── README.md                    # Índice geral deste repositório
-├── manifest.xml                 # Manifesto da aplicação-base
-├── taskpane.*, novo.*
-├── email.*, sms.*
-├── historico.*, resumo.*
-├── config.*, commands.*
-├── assets/                      # Recursos da aplicação-base
-└── alpha2-prototype/
-    ├── README.md                # Guia do ambiente Alpha 2.0
-    ├── index.html               # Protótipo isolado
-    ├── assets/                  # Identidade visual Alpha 2.0
-    ├── docs/                    # Arquitetura e planejamento
-    ├── tests/                   # Roteiros de teste
-    └── manifest/                # Preparação do manifesto de teste
-```
-
-## Por que os arquivos da aplicação-base continuam na raiz?
-
-Eles são mantidos no lugar para evitar quebrar o caminho de entrada e a configuração de deploy já existentes. A organização da Alpha 2.0 acontece dentro de sua própria pasta, sem mover arquivos executáveis da aplicação-base nem mudar o manifesto usado por ela.
-
-## Alpha 2.0 — estado atual
-
-- O protótipo é visual e usa dados fictícios.
-- Ainda não grava no Excel nem em um serviço externo.
-- O manifesto separado só deve ser criado depois que houver uma URL de Preview exclusiva e verificada.
-- A publicação independente na Vercel está bloqueada por falta de permissão de criação/implantação (erro 403).
-- Não foram desativadas proteções nem alterado o deploy de produção.
-
-## Regras de desenvolvimento
-
-1. Trabalhar na branch `alpha-2.0-dev`.
-2. Não alterar `main` ou `alpha-1.05` para desenvolver a Alpha 2.0.
-3. Não apontar o manifesto de teste para a produção da Alpha 1.05.
-4. Não usar dados pessoais reais no protótipo.
-5. Não criar banco, serviço pago ou credenciais sem verificar necessidade e custo.
-6. Não depender de privilégios administrativos do SharePoint.
-7. Não mesclar nem publicar a Alpha 2.0 em produção sem autorização explícita.
-
-## Links úteis
-
-- [Pasta Alpha 2.0](alpha2-prototype/)
+- [Guia da pasta Alpha 2.0](alpha2-prototype/README.md)
 - [Arquitetura](alpha2-prototype/docs/ARCHITECTURE.md)
-- [Documentação do protótipo](alpha2-prototype/docs/PROTOTIPO.md)
+- [Descrição do protótipo](alpha2-prototype/docs/PROTOTIPO.md)
 - [Plano de desenvolvimento](alpha2-prototype/docs/README.md)
 - [Roteiros de teste](alpha2-prototype/tests/README.md)
-- [Manifesto de teste — notas](alpha2-prototype/manifest/README.md)
-- [Recursos visuais — notas](alpha2-prototype/assets/README.md)
+- [Notas dos recursos visuais](alpha2-prototype/assets/README.md)
+- [Notas do manifesto de teste](alpha2-prototype/manifest/README.md)
+
+## 3. Regras de isolamento e segurança
+
+1. A Alpha 1.05 e a produção devem permanecer estáveis.
+2. Desenvolver a Alpha 2.0 na branch `alpha-2.0-dev`.
+3. Não apontar o manifesto da Alpha 2.0 para a URL de produção.
+4. Não usar dados pessoais reais nos testes do protótipo.
+5. Não criar serviços pagos, banco de dados ou credenciais sem avaliar necessidade e custo.
+6. Não depender de privilégios administrativos do SharePoint.
+7. Não mesclar a Alpha 2.0 na linha estável sem autorização explícita.
+
+## 4. Estado conhecido
+
+- A aplicação-base e o protótipo Alpha 2.0 coexistem nesta branch, mas têm funções distintas.
+- O protótipo ainda usa dados fictícios e não grava no Excel nem em serviços externos.
+- O manifesto separado da Alpha 2.0 depende de uma URL de Preview própria confirmada.
+- A implantação independente na Vercel foi recusada com erro 403; nenhuma proteção da produção foi alterada.
+
+## 5. Repositório e branch
+
+- Repositório: [Matheus-Excelencia/Addin_Registros_Envios](https://github.com/Matheus-Excelencia/Addin_Registros_Envios)
+- Branch de organização/desenvolvimento: `alpha-2.0-dev`
+- Aplicação de produção (referência, não alterar neste trabalho): [addin-registros-envios.vercel.app](https://addin-registros-envios.vercel.app/)
