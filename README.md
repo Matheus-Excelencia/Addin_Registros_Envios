@@ -4,7 +4,7 @@ Office Add-in desenvolvido para **Excel Web / Microsoft 365** com o objetivo de 
 
 O projeto utiliza uma arquitetura baseada em **Office Add-ins**, com **Task Pane**, JavaScript e integração direta com a pasta de trabalho do Excel por meio da **Excel JavaScript API**.
 
-> **Documentação técnica do projeto:** [Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQCWHNmJGBi_R5tA79npAMo9AdartnTpMtqaM0UFbAeXiAk?e=tDYYkV)
+> **Documentação técnica do projeto:** [Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQB79cWT2VE7RYT1MOfd8GDtAf6Lf5umxpsdou1uH6neI0s?e=5BDbt1)
 
 ---
 
