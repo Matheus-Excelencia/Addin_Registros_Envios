@@ -8,21 +8,25 @@ Marcar cada item somente depois de executar e registrar o resultado.
 - [x] Registrar os caminhos principais antes/depois da etapa de movimentação.
 - [x] Buscar referências principais a `.html`, `.css`, `.js`, `window.location` e `location.href`.
 
-## Verificação estática
+## Verificação estática e de hospedagem
 - [x] HTMLs da aplicação apontam para CSS/JS existentes em `app/styles/` e `app/scripts/`.
-- [x] Caminhos de navegação verificados nos scripts consultados apontam para páginas HTML mantidas na raiz.
-- [ ] Conferir todos os ícones e recursos referenciados no manifesto.
-- [ ] Validar formalmente a sintaxe do XML do manifesto.
-- [ ] Confirmar que o manifesto de teste usa ID e URLs independentes da produção.
-- [x] O manifesto estável consultado continua apontando para a URL de produção; ele não deve ser usado para testar a Alpha 2.0.
-- [ ] Fazer uma revisão funcional completa para confirmar que a movimentação não alterou gravação, planilhas ou validações.
+- [x] Caminhos de navegação nos scripts consultados apontam para páginas HTML mantidas na raiz.
+- [x] CSS e JavaScript locais consultados respondem HTTP 200 no Preview.
+- [x] Ícones `assets/icon-16.png`, `assets/icon-32.png` e `assets/icon-80.png` respondem HTTP 200 no Preview.
+- [ ] Validar formalmente a sintaxe XML do manifesto.
+- [ ] Confirmar que existe manifesto de teste independente, com ID e URLs independentes da produção.
+- [x] Confirmado que o manifesto publicado neste deploy ainda usa o GUID estável e URLs de produção; não usar para instalar/testar a Alpha 2.0 no Excel.
+- [ ] Fazer revisão funcional completa de gravação, planilhas e validações.
+- [ ] Investigar o endpoint raiz `/`, que responde HTTP 404 no Preview; as páginas HTML diretas funcionam.
 
 ## Deploy e Excel
-- [ ] Existe URL Preview exclusiva e acessível por HTTPS.
-- [ ] Abrir cada página diretamente no Preview sem erro 404.
-- [ ] Confirmar carregamento de CSS, JS e Office.js no navegador.
-- [ ] Importar somente o manifesto de teste independente.
-- [ ] Testar navegação: painel → novo registro → e-mail/SMS; painel → histórico/resumo/configurações.
+- [x] URL Preview HTTPS disponível: https://addin-registros-envios-nipm8pr6r-acme-vs-coyote.vercel.app/
+- [x] Abrir diretamente as páginas principais no Preview: o usuário informou que todas as telas abriram normalmente.
+- [x] Confirmar por requisição HTTP que `taskpane.html`, `manifest.xml`, os CSS/JS locais consultados e os ícones respondem corretamente.
+- [ ] Confirmar carregamento de Office.js no Excel/navegador.
+- [ ] Importar somente manifesto de teste independente.
+- [x] Teste manual informado pelo usuário: todas as telas abriram normalmente.
+- [ ] Testar fluxo completo de navegação dentro do Excel.
 - [ ] Testar leitura e gravação em cópia de uma pasta de trabalho, nunca em dados reais durante a validação.
 - [ ] Testar filtros, duplicação, retorno, mensagens e validações.
 - [ ] Registrar erros do console e corrigir antes de avançar.
@@ -39,7 +43,12 @@ Marcar cada item somente depois de executar e registrar o resultado.
 - [x] Documentação de organização e mapa inicial de dependências.
 - [x] Migração física dos CSS/JS para `app/styles/` e `app/scripts/` na branch `alpha-2.0-dev`.
 - [x] Atualização das referências nos sete HTMLs da aplicação que carregam CSS/JS locais.
-- [ ] Validação em Preview e no Excel.
+- [x] Deploy Preview acessível e teste manual de abertura de todas as telas informado pelo usuário.
+- [ ] Validação funcional no Excel e confirmação de persistência dos dados.
+- [ ] Validar manifesto de teste separado antes de instalar no Excel.
 
-## Bloqueio registrado
-A criação de um projeto Vercel separado para a Alpha 2.0 retornou erro 403 (sem permissão para criar projeto). Não foi possível confirmar um Preview independente. Até resolver isso, não importar o manifesto estável no Excel para validar a Alpha 2.0 e não alterar produção.
+## Bloqueios e observações
+- A tentativa anterior de criar um projeto Vercel separado para Alpha 2.0 retornou erro 403. A integração agora permite consultar deployments do projeto existente e foi localizado um Preview da branch `alpha-2.0-dev`.
+- O Preview consultado serve `taskpane.html`, `manifest.xml`, CSS/JS locais e ícones, mas `/` retorna HTTP 404.
+- O manifesto publicado no Preview ainda aponta para o domínio de produção e mantém o GUID estável. Não importar esse manifesto no Excel para validar a Alpha 2.0.
+- A abertura visual das telas não comprova que salvar, ler dados, Office.js, filtros ou validações funcionem.
