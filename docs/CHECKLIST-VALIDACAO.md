@@ -3,24 +3,24 @@
 Marcar cada item somente depois de executar e registrar o resultado.
 
 ## Antes da migração
-- [ ] Confirmar branch e commit de trabalho: `alpha-2.0-dev`.
-- [ ] Confirmar que `main` e `alpha-1.05` não foram alteradas.
-- [ ] Registrar o conjunto de arquivos antes de cada etapa.
-- [ ] Buscar referências a `.html`, `.css`, `.js`, `assets/`, `window.location`, `location.href` e URLs absolutas.
+- [x] Confirmar branch e commit de trabalho: `alpha-2.0-dev`.
+- [x] Confirmar que `main` e `alpha-1.05` não foram alteradas por esta etapa.
+- [x] Registrar os caminhos principais antes/depois da etapa de movimentação.
+- [x] Buscar referências principais a `.html`, `.css`, `.js`, `window.location` e `location.href`.
 
 ## Verificação estática
-- [ ] Todo HTML aponta para CSS e JS existentes.
-- [ ] Todos os caminhos de navegação levam a páginas existentes.
-- [ ] Todos os ícones e recursos referenciados existem.
-- [ ] O manifesto XML é bem-formado.
-- [ ] IDs e URLs do manifesto de teste são independentes da produção.
-- [ ] Nenhum recurso de teste aponta acidentalmente para a URL de produção.
-- [ ] Não há alterações em lógica de gravação, planilhas ou validações apenas por causa da movimentação de arquivos.
+- [x] HTMLs da aplicação apontam para CSS/JS existentes em `app/styles/` e `app/scripts/`.
+- [x] Caminhos de navegação verificados nos scripts consultados apontam para páginas HTML mantidas na raiz.
+- [ ] Conferir todos os ícones e recursos referenciados no manifesto.
+- [ ] Validar formalmente a sintaxe do XML do manifesto.
+- [ ] Confirmar que o manifesto de teste usa ID e URLs independentes da produção.
+- [x] O manifesto estável consultado continua apontando para a URL de produção; ele não deve ser usado para testar a Alpha 2.0.
+- [ ] Fazer uma revisão funcional completa para confirmar que a movimentação não alterou gravação, planilhas ou validações.
 
 ## Deploy e Excel
 - [ ] Existe URL Preview exclusiva e acessível por HTTPS.
 - [ ] Abrir cada página diretamente no Preview sem erro 404.
-- [ ] Confirmar carregamento de CSS, JS e Office.js.
+- [ ] Confirmar carregamento de CSS, JS e Office.js no navegador.
 - [ ] Importar somente o manifesto de teste independente.
 - [ ] Testar navegação: painel → novo registro → e-mail/SMS; painel → histórico/resumo/configurações.
 - [ ] Testar leitura e gravação em cópia de uma pasta de trabalho, nunca em dados reais durante a validação.
@@ -34,8 +34,12 @@ Marcar cada item somente depois de executar e registrar o resultado.
 - [ ] Validar cada branch individualmente.
 - [ ] Atualizar `main` e `alpha-1.05` por último, somente após aprovação explícita e plano de reversão.
 
-## Estado inicial
-- [x] Inventário de arquivos das branches `main`, `alpha-1.01` a `alpha-1.05` e `alpha-2.0-dev`.
-- [x] Mapeamento inicial dos caminhos principais em `alpha-2.0-dev`.
-- [ ] Migração física dos arquivos.
-- [ ] Validação no preview e no Excel.
+## Estado atual
+- [x] Inventário inicial das branches `main`, `alpha-1.01` a `alpha-1.05` e `alpha-2.0-dev`.
+- [x] Documentação de organização e mapa inicial de dependências.
+- [x] Migração física dos CSS/JS para `app/styles/` e `app/scripts/` na branch `alpha-2.0-dev`.
+- [x] Atualização das referências nos sete HTMLs da aplicação que carregam CSS/JS locais.
+- [ ] Validação em Preview e no Excel.
+
+## Bloqueio registrado
+A criação de um projeto Vercel separado para a Alpha 2.0 retornou erro 403 (sem permissão para criar projeto). Não foi possível confirmar um Preview independente. Até resolver isso, não importar o manifesto estável no Excel para validar a Alpha 2.0 e não alterar produção.
