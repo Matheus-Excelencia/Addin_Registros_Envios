@@ -68,5 +68,15 @@ As tabelas devem ter IDs estáveis, chaves estrangeiras, timestamps e políticas
 8. Adicionar versões, permissões, auditoria e Resumo.
 9. Testar concorrência, alterações de cabeçalhos, permissões, compatibilidade e recuperação.
 
+
+## Instalação de teste no Excel sem afetar a versão estável
+- A Alpha 2.0 terá um arquivo de manifesto separado, por exemplo `manifest.alpha-2.0.xml`, com um GUID de suplemento diferente do manifesto estável. Assim, o Excel deverá mostrar as duas instalações como suplementos independentes.
+- O manifesto de teste só será criado/apontado depois que existir uma URL de Preview exclusiva da Alpha 2.0. Nunca apontar o manifesto de teste para `https://addin-registros-envios.vercel.app` nem reutilizar a URL de produção, pois isso poderia abrir o código da Alpha 1.05 ou misturar ambientes.
+- Todos os endereços do manifesto de teste (taskpane, commands, ícones e domínio permitido) devem apontar para a implantação de teste correspondente.
+- A implantação de teste deve usar configurações e dados de teste, sem chaves de produção nem gravação na planilha operacional oficial.
+- A instalação de teste será feita separadamente no Excel Web por carregamento do manifesto, se a política do tenant permitir sideload para a conta. Não exigir acesso administrativo do SharePoint; se o carregamento de suplementos personalizados estiver bloqueado pela organização, registraremos essa limitação e usaremos a alternativa de teste permitida, sem tentar contornar políticas.
+- O teste deve incluir instruções para distinguir visualmente “Alpha 2.0 — TESTE” de “Registros de Envios” estável e remover o manifesto de teste sem desinstalar o suplemento estável.
+- Antes de testar escrita, usar uma cópia de workbook e verificar explicitamente o destino de gravação.
+
 ## Estado
 Este documento registra a proposta inicial. Nenhum banco Supabase foi criado, nenhuma integração foi autorizada e nenhuma planilha foi alterada.
