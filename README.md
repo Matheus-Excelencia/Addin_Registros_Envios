@@ -4,21 +4,23 @@ Este repositório contém a aplicação Office Add-in de Registro de Envios e o 
 
 ## 1. Aplicação-base (raiz)
 
-Os arquivos de execução da aplicação-base ficam na raiz para preservar os caminhos relativos usados pelo manifesto e pelo deploy existente.
+As páginas HTML e o manifesto permanecem na raiz para preservar os endpoints atuais. Os arquivos CSS e JavaScript foram movidos para `app/styles/` e `app/scripts/`, e os HTMLs foram atualizados para carregar os novos caminhos.
 
 | Grupo | Arquivos | Responsabilidade |
 |---|---|---|
-| Entrada | `manifest.xml`, `taskpane.html`, `taskpane.css`, `taskpane.js` | Manifesto e painel principal |
-| Novo registro | `novo.html`, `novo.css`, `novo.js` | Escolha do módulo E-mail ou SMS |
-| E-mail | `email.html`, `email.css`, `email.js` | Formulário e gravação de registros de E-mail |
-| SMS | `sms.html`, `sms.css`, `sms.js` | Formulário e gravação de registros SMS |
-| Histórico | `historico.html`, `historico.css`, `historico.js` | Consulta, filtros e ações sobre registros |
-| Resumo | `resumo.html`, `resumo.css`, `resumo.js` | Indicadores consolidados |
-| Configurações | `config.html`, `config.css`, `config.js` | Listas, mensagens e parâmetros |
-| Comandos Office | `commands.html`, `commands.js` | Arquivos referenciados pelo manifesto |
+| Entrada | `manifest.xml`, `taskpane.html` | Manifesto e painel principal |
+| Novo registro | `novo.html` | Escolha do módulo E-mail ou SMS |
+| E-mail | `email.html` | Formulário e gravação de registros de E-mail |
+| SMS | `sms.html` | Formulário e gravação de registros SMS |
+| Histórico | `historico.html` | Consulta, filtros e ações sobre registros |
+| Resumo | `resumo.html` | Indicadores consolidados |
+| Configurações | `config.html` | Listas, mensagens e parâmetros |
+| Comandos Office | `commands.html` | Página de comandos referenciada pelo manifesto |
+| Estilos | `app/styles/` | CSS de todos os módulos |
+| Scripts | `app/scripts/` | JavaScript de todos os módulos |
 | Recursos | `assets/` | Ícones da aplicação-base |
 
-> Não mova os arquivos de execução da raiz sem atualizar e testar todas as referências do `manifest.xml`, os links relativos entre HTML/CSS/JS e a configuração de hospedagem.
+> Não mova as páginas HTML nem altere os endpoints do manifesto sem atualizar e testar as rotas e a configuração de hospedagem.
 
 ## 2. Alpha 2.0 — desenvolvimento isolado
 
