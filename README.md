@@ -66,3 +66,7 @@ A Alpha 2.0 fica em [`alpha2-prototype/`](alpha2-prototype/).
 - Repositório: [Matheus-Excelencia/Addin_Registros_Envios](https://github.com/Matheus-Excelencia/Addin_Registros_Envios)
 - Branch de organização/desenvolvimento: `alpha-2.0-dev`
 - Aplicação de produção (referência, não alterar neste trabalho): [addin-registros-envios.vercel.app](https://addin-registros-envios.vercel.app/)
+
+
+## Portal web Alpha 2.5
+A branch `alpha-2.5-dev` inclui uma página inicial de portal para selecionar o módulo e abrir opcionalmente uma planilha online. Consulte [`docs/ALPHA-2.5-PORTAL-WEB.md`](docs/ALPHA-2.5-PORTAL-WEB.md) para o escopo e as limitações. O portal é uma camada inicial de navegação; login real, armazenamento independente e adaptação das operações Office ainda precisam ser implementados antes de oferecer o site como alternativa completa ao suplemento.
