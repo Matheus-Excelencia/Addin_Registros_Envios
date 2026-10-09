@@ -1,54 +1,34 @@
-# Checklist de validação da reorganização
+# Checklist de validação — Sistema Evolut
 
-Marcar cada item somente depois de executar e registrar o resultado.
-
-## Antes da migração
-- [x] Confirmar branch e commit de trabalho: `alpha-2.0-dev`.
-- [x] Confirmar que `main` e `alpha-1.05` não foram alteradas por esta etapa.
-- [x] Registrar os caminhos principais antes/depois da etapa de movimentação.
-- [x] Buscar referências principais a `.html`, `.css`, `.js`, `window.location` e `location.href`.
-
-## Verificação estática e de hospedagem
-- [x] HTMLs da aplicação apontam para CSS/JS existentes em `app/styles/` e `app/scripts/`.
-- [x] Caminhos de navegação nos scripts consultados apontam para páginas HTML mantidas na raiz.
-- [x] CSS e JavaScript locais consultados respondem HTTP 200 no Preview.
-- [x] Ícones `assets/icon-16.png`, `assets/icon-32.png` e `assets/icon-80.png` respondem HTTP 200 no Preview.
+## Organização e Preview
+- [x] CSS e JavaScript da aplicação organizados em `app/styles/` e `app/scripts/`.
+- [x] Referências locais verificadas por requisição HTTP no Preview.
+- [x] Ícones 16, 32 e 80 px respondem HTTP 200 no Preview.
+- [x] Usuário confirmou que todas as telas abriram normalmente.
+- [ ] Investigar/definir o endpoint raiz `/`, que responde HTTP 404 no Preview.
 - [ ] Validar formalmente a sintaxe XML do manifesto.
-- [ ] Confirmar que existe manifesto de teste independente, com ID e URLs independentes da produção.
-- [x] Confirmado que o manifesto publicado neste deploy ainda usa o GUID estável e URLs de produção; não usar para instalar/testar a Alpha 2.0 no Excel.
-- [ ] Fazer revisão funcional completa de gravação, planilhas e validações.
-- [ ] Investigar o endpoint raiz `/`, que responde HTTP 404 no Preview; as páginas HTML diretas funcionam.
+- [ ] Criar manifesto de teste com ID e URLs independentes da produção.
+- [ ] Testar Office.js e navegação dentro do Excel.
+- [ ] Testar leitura e gravação em cópia de planilha.
+- [ ] Testar filtros, duplicação, mensagens, configurações e validações.
 
-## Deploy e Excel
-- [x] URL Preview HTTPS disponível: https://addin-registros-envios-nipm8pr6r-acme-vs-coyote.vercel.app/
-- [x] Abrir diretamente as páginas principais no Preview: o usuário informou que todas as telas abriram normalmente.
-- [x] Confirmar por requisição HTTP que `taskpane.html`, `manifest.xml`, os CSS/JS locais consultados e os ícones respondem corretamente.
-- [ ] Confirmar carregamento de Office.js no Excel/navegador.
-- [ ] Importar somente manifesto de teste independente.
-- [x] Teste manual informado pelo usuário: todas as telas abriram normalmente.
-- [ ] Testar fluxo completo de navegação dentro do Excel.
-- [ ] Testar leitura e gravação em cópia de uma pasta de trabalho, nunca em dados reais durante a validação.
-- [ ] Testar filtros, duplicação, retorno, mensagens e validações.
-- [ ] Registrar erros do console e corrigir antes de avançar.
+## Portal WEB Evolut
+- [ ] Página inicial web com identidade Portal WEB Evolut.
+- [ ] Escolha explícita do modelo/planilha.
+- [ ] Campo opcional para link da planilha e ação para abri-la.
+- [ ] Navegação para E-mail, SMS, histórico, resumo e configurações conforme o modelo escolhido.
+- [ ] Definir autenticação e autorização reais antes de dados reais.
+- [ ] Definir integração segura para leitura/gravação (por exemplo, Microsoft Graph com consentimento apropriado ou backend autorizado).
+- [ ] Testar permissões, erros, sessão e acesso indevido.
+- [ ] Confirmar que o suplemento Excel continua funcionando e disponível.
 
-## Promoção às outras branches
-- [ ] Comparar arquivos de cada versão antes de aplicar mudanças.
-- [ ] Não substituir funcionalidades antigas por versões mais novas sem análise.
-- [ ] Aplicar apenas a reorganização e correções de caminho necessárias.
-- [ ] Validar cada branch individualmente.
-- [ ] Atualizar `main` e `alpha-1.05` por último, somente após aprovação explícita e plano de reversão.
+## Branches e segurança
+- [x] Criada branch `sistema-evolut` a partir do estado de `alpha-2.0-dev`.
+- [x] Criada branch `portal-web-evolut` a partir do estado de `alpha-2.5-dev`.
+- [ ] Atualizar Vercel e demais integrações para usar as novas branches.
+- [ ] Verificar PRs, links e automações antes de excluir branches antigas.
+- [ ] Excluir `alpha-2.0-dev` e `alpha-2.5-dev` somente depois da migração dos vínculos e confirmação do usuário.
+- [x] Não alterar `main`, `alpha-1.05` nem produção.
 
 ## Estado atual
-- [x] Inventário inicial das branches `main`, `alpha-1.01` a `alpha-1.05` e `alpha-2.0-dev`.
-- [x] Documentação de organização e mapa inicial de dependências.
-- [x] Migração física dos CSS/JS para `app/styles/` e `app/scripts/` na branch `alpha-2.0-dev`.
-- [x] Atualização das referências nos sete HTMLs da aplicação que carregam CSS/JS locais.
-- [x] Deploy Preview acessível e teste manual de abertura de todas as telas informado pelo usuário.
-- [ ] Validação funcional no Excel e confirmação de persistência dos dados.
-- [ ] Validar manifesto de teste separado antes de instalar no Excel.
-
-## Bloqueios e observações
-- A tentativa anterior de criar um projeto Vercel separado para Alpha 2.0 retornou erro 403. A integração agora permite consultar deployments do projeto existente e foi localizado um Preview da branch `alpha-2.0-dev`.
-- O Preview consultado serve `taskpane.html`, `manifest.xml`, CSS/JS locais e ícones, mas `/` retorna HTTP 404.
-- O manifesto publicado no Preview ainda aponta para o domínio de produção e mantém o GUID estável. Não importar esse manifesto no Excel para validar a Alpha 2.0.
-- A abertura visual das telas não comprova que salvar, ler dados, Office.js, filtros ou validações funcionem.
+A abertura visual das telas foi confirmada pelo usuário. Isso não comprova, por si só, que a gravação, leitura de dados, Office.js, autenticação ou integração com planilhas estejam funcionais. O manifesto servido no Preview ainda aponta para GUID e URLs de produção; não instalá-lo como manifesto de teste.
