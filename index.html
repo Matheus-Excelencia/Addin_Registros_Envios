@@ -1,13 +1,18 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0; url=taskpane.html">
-  <title>Registros de Envios</title>
-  <script>window.location.replace("taskpane.html");</script>
-</head>
-<body>
-  <p>Redirecionando para o painel... <a href="taskpane.html">Abrir Registros de Envios</a></p>
-</body>
-</html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#217346"><meta name="description" content="Portal de acesso aos módulos de Registro de Envios."><title>Registros de Envios | Portal</title><link rel="stylesheet" href="app/styles/portal.css"><script defer src="app/scripts/portal.js"></script></head>
+<body><main class="shell"><header class="topbar"><div class="brand"><span class="brand-mark" aria-hidden="true">RE</span><span>Registros de Envios</span></div><span class="pill">Alpha 2.5 · Portal web</span></header>
+<section class="hero"><div class="eyebrow">Um acesso, duas formas de trabalhar</div><h1>Seus registros, do jeito que você precisa.</h1><p>Escolha o módulo de trabalho e, se quiser, abra também a planilha correspondente no Excel Online. O suplemento continua disponível para quem prefere trabalhar dentro do Excel.</p></section>
+<div class="layout"><section class="panel"><h2>Começar</h2><p class="sub">Selecione o fluxo que deseja usar nesta sessão.</p>
+<div class="field"><label for="modelo">Modelo ou módulo</label><select id="modelo"><option value="">Escolha uma opção…</option><option value="email">Registro de E-mail</option><option value="sms">Registro de SMS</option><option value="historico">Histórico de registros</option><option value="resumo">Resumo e indicadores</option><option value="config">Configurações</option><option value="all">Todos os módulos</option></select></div>
+<p class="hint">A seleção filtra os atalhos disponíveis; não altera nem modifica sua planilha.</p>
+<div class="field"><label for="planilhaUrl">Link da planilha (opcional)</label><input id="planilhaUrl" type="url" placeholder="https://.../planilha.xlsx" autocomplete="url"><span class="hint">Use um link HTTPS do Excel Online, SharePoint ou OneDrive com permissão de acesso.</span></div>
+<div class="actions"><button class="btn primary" id="abrirPainel" type="button">Abrir módulo selecionado ↗</button><button class="btn secondary" id="abrirPlanilha" type="button">Abrir planilha</button><button class="btn secondary" id="limparLink" type="button">Limpar link</button></div><div class="status" id="status" role="status" aria-live="polite"></div>
+<div class="notice"><strong>Limite desta versão:</strong> esta é a entrada web inicial. Os formulários atuais ainda dependem de recursos do suplemento Office; login Microsoft, seleção automática de arquivos e operações web independentes serão integrados nas próximas etapas. Não informe dados sensíveis nesta tela.</div></section>
+<aside class="panel"><h2>Acesso rápido</h2><p class="sub">Atalhos para os módulos existentes.</p><div class="module-list">
+<a class="module" data-module="email" href="email.html"><span><strong>Registro de E-mail</strong><small>Formulário de envio de e-mail</small></span><span class="module-icon" aria-hidden="true">@</span></a>
+<a class="module" data-module="sms" href="sms.html"><span><strong>Registro de SMS</strong><small>Formulário de envio SMS</small></span><span class="module-icon" aria-hidden="true">SMS</span></a>
+<a class="module" data-module="historico" href="historico.html"><span><strong>Histórico</strong><small>Consultar registros existentes</small></span><span class="module-icon" aria-hidden="true">↻</span></a>
+<a class="module" data-module="resumo" href="resumo.html"><span><strong>Resumo</strong><small>Indicadores e consolidação</small></span><span class="module-icon" aria-hidden="true">▥</span></a>
+<a class="module" data-module="config" href="config.html"><span><strong>Configurações</strong><small>Cadastros e mensagens</small></span><span class="module-icon" aria-hidden="true">⚙</span></a>
+<a class="module" data-module="all" href="taskpane.html"><span><strong>Painel do suplemento</strong><small>Abrir o painel de entrada atual</small></span><span class="module-icon" aria-hidden="true">⌂</span></a>
+</div></aside></div><footer class="footer"><span>Alpha 2.5 · ambiente de validação</span><span>O suplemento Office continua preservado.</span></footer></main></body></html>
