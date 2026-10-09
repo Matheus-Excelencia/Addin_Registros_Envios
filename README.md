@@ -1,6 +1,6 @@
 # Registro de Envios — Índice do repositório
 
-Este repositório contém a aplicação Office Add-in de Registro de Envios e o ambiente isolado de desenvolvimento da Alpha 2.0.
+Este repositório contém o suplemento Office de Registro de Envios, o protótipo Alpha 2.0 e a primeira entrada de portal web Alpha 2.5.
 
 ## 1. Aplicação-base (raiz)
 
@@ -22,7 +22,11 @@ As páginas HTML e o manifesto permanecem na raiz para preservar os endpoints at
 
 > Não mova as páginas HTML nem altere os endpoints do manifesto sem atualizar e testar as rotas e a configuração de hospedagem.
 
-## 2. Alpha 2.0 — desenvolvimento isolado
+## 2. Portal web Alpha 2.5
+
+A página `index.html` é a entrada do portal web, com seleção de módulo e link opcional da planilha. É uma primeira camada de navegação, não um sistema web completo: autenticação Microsoft, listagem automática de arquivos e gravação independente ainda estão pendentes. Consulte [o plano Alpha 2.5](docs/ALPHA-2.5-PORTAL-WEB.md).
+
+## 3. Alpha 2.0 — desenvolvimento isolado
 
 A Alpha 2.0 fica em [`alpha2-prototype/`](alpha2-prototype/).
 
@@ -44,7 +48,7 @@ A Alpha 2.0 fica em [`alpha2-prototype/`](alpha2-prototype/).
 - [Notas dos recursos visuais](alpha2-prototype/assets/README.md)
 - [Notas do manifesto de teste](alpha2-prototype/manifest/README.md)
 
-## 3. Regras de isolamento e segurança
+## 4. Regras de isolamento e segurança
 
 1. A Alpha 1.05 e a produção devem permanecer estáveis.
 2. Desenvolver a Alpha 2.0 na branch `alpha-2.0-dev`.
@@ -54,14 +58,14 @@ A Alpha 2.0 fica em [`alpha2-prototype/`](alpha2-prototype/).
 6. Não depender de privilégios administrativos do SharePoint.
 7. Não mesclar a Alpha 2.0 na linha estável sem autorização explícita.
 
-## 4. Estado conhecido
+## 5. Estado conhecido
 
 - A aplicação-base e o protótipo Alpha 2.0 coexistem nesta branch, mas têm funções distintas.
 - O protótipo ainda usa dados fictícios e não grava no Excel nem em serviços externos.
 - O manifesto separado da Alpha 2.0 depende de uma URL de Preview própria confirmada.
 - A implantação independente na Vercel foi recusada com erro 403; nenhuma proteção da produção foi alterada.
 
-## 5. Repositório e branch
+## 6. Repositório e branch
 
 - Repositório: [Matheus-Excelencia/Addin_Registros_Envios](https://github.com/Matheus-Excelencia/Addin_Registros_Envios)
 - Branch de organização/desenvolvimento: `alpha-2.0-dev`
