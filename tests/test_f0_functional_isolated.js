@@ -157,3 +157,117 @@ test("SIMULATION ONLY: reconciliation detects duplicate IDs instead of writing a
   assert.equal(result.state, "duplicate-conflict");
   assert.equal(sim.writeAttempts, 1);
 });
+
+
+/*
+ * TESTE DO CÓDIGO REAL com mock da superfície Office.js.
+ * Não conecta ao Excel real; executa adicionarRegistroEmail/SMS carregadas do arquivo.
+ */
+function createOfficeWriteMock(headers, { failMode = "none" } = {}) {
+  const rows = [headers.slice()];
+  let syncCount = 0;
+  let writeAttempts = 0;
+  let pendingWrite = null;
+  const usedRange = () => ({
+    get values() { return rows.map(row => row.slice()); },
+    isNullObject: false,
+    rowIndex: 0,
+    columnIndex: 0,
+    load() {},
+  });
+  const sheet = {
+    getUsedRangeOrNullObject() { return usedRange(); },
+    getRangeByIndexes(rowIndex, columnIndex, rowCount, columnCount) {
+      const range = {
+        _values: null,
+        set values(value) {
+          writeAttempts += 1;
+          pendingWrite = { rowIndex, columnIndex, values: value.map(row => row.slice()) };
+          range._values = value;
+        },
+        get values() { return range._values; },
+        getCell(rowOffset, columnOffset) {
+          return {
+            set numberFormat(_value) {},
+            load() {},
+            get values() {
+              const row = rows[rowIndex + rowOffset] || [];
+              return [[row[columnIndex + columnOffset]]];
+            },
+          };
+        },
+      };
+      return range;
+    },
+  };
+  const context = {
+    workbook: { worksheets: { getItem(name) {
+      assert.ok(name === "Email" || name === "SMS");
+      return sheet;
+    } } },
+    async sync() {
+      syncCount += 1;
+      // First sync loads the header range; second sync refreshes the target used range.
+      if (syncCount < 3 || !pendingWrite) return;
+      const queued = pendingWrite;
+      pendingWrite = null;
+      if (failMode === "before-persist") {
+        throw new Error("mock sync failed before persistence");
+      }
+      for (let r = 0; r < queued.values.length; r++) {
+        const targetRow = queued.rowIndex + r;
+        while (rows.length <= targetRow) rows.push([]);
+        for (let c = 0; c < queued.values[r].length; c++) {
+          rows[targetRow][queued.columnIndex + c] = queued.values[r][c];
+        }
+      }
+      if (failMode === "after-persist") {
+        throw new Error("mock confirmation failed after persistence");
+      }
+    },
+  };
+  return { context, rows, get writeAttempts() { return writeAttempts; } };
+}
+
+const completeHeaders = {
+  email: ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "EMAIL RESPOSTA", "SUPERVISOR", "OBS", "HISTORICO EXTERNO", "MENSAGEM", "ASSUNTO", "ID REGISTRO"],
+  sms: ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "SUPERVISOR", "OBS.", "HISTORICO EXTERNO", "MENSAGEM", "ID REGISTRO"],
+};
+const validRecord = {
+  realizadoPor: "Teste", empresa: "Empresa Teste", qtde: 1,
+  emailResposta: "teste@example.com", supervisor: "Supervisão",
+  obs: "", historicoExterno: "EXT-1", textoMensagem: "Mensagem teste",
+  assunto: "Assunto teste", idRegistro: "F0-MOCK-ID-001",
+};
+
+test("REAL FUNCTION + Office.js mock: sync failure before persistence leaves no row and does not retry", async () => {
+  for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
+    const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
+    const mock = createOfficeWriteMock(completeHeaders[name], { failMode: "before-persist" });
+    await assert.rejects(sandbox.__test.add(mock.context, validRecord), /mock sync failed before persistence/, name);
+    assert.equal(mock.rows.length, 1, name);
+    assert.equal(mock.writeAttempts, 1, name);
+  }
+});
+
+test("REAL FUNCTION + Office.js mock: confirmation failure after persistence leaves one row but code does not reconcile", async () => {
+  for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
+    const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
+    const mock = createOfficeWriteMock(completeHeaders[name], { failMode: "after-persist" });
+    await assert.rejects(sandbox.__test.add(mock.context, validRecord), /mock confirmation failed after persistence/, name);
+    assert.equal(mock.rows.length, 2, name);
+    assert.equal(mock.rows[1][completeHeaders[name].indexOf("ID REGISTRO")], validRecord.idRegistro, name);
+    assert.equal(mock.writeAttempts, 1, name);
+  }
+});
+
+test("REAL FUNCTION + Office.js mock: successful write confirms ID exactly once", async () => {
+  for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
+    const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
+    const mock = createOfficeWriteMock(completeHeaders[name]);
+    await sandbox.__test.add(mock.context, validRecord);
+    assert.equal(mock.rows.length, 2, name);
+    assert.equal(mock.rows[1][completeHeaders[name].indexOf("ID REGISTRO")], validRecord.idRegistro, name);
+    assert.equal(mock.writeAttempts, 1, name);
+  }
+});
