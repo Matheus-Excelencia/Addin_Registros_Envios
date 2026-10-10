@@ -35,6 +35,22 @@ Os testes com mocks são isolados e não conectam ao Excel/Office.js real. Eles 
 - A ausência/ambiguidade de cabeçalhos bloqueia a gravação; não são criadas colunas automaticamente.
 - Não há retry cego após resultado incerto.
 
-## Próxima ação
+## CI confirmado após correção do mock
 
-Aguardar o CI do commit `788ae2489ef51593c7731c43c00cd0d773bf57ab`. Se estiver verde, avaliar a implementação de reconciliação real por ID em alteração isolada, com testes de leitura independente e IDs duplicados, antes de considerar a fase F0 concluída.
+- Commit: [`f7999d94500f59b0478d687c16b6b28246f96ccc`](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/commit/f7999d94500f59b0478d687c16b6b28246f96ccc)
+- Run: [38018616034](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/runs/38018616034)
+- Resultado: **success**; job `f0-regressions` concluído.
+- Evidências dos logs: sintaxe JavaScript aprovada; 5 testes de contrato estáticos aprovados; 11 testes isolados aprovados (11/11).
+- A primeira execução dos mocks falhou porque o mock não expunha `getCell().format.wrapText`; a correção acrescentou essa superfície ao mock, sem alterar o código de produção. A execução seguinte passou.
+- Os testes com funções reais + mock confirmam os caminhos simulados de falha antes da persistência, falha de confirmação após persistência e gravação confirmada. Isso não é teste contra Excel real.
+
+## Plano proposto — reconciliação real por ID (ainda não implementada)
+
+1. **Não repetir a escrita** quando `context.sync()` falhar com resultado de persistência incerto.
+2. Depois da falha, tentar uma **leitura independente** da faixa usada em novo `Excel.run`/contexto, sem reutilizar comandos pendentes do contexto que falhou.
+3. Resolver o cabeçalho canônico `ID REGISTRO` com as regras atuais; se ausente ou ambíguo, não prosseguir.
+4. Contar correspondências exatas para o ID tentado: zero = resultado não resolvido, sem regravação automática; uma = registro encontrado e reconciliado; mais de uma = conflito de IDs, bloquear e exigir análise.
+5. Se a leitura independente falhar, preservar o estado indeterminado e orientar consulta ao histórico antes de qualquer nova tentativa.
+6. Testar com mocks a leitura independente, zero/uma/múltiplas correspondências, falha de leitura e garantia de nenhuma segunda escrita. Depois, validar manualmente no Excel Web antes de alegar validação no ambiente real.
+
+A reconciliação real não está implementada nesta entrega. Deve ser desenvolvida em alteração isolada, mantendo Office.js como fluxo principal, sem alterações de SSO/permissões, sem merge e sem publicação em produção.
