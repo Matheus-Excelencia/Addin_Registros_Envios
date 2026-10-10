@@ -44,6 +44,22 @@ Os testes com mocks são isolados e não conectam ao Excel/Office.js real. Eles 
 - A primeira execução dos mocks falhou porque o mock não expunha `getCell().format.wrapText`; a correção acrescentou essa superfície ao mock, sem alterar o código de produção. A execução seguinte passou.
 - Os testes com funções reais + mock confirmam os caminhos simulados de falha antes da persistência, falha de confirmação após persistência e gravação confirmada. Isso não é teste contra Excel real.
 
+## Reconciliação por ID — implementação inicial em validação
+
+Commits na branch isolada:
+- `03bd2b7`: adiciona leitura independente e reconciliação por ID ao fluxo Email.
+- `e0d6917`: aplica a mesma proteção ao fluxo SMS.
+- `1a57cf7`: ajusta testes das funções reais com mocks para cobrir os novos resultados.
+- `1c619b5`: garante que o mock de reconciliação usa contexto separado e lê o estado compartilhado da planilha simulada.
+
+Comportamento implementado:
+1. A falha no `context.sync()` final é tratada como resultado de escrita incerto; a função não repete a escrita.
+2. É iniciada uma leitura via `Excel.run` independente para procurar o cabeçalho e o ID exato.
+3. Uma única correspondência considera o registro reconciliado; nenhuma correspondência gera resultado não resolvido; múltiplas correspondências geram conflito explícito.
+4. Cabeçalho canônico ausente/ambíguo ou falha na leitura independente bloqueiam a conclusão e não disparam nova gravação.
+
+**Estado de validação:** CI para os commits de implementação/teste ainda não confirmado nesta atualização. Os mocks não equivalem a um teste no Excel Web real; validar o comportamento no host Office.js permanece obrigatório antes de considerar F0 concluída. A chamada aninhada de `Excel.run` e o comportamento de leitura após falha de sincronização devem ser verificados no ambiente Excel suportado.
+
 ## Plano proposto — reconciliação real por ID (ainda não implementada)
 
 1. **Não repetir a escrita** quando `context.sync()` falhar com resultado de persistência incerto.
