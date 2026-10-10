@@ -24,7 +24,7 @@ if (window.Office && Office.onReady) {
 }
 
 function normalizar(v) {
-    return String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
+    return String(v ?? "").trim().replace(/\s+/g, " ").toUpperCase();
 }
 
 function indice(mapa, nomes) {
@@ -39,7 +39,11 @@ function encontrarCabecalho(valores, obrigatorios) {
     for (let linha = 0; linha < Math.min(valores.length, 30); linha++) {
         const mapa = {};
         (valores[linha] || []).forEach((valor, coluna) => {
-            if (String(valor ?? "").trim()) mapa[normalizar(valor)] = coluna;
+            if (String(valor ?? "").trim()) {
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(mapa, chave)) throw new Error("Cabeçalho duplicado ou ambíguo no Histórico: " + chave);
+                mapa[chave] = coluna;
+            }
         });
         if (obrigatorios.every(nomes => indice(mapa, nomes) !== -1)) {
             return { linha, mapa };
