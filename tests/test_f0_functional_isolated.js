@@ -97,3 +97,63 @@ test("uncertain-write paths do not loop/retry automatically", () => {
     assert.match(source, /Não foi possível confirmar a gravação/, name);
   }
 });
+
+
+/*
+ * SIMULAÇÃO DO PROTOCOLO — não executa o código real de persistência Office.js.
+ * Serve para definir o comportamento esperado de falha incerta/reconciliação.
+ */
+function createUncertainWriteSimulator({ failBeforePersist = false, failAfterPersist = false } = {}) {
+  const rows = [];
+  let writeAttempts = 0;
+  return {
+    rows,
+    get writeAttempts() { return writeAttempts; },
+    async write(record) {
+      writeAttempts += 1;
+      if (failBeforePersist) throw new Error("simulated failure before persistence");
+      rows.push({ ...record });
+      if (failAfterPersist) throw new Error("simulated confirmation failure after persistence");
+      return { confirmed: true, id: record.id };
+    },
+    findById(id) {
+      return rows.filter(row => String(row.id) === String(id));
+    },
+  };
+}
+
+async function writeWithReconciliation(simulator, record) {
+  try {
+    const result = await simulator.write(record);
+    return { state: "confirmed", id: result.id };
+  } catch (error) {
+    const matches = simulator.findById(record.id);
+    if (matches.length === 1) return { state: "reconciled-existing", id: record.id };
+    if (matches.length > 1) return { state: "duplicate-conflict", id: record.id };
+    return { state: "unresolved-no-match", id: record.id, reason: error.message };
+  }
+}
+
+test("SIMULATION ONLY: failure before persistence leaves no record and no blind retry", async () => {
+  const sim = createUncertainWriteSimulator({ failBeforePersist: true });
+  const result = await writeWithReconciliation(sim, { id: "F0-SIM-BEFORE-001", value: "x" });
+  assert.equal(result.state, "unresolved-no-match");
+  assert.equal(sim.rows.length, 0);
+  assert.equal(sim.writeAttempts, 1);
+});
+
+test("SIMULATION ONLY: confirmation failure after persistence reconciles by ID without retry", async () => {
+  const sim = createUncertainWriteSimulator({ failAfterPersist: true });
+  const result = await writeWithReconciliation(sim, { id: "F0-SIM-AFTER-001", value: "x" });
+  assert.equal(result.state, "reconciled-existing");
+  assert.equal(sim.findById("F0-SIM-AFTER-001").length, 1);
+  assert.equal(sim.writeAttempts, 1);
+});
+
+test("SIMULATION ONLY: reconciliation detects duplicate IDs instead of writing again", async () => {
+  const sim = createUncertainWriteSimulator({ failAfterPersist: true });
+  sim.rows.push({ id: "F0-SIM-DUP-001", value: "pre-existing" });
+  const result = await writeWithReconciliation(sim, { id: "F0-SIM-DUP-001", value: "x" });
+  assert.equal(result.state, "duplicate-conflict");
+  assert.equal(sim.writeAttempts, 1);
+});
