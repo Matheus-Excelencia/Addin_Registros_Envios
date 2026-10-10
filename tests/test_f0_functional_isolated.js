@@ -188,6 +188,7 @@ function createOfficeWriteMock(headers, { failMode = "none" } = {}) {
         get values() { return range._values; },
         getCell(rowOffset, columnOffset) {
           return {
+            format: { set wrapText(_value) {} },
             set numberFormat(_value) {},
             load() {},
             get values() {
