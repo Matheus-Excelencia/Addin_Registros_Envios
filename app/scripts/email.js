@@ -142,9 +142,8 @@ function emailValido(valor) {
 function normalizar(valor) {
 
     return String(valor || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
         .trim()
+        .replace(/\s+/g, " ")
         .toUpperCase();
 }
 
@@ -174,7 +173,9 @@ function encontrarCabecalho(valores) {
                 String(valor).trim() !== ""
             ) {
 
-                mapa[normalizar(valor)] = indice;
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(mapa, chave)) throw new Error("Cabeçalho duplicado ou ambíguo no Config: " + chave);
+                mapa[chave] = indice;
             }
         });
 
@@ -1121,9 +1122,9 @@ async function adicionarRegistroEmail(
                         String(valor).trim() !== ""
                     ) {
 
-                        atual[
-                            normalizar(valor)
-                        ] = indice;
+                        const chave = normalizar(valor);
+                        if (Object.prototype.hasOwnProperty.call(atual, chave)) throw new Error("Cabeçalho duplicado ou ambíguo na aba Email: " + chave);
+                        atual[chave] = indice;
                     }
                 }
             );
@@ -1148,60 +1149,9 @@ async function adicionarRegistroEmail(
     }
 
 
-    if (linhaCabecalho === -1) {
-
-        folha
-            .getRange("A1:J1")
-            .values = [[
-                "Data",
-                "Realizado por",
-                "Empresa",
-                "Qtde",
-                "Email Resposta",
-                "Supervisor",
-                "Obs",
-                "Historico Externo",
-                "Mensagem",
-                "Assunto"
-            ]];
-
-        linhaCabecalho = 0;
-
-        [
-            "DATA",
-            "REALIZADO POR",
-            "EMPRESA",
-            "QTDE",
-            "EMAIL RESPOSTA",
-            "SUPERVISOR",
-            "OBS",
-            "HISTORICO EXTERNO",
-            "MENSAGEM",
-            "ASSUNTO"
-        ].forEach(function (
-            nome,
-            indice
-        ) {
-            mapa[nome] = indice;
-        });
-    }
-
-
-    // Compatibilidade: versões anteriores da aba Email tinham apenas 10 colunas.
-    // Se ID REGISTRO ainda não existir, ele é criado automaticamente na próxima coluna.
-    let indiceId = obterIndice(mapa, ["ID REGISTRO"]);
-    if (indiceId === -1) {
-        const indices = Object.values(mapa).filter(function (valor) { return Number.isInteger(valor); });
-        indiceId = indices.length > 0 ? Math.max.apply(null, indices) + 1 : 10;
-        const colunaId = (usado.isNullObject ? 0 : usado.columnIndex) + indiceId;
-        folha.getRangeByIndexes(
-            (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
-            colunaId,
-            1,
-            1
-        ).values = [["ID REGISTRO"]];
-        mapa["ID REGISTRO"] = indiceId;
-    }
+    if (linhaCabecalho === -1) throw new Error("Estrutura da aba Email não reconhecida. Nenhuma coluna foi criada; revise os cabeçalhos antes de gravar.");
+    const indiceId = obterIndice(mapa, ["ID REGISTRO"]);
+    if (indiceId === -1) throw new Error("A coluna ID REGISTRO está ausente na aba Email. A gravação foi bloqueada sem alterar a estrutura.");
 
     const numeroColunas = 11;
 
@@ -1296,7 +1246,7 @@ async function adicionarRegistroEmail(
     colocar(["ID REGISTRO"], dados.idRegistro);
     let confirmado = false;
 
-    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    for (let tentativa = 1; tentativa <= 1; tentativa++) {
         const atual = folha.getUsedRangeOrNullObject(true);
         atual.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
         await context.sync();
