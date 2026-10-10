@@ -142,9 +142,8 @@ function emailValido(valor) {
 function normalizar(valor) {
 
     return String(valor || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
         .trim()
+        .replace(/\s+/g, " ")
         .toUpperCase();
 }
 
@@ -174,7 +173,9 @@ function encontrarCabecalho(valores) {
                 String(valor).trim() !== ""
             ) {
 
-                mapa[normalizar(valor)] = indice;
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(mapa, chave)) throw new Error("Cabeçalho duplicado ou ambíguo no Config: " + chave);
+                mapa[chave] = indice;
             }
         });
 
@@ -214,21 +215,9 @@ function encontrarCabecalho(valores) {
 ========================================================= */
 
 function obterIndice(mapa, nomes) {
-
-    for (const nome of nomes) {
-
-        const chave =
-            normalizar(nome);
-
-        if (
-            mapa[chave] !== undefined
-        ) {
-
-            return mapa[chave];
-        }
-    }
-
-    return -1;
+    const encontrados = [...new Set(nomes.map(normalizar).filter(chave => mapa[chave] !== undefined).map(chave => mapa[chave]))];
+    if (encontrados.length > 1) throw new Error("Aliases ambíguos para o mesmo campo: " + nomes.join(" / "));
+    return encontrados.length ? encontrados[0] : -1;
 }
 
 
@@ -1121,9 +1110,9 @@ async function adicionarRegistroEmail(
                         String(valor).trim() !== ""
                     ) {
 
-                        atual[
-                            normalizar(valor)
-                        ] = indice;
+                        const chave = normalizar(valor);
+                        if (Object.prototype.hasOwnProperty.call(atual, chave)) throw new Error("Cabeçalho duplicado ou ambíguo na aba Email: " + chave);
+                        atual[chave] = indice;
                     }
                 }
             );
@@ -1148,60 +1137,9 @@ async function adicionarRegistroEmail(
     }
 
 
-    if (linhaCabecalho === -1) {
-
-        folha
-            .getRange("A1:J1")
-            .values = [[
-                "Data",
-                "Realizado por",
-                "Empresa",
-                "Qtde",
-                "Email Resposta",
-                "Supervisor",
-                "Obs",
-                "Historico Externo",
-                "Mensagem",
-                "Assunto"
-            ]];
-
-        linhaCabecalho = 0;
-
-        [
-            "DATA",
-            "REALIZADO POR",
-            "EMPRESA",
-            "QTDE",
-            "EMAIL RESPOSTA",
-            "SUPERVISOR",
-            "OBS",
-            "HISTORICO EXTERNO",
-            "MENSAGEM",
-            "ASSUNTO"
-        ].forEach(function (
-            nome,
-            indice
-        ) {
-            mapa[nome] = indice;
-        });
-    }
-
-
-    // Compatibilidade: versões anteriores da aba Email tinham apenas 10 colunas.
-    // Se ID REGISTRO ainda não existir, ele é criado automaticamente na próxima coluna.
-    let indiceId = obterIndice(mapa, ["ID REGISTRO"]);
-    if (indiceId === -1) {
-        const indices = Object.values(mapa).filter(function (valor) { return Number.isInteger(valor); });
-        indiceId = indices.length > 0 ? Math.max.apply(null, indices) + 1 : 10;
-        const colunaId = (usado.isNullObject ? 0 : usado.columnIndex) + indiceId;
-        folha.getRangeByIndexes(
-            (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
-            colunaId,
-            1,
-            1
-        ).values = [["ID REGISTRO"]];
-        mapa["ID REGISTRO"] = indiceId;
-    }
+    if (linhaCabecalho === -1) throw new Error("Estrutura da aba Email não reconhecida. Nenhuma coluna foi criada; revise os cabeçalhos antes de gravar.");
+    const indiceId = obterIndice(mapa, ["ID REGISTRO"]);
+    if (indiceId === -1) throw new Error("A coluna ID REGISTRO está ausente na aba Email. A gravação foi bloqueada sem alterar a estrutura.");
 
     const numeroColunas = 11;
 
@@ -1296,7 +1234,7 @@ async function adicionarRegistroEmail(
     colocar(["ID REGISTRO"], dados.idRegistro);
     let confirmado = false;
 
-    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    for (let tentativa = 1; tentativa <= 1; tentativa++) {
         const atual = folha.getUsedRangeOrNullObject(true);
         atual.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
         await context.sync();
@@ -1320,7 +1258,18 @@ async function adicionarRegistroEmail(
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
-        await context.sync();
+        try {
+            await context.sync();
+        } catch (erroConfirmacao) {
+            try {
+                const resultado = await reconciliarRegistroPorIdEmail(dados.idRegistro);
+                if (resultado.status === "reconciliado") { confirmado = true; break; }
+            } catch (erroReconciliacao) {
+                throw new Error("Falha ao confirmar a gravação (" + (erroConfirmacao && erroConfirmacao.message || "erro Office.js") + "). " +
+                    (erroReconciliacao && erroReconciliacao.message || "Reconciliação inconclusiva") +
+                    " Não houve nova tentativa de escrita.");
+            }
+        }
 
         if (String(celulaId.values[0][0] || "") === String(dados.idRegistro)) {
             confirmado = true;
@@ -1333,6 +1282,40 @@ async function adicionarRegistroEmail(
     }
 }
 
+
+async function reconciliarRegistroPorIdEmail(idRegistro) {
+    return Excel.run(async function (contextoLeitura) {
+        const folhaLeitura = contextoLeitura.workbook.worksheets.getItem("Email");
+        const usadoLeitura = folhaLeitura.getUsedRangeOrNullObject(true);
+        usadoLeitura.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
+        await contextoLeitura.sync();
+        if (usadoLeitura.isNullObject) throw new Error("RECONCILIACAO_INDETERMINADA: aba Email indisponível.");
+        let indiceCabecalho = -1, indiceId = -1;
+        const valores = usadoLeitura.values || [];
+        for (let linha = 0; linha < Math.min(valores.length, 20); linha++) {
+            const vistos = Object.create(null); let duplicado = false;
+            (valores[linha] || []).forEach(function (valor, coluna) {
+                if (valor === null || valor === undefined || String(valor).trim() === "") return;
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(vistos, chave)) duplicado = true;
+                vistos[chave] = coluna;
+            });
+            if (!duplicado && vistos["ID REGISTRO"] !== undefined && vistos["EMPRESA"] !== undefined &&
+                (vistos["DATA"] !== undefined || vistos["REALIZADO POR"] !== undefined)) {
+                indiceCabecalho = linha; indiceId = vistos["ID REGISTRO"]; break;
+            }
+        }
+        if (indiceCabecalho < 0) throw new Error("RECONCILIACAO_INDETERMINADA: cabeçalho ID REGISTRO ausente ou ambíguo na aba Email.");
+        let correspondencias = 0;
+        for (let linha = indiceCabecalho + 1; linha < valores.length; linha++) {
+            const valorId = (valores[linha] || [])[indiceId];
+            if (String(valorId == null ? "" : valorId) === String(idRegistro)) correspondencias++;
+        }
+        if (correspondencias === 1) return { status: "reconciliado", correspondencias: 1 };
+        if (correspondencias > 1) throw new Error("CONFLITO_ID_DUPLICADO: " + correspondencias + " registros com ID " + idRegistro + " na aba Email. Nenhuma nova gravação foi feita.");
+        throw new Error("RESULTADO_NAO_RESOLVIDO: ID " + idRegistro + " não encontrado após falha de confirmação na aba Email. Consulte o histórico antes de tentar novamente.");
+    });
+}
 
 function gerarIdRegistro() {
     const agora = new Date();
