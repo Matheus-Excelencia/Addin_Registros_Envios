@@ -24,6 +24,7 @@ class F0HeaderContractTests(unittest.TestCase):
             with self.subTest(script=name):
                 source = SCRIPTS[name].read_text(encoding="utf-8")
                 self.assertIn("Cabeçalho duplicado ou ambíguo", source)
+                self.assertIn("Aliases ambíguos para o mesmo campo", source)
 
     def test_email_and_sms_do_not_create_missing_schema(self):
         for name in ("email", "sms"):
