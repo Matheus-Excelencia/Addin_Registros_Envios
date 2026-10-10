@@ -13,6 +13,7 @@
 - **Bloqueio ainda por resolver:** Vercel informa SSO Protection habilitada para todos os domínios não customizados. Acessibilidade do preview pelo Excel Web/Office.js não foi testada. Não desativar nem contornar a proteção; antes do teste, verificar acesso autorizado ao preview e se o suplemento carrega no painel do Excel.
 - `WebApplicationInfo`/escopos de identidade foram mantidos iguais aos do manifesto original; fluxo de autenticação e consentimento não foi validado por esta preparação.
 - A URL é um deployment Preview, não domínio de produção; não implica que o host esteja validado.
+- **Evidência visual relatada em 10/10/2026:** o usuário confirmou que o preview abriu a página inicial do portal e que as telas do suplemento (`Novo Registro`, `Histórico`, `Resumo` e `Configurações`) abriram sem erro visível. Classificação: `INTERFACE_ABERTA`; não foram relatados resultados de leitura/gravação, autenticação Office.js/Graph ou cenários M01–M06. As capturas foram fornecidas na conversa e não estão anexadas a este repositório.
 
 ## 2. Identificação da execução
 
