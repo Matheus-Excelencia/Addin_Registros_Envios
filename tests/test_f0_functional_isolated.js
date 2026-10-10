@@ -282,3 +282,47 @@ test("REAL FUNCTION + Office.js mock: successful write confirms ID exactly once"
     assert.equal(mock.writeAttempts, 1, name);
   }
 });
+
+test("ID reconciliation helper distinguishes zero, one and duplicate matches", async () => {
+  for (const [name, helperName, sheet] of [
+    ["email", "reconciliarRegistroPorIdEmail", "Email"],
+    ["sms", "reconciliarRegistroPorIdSMS", "SMS"],
+  ]) {
+    const sandbox = loadHelpers(name, `globalThis.__test = { reconcile: ${helperName} };`);
+    const headers = completeHeaders[name];
+    const idColumn = headers.indexOf("ID REGISTRO");
+    const rowsFor = ids => [headers, ...ids.map(id => {
+      const row = new Array(headers.length).fill("");
+      row[headers.indexOf("EMPRESA")] = "Empresa teste";
+      row[idColumn] = id;
+      return row;
+    })];
+    let rows = rowsFor([]);
+    const context = {
+      workbook: { worksheets: { getItem(requested) {
+        assert.equal(requested, sheet);
+        return { getUsedRangeOrNullObject() {
+          return { get values() { return rows; }, isNullObject: false, rowIndex: 0, columnIndex: 0, load() {} };
+        } };
+      } } },
+      async sync() {},
+    };
+    sandbox.Excel = { run: async callback => callback(context) };
+    await assert.rejects(sandbox.__test.reconcile("TARGET-ID"), /RESULTADO_NAO_RESOLVIDO/);
+    rows = rowsFor(["TARGET-ID"]);
+    assert.equal((await sandbox.__test.reconcile("TARGET-ID")).status, "reconciliado");
+    rows = rowsFor(["TARGET-ID", "TARGET-ID"]);
+    await assert.rejects(sandbox.__test.reconcile("TARGET-ID"), /CONFLITO_ID_DUPLICADO/);
+  }
+});
+
+test("ID reconciliation helper leaves outcome indeterminate when independent read fails", async () => {
+  for (const [name, helperName] of [
+    ["email", "reconciliarRegistroPorIdEmail"],
+    ["sms", "reconciliarRegistroPorIdSMS"],
+  ]) {
+    const sandbox = loadHelpers(name, `globalThis.__test = { reconcile: ${helperName} };`);
+    sandbox.Excel = { run: async () => { throw new Error("independent read failed"); } };
+    await assert.rejects(sandbox.__test.reconcile("TARGET-ID"), /independent read failed/);
+  }
+});
