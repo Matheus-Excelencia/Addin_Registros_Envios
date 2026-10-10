@@ -28,11 +28,9 @@ function normalizar(v) {
 }
 
 function indice(mapa, nomes) {
-    for (const nome of nomes) {
-        const chave = normalizar(nome);
-        if (mapa[chave] !== undefined) return mapa[chave];
-    }
-    return -1;
+    const encontrados = [...new Set(nomes.map(normalizar).filter(chave => mapa[chave] !== undefined).map(chave => mapa[chave]))];
+    if (encontrados.length > 1) throw new Error("Aliases ambíguos para o mesmo campo: " + nomes.join(" / "));
+    return encontrados.length ? encontrados[0] : -1;
 }
 
 function encontrarCabecalho(valores, obrigatorios) {
