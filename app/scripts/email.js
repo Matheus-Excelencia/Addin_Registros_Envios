@@ -141,11 +141,7 @@ function emailValido(valor) {
 
 function normalizar(valor) {
 
-    return String(valor || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim()
-        .toUpperCase();
+    return String(valor || "").trim().toUpperCase();
 }
 
 
