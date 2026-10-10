@@ -58,7 +58,7 @@ Comportamento implementado:
 3. Uma única correspondência considera o registro reconciliado; nenhuma correspondência gera resultado não resolvido; múltiplas correspondências geram conflito explícito.
 4. Cabeçalho canônico ausente/ambíguo ou falha na leitura independente bloqueiam a conclusão e não disparam nova gravação.
 
-**Estado de validação:** CI para os commits de implementação/teste ainda não confirmado nesta atualização. Os mocks não equivalem a um teste no Excel Web real; validar o comportamento no host Office.js permanece obrigatório antes de considerar F0 concluída. A chamada aninhada de `Excel.run` e o comportamento de leitura após falha de sincronização devem ser verificados no ambiente Excel suportado.
+**Estado de validação:** CI do commit `1c619b5` passou no run [38018765949](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/runs/38018765949): sintaxe JS, 5 testes estáticos e 11 testes isolados aprovados. Depois disso, foram acrescentados testes diretos para zero/uma/múltiplas correspondências e falha de leitura no commit `7151ed2`; o resultado do CI específico desses novos testes ainda precisa ser confirmado. Os mocks não equivalem a um teste no Excel Web real; validar o comportamento no host Office.js permanece obrigatório antes de considerar F0 concluída. A chamada aninhada de `Excel.run` e o comportamento de leitura após falha de sincronização devem ser verificados no ambiente Excel suportado.
 
 ## Plano proposto — reconciliação real por ID (ainda não implementada)
 
