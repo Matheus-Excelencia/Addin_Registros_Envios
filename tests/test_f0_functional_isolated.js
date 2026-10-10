@@ -241,21 +241,23 @@ const validRecord = {
   assunto: "Assunto teste", idRegistro: "F0-MOCK-ID-001",
 };
 
-test("REAL FUNCTION + Office.js mock: sync failure before persistence leaves no row and does not retry", async () => {
+test("REAL FUNCTION + Office.js mock: sync failure before persistence is unresolved and does not retry", async () => {
   for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
     const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
     const mock = createOfficeWriteMock(completeHeaders[name], { failMode: "before-persist" });
-    await assert.rejects(sandbox.__test.add(mock.context, validRecord), /mock sync failed before persistence/, name);
+    sandbox.Excel = { run: async callback => callback(mock.context) };
+    await assert.rejects(sandbox.__test.add(mock.context, validRecord), /RESULTADO_NAO_RESOLVIDO/, name);
     assert.equal(mock.rows.length, 1, name);
     assert.equal(mock.writeAttempts, 1, name);
   }
 });
 
-test("REAL FUNCTION + Office.js mock: confirmation failure after persistence leaves one row but code does not reconcile", async () => {
+test("REAL FUNCTION + Office.js mock: confirmation failure after persistence reconciles by ID without retry", async () => {
   for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
     const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
     const mock = createOfficeWriteMock(completeHeaders[name], { failMode: "after-persist" });
-    await assert.rejects(sandbox.__test.add(mock.context, validRecord), /mock confirmation failed after persistence/, name);
+    sandbox.Excel = { run: async callback => callback(mock.context) };
+    await sandbox.__test.add(mock.context, validRecord);
     assert.equal(mock.rows.length, 2, name);
     assert.equal(mock.rows[1][completeHeaders[name].indexOf("ID REGISTRO")], validRecord.idRegistro, name);
     assert.equal(mock.writeAttempts, 1, name);
@@ -266,6 +268,7 @@ test("REAL FUNCTION + Office.js mock: successful write confirms ID exactly once"
   for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
     const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
     const mock = createOfficeWriteMock(completeHeaders[name]);
+    sandbox.Excel = { run: async callback => callback(mock.context) };
     await sandbox.__test.add(mock.context, validRecord);
     assert.equal(mock.rows.length, 2, name);
     assert.equal(mock.rows[1][completeHeaders[name].indexOf("ID REGISTRO")], validRecord.idRegistro, name);
