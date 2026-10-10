@@ -68,11 +68,7 @@ function limparFormulario() {
 }
 
 function normalizar(valor) {
-    return String(valor || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim()
-        .toUpperCase();
+    return String(valor || "").trim().toUpperCase();
 }
 
 function obterIndice(mapa, nomes) {
@@ -87,9 +83,7 @@ function encontrarCabecalho(valores) {
     for (let linha = 0; linha < Math.min(valores.length, 30); linha++) {
         const mapa = {};
         valores[linha].forEach(function (valor, indice) {
-            if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
-                mapa[normalizar(valor)] = indice;
-            }
+            if (valor !== null && valor !== undefined && String(valor).trim() !== "") { const chave = normalizar(valor); if (mapa[chave] !== undefined) throw new Error("Cabeçalho duplicado ou ambíguo: " + String(valor).trim()); mapa[chave] = indice; }
         });
 
         const temEmpresa = obterIndice(mapa, ["EMPRESAS", "EMPRESA"]) !== -1;
