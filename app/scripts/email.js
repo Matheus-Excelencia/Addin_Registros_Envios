@@ -1258,7 +1258,18 @@ async function adicionarRegistroEmail(
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
-        await context.sync();
+        try {
+            await context.sync();
+        } catch (erroConfirmacao) {
+            try {
+                const resultado = await reconciliarRegistroPorIdEmail(dados.idRegistro);
+                if (resultado.status === "reconciliado") { confirmado = true; break; }
+            } catch (erroReconciliacao) {
+                throw new Error("Falha ao confirmar a gravação (" + (erroConfirmacao && erroConfirmacao.message || "erro Office.js") + "). " +
+                    (erroReconciliacao && erroReconciliacao.message || "Reconciliação inconclusiva") +
+                    " Não houve nova tentativa de escrita.");
+            }
+        }
 
         if (String(celulaId.values[0][0] || "") === String(dados.idRegistro)) {
             confirmado = true;
@@ -1271,6 +1282,40 @@ async function adicionarRegistroEmail(
     }
 }
 
+
+async function reconciliarRegistroPorIdEmail(idRegistro) {
+    return Excel.run(async function (contextoLeitura) {
+        const folhaLeitura = contextoLeitura.workbook.worksheets.getItem("Email");
+        const usadoLeitura = folhaLeitura.getUsedRangeOrNullObject(true);
+        usadoLeitura.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
+        await contextoLeitura.sync();
+        if (usadoLeitura.isNullObject) throw new Error("RECONCILIACAO_INDETERMINADA: aba Email indisponível.");
+        let indiceCabecalho = -1, indiceId = -1;
+        const valores = usadoLeitura.values || [];
+        for (let linha = 0; linha < Math.min(valores.length, 20); linha++) {
+            const vistos = Object.create(null); let duplicado = false;
+            (valores[linha] || []).forEach(function (valor, coluna) {
+                if (valor === null || valor === undefined || String(valor).trim() === "") return;
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(vistos, chave)) duplicado = true;
+                vistos[chave] = coluna;
+            });
+            if (!duplicado && vistos["ID REGISTRO"] !== undefined && vistos["EMPRESA"] !== undefined &&
+                (vistos["DATA"] !== undefined || vistos["REALIZADO POR"] !== undefined)) {
+                indiceCabecalho = linha; indiceId = vistos["ID REGISTRO"]; break;
+            }
+        }
+        if (indiceCabecalho < 0) throw new Error("RECONCILIACAO_INDETERMINADA: cabeçalho ID REGISTRO ausente ou ambíguo na aba Email.");
+        let correspondencias = 0;
+        for (let linha = indiceCabecalho + 1; linha < valores.length; linha++) {
+            const valorId = (valores[linha] || [])[indiceId];
+            if (String(valorId == null ? "" : valorId) === String(idRegistro)) correspondencias++;
+        }
+        if (correspondencias === 1) return { status: "reconciliado", correspondencias: 1 };
+        if (correspondencias > 1) throw new Error("CONFLITO_ID_DUPLICADO: " + correspondencias + " registros com ID " + idRegistro + " na aba Email. Nenhuma nova gravação foi feita.");
+        throw new Error("RESULTADO_NAO_RESOLVIDO: ID " + idRegistro + " não encontrado após falha de confirmação na aba Email. Consulte o histórico antes de tentar novamente.");
+    });
+}
 
 function gerarIdRegistro() {
     const agora = new Date();
