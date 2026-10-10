@@ -1,0 +1,59 @@
+name: Quality gate
+
+on:
+  pull_request:
+    branches:
+      - portal-web-evolut
+      - main
+  push:
+    branches:
+      - portal-web-evolut
+      - automation/ci-baseline
+  workflow_dispatch:
+  schedule:
+    - cron: "23 12 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-validation:
+    name: Static validation (no production deploy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find app/scripts -type f -name '*.js' -not -name 'README.md' | sort)
+          test "${#scripts[@]}" -gt 0
+          for file in "${scripts[@]}"; do
+            echo "Checking ${file}"
+            node --check "${file}"
+          done
+
+      - name: Validate Office manifest and local references
+        run: python tests/validate_project.py
+
+      - name: Confirm protected production files were not changed by this baseline
+        run: |
+          test -f manifest.xml
+          test -f docs/roadmap/F0-CONTRATO-CANONICO-DECISOES-E-TESTES.md
+          echo "Static checks completed. This workflow does not deploy or change production."
