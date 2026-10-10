@@ -44,7 +44,7 @@ test("duplicate normalized headers fail instead of selecting a column", () => {
     const row = name === "history"
       ? [["DATA", " data ", "EMPRESA"]]
       : name === "config"
-        ? [["EMPRESAS", "EMPRESA", "SUPERVISORES"]]
+        ? [["EMPRESAS", " EMPRESAS ", "SUPERVISORES"]]
         : [["EMPRESAS", " EMPRESAS ", "SUPERVISORES"]];
     assert.throws(() => parse(row), /Cabeçalho duplicado ou ambíguo/, name);
   }
