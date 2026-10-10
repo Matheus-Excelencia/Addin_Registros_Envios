@@ -69,9 +69,8 @@ function limparFormulario() {
 
 function normalizar(valor) {
     return String(valor || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
         .trim()
+        .replace(/\s+/g, " ")
         .toUpperCase();
 }
 
@@ -88,7 +87,9 @@ function encontrarCabecalho(valores) {
         const mapa = {};
         valores[linha].forEach(function (valor, indice) {
             if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
-                mapa[normalizar(valor)] = indice;
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(mapa, chave)) throw new Error("Cabeçalho duplicado ou ambíguo no Config: " + chave);
+                mapa[chave] = indice;
             }
         });
 
@@ -395,7 +396,9 @@ async function adicionarRegistroSMS(context, dados) {
             const atual = {};
             usado.values[linha].forEach(function (valor, indice) {
                 if (valor !== null && valor !== undefined && String(valor).trim() !== "") {
-                    atual[normalizar(valor)] = indice;
+                    const chave = normalizar(valor);
+                    if (Object.prototype.hasOwnProperty.call(atual, chave)) throw new Error("Cabeçalho duplicado ou ambíguo na aba SMS: " + chave);
+                    atual[chave] = indice;
                 }
             });
             if (atual["EMPRESA"] !== undefined && (atual["DATA"] !== undefined || atual["REALIZADO POR"] !== undefined)) {
@@ -406,29 +409,9 @@ async function adicionarRegistroSMS(context, dados) {
         }
     }
 
-    if (linhaCabecalho === -1) {
-        folha.getRange("A1:H1").values = [["Data", "Realizado por", "Empresa", "Qtde", "Supervisor", "Obs.", "Historico Externo", "Mensagem"]];
-        linhaCabecalho = 0;
-        ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "SUPERVISOR", "OBS.", "HISTORICO EXTERNO", "MENSAGEM"].forEach(function (nome, indice) {
-            mapa[nome] = indice;
-        });
-    }
-
-    // Compatibilidade: versões anteriores da aba SMS tinham apenas 8 colunas.
-    // Se ID REGISTRO ainda não existir, ele é criado automaticamente na próxima coluna.
-    let indiceId = obterIndice(mapa, ["ID REGISTRO"]);
-    if (indiceId === -1) {
-        const indices = Object.values(mapa).filter(function (valor) { return Number.isInteger(valor); });
-        indiceId = indices.length > 0 ? Math.max.apply(null, indices) + 1 : 8;
-        const colunaId = (usado.isNullObject ? 0 : usado.columnIndex) + indiceId;
-        folha.getRangeByIndexes(
-            (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
-            colunaId,
-            1,
-            1
-        ).values = [["ID REGISTRO"]];
-        mapa["ID REGISTRO"] = indiceId;
-    }
+    if (linhaCabecalho === -1) throw new Error("Estrutura da aba SMS não reconhecida. Nenhuma coluna foi criada; revise os cabeçalhos antes de gravar.");
+    const indiceId = obterIndice(mapa, ["ID REGISTRO"]);
+    if (indiceId === -1) throw new Error("A coluna ID REGISTRO está ausente na aba SMS. A gravação foi bloqueada sem alterar a estrutura.");
 
     const numeroColunas = 9;
 
@@ -463,7 +446,7 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["ID REGISTRO"], dados.idRegistro);
     let confirmado = false;
 
-    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    for (let tentativa = 1; tentativa <= 1; tentativa++) {
         const atual = folha.getUsedRangeOrNullObject(true);
         atual.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
         await context.sync();
