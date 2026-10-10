@@ -1,0 +1,33 @@
+name: F0 header contract regressions
+
+on:
+  pull_request:
+    branches:
+      - portal-web-evolut
+      - main
+  push:
+    branches:
+      - fix/f0-canonical-headers-regressions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  f0-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Check JavaScript syntax
+        run: |
+          for file in app/scripts/email.js app/scripts/sms.js app/scripts/historico.js app/scripts/config.js; do
+            node --check "$file"
+          done
+      - name: Run F0 header contract regressions
+        run: python -m unittest discover -s tests -p "test_f0_header_contract.py" -v
