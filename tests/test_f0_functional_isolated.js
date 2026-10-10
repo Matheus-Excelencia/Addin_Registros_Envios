@@ -227,7 +227,14 @@ function createOfficeWriteMock(headers, { failMode = "none" } = {}) {
       }
     },
   };
-  return { context, rows, get writeAttempts() { return writeAttempts; } };
+  const reconcileContext = {
+    workbook: { worksheets: { getItem(name) {
+      assert.ok(name === "Email" || name === "SMS");
+      return { getUsedRangeOrNullObject() { return usedRange(); } };
+    } } },
+    async sync() {},
+  };
+  return { context, reconcileContext, rows, get writeAttempts() { return writeAttempts; } };
 }
 
 const completeHeaders = {
@@ -245,7 +252,7 @@ test("REAL FUNCTION + Office.js mock: sync failure before persistence is unresol
   for (const [name, fnName] of [["email", "adicionarRegistroEmail"], ["sms", "adicionarRegistroSMS"]]) {
     const sandbox = loadHelpers(name, `globalThis.__test = { add: ${fnName} };`);
     const mock = createOfficeWriteMock(completeHeaders[name], { failMode: "before-persist" });
-    sandbox.Excel = { run: async callback => callback(mock.context) };
+    sandbox.Excel = { run: async callback => callback(mock.reconcileContext) };
     await assert.rejects(sandbox.__test.add(mock.context, validRecord), /RESULTADO_NAO_RESOLVIDO/, name);
     assert.equal(mock.rows.length, 1, name);
     assert.equal(mock.writeAttempts, 1, name);
