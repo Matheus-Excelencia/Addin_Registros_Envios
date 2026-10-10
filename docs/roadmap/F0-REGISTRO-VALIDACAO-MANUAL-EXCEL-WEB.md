@@ -1,11 +1,20 @@
 # F0 — Registro de validação manual no Excel para Web
 
-**Status:** PENDENTE — nenhum resultado de host real registrado  
+**Status:** PENDENTE — preparação parcial concluída; nenhum resultado de host real registrado  
 **Branch de trabalho:** `fix/f0-canonical-headers-regressions`  
 **Escopo:** confirmar leitura independente e reconciliação por `ID REGISTRO` após falha de `context.sync()`.  
 **Regra:** não marcar como validado até preencher as evidências observadas no Excel para Web. Não executar em workbook de produção.
 
-## 1. Identificação da execução
+## 1. Preparação técnica já realizada
+
+- Manifesto de teste separado criado: [`manifest.f0-test.xml`](../../manifest.f0-test.xml).
+- Manifesto usa ID de suplemento diferente e aponta os recursos web para o deployment Preview `https://addin-registros-envios-jkdmawi9c-acme-vs-coyote.vercel.app`.
+- Deployment associado ao commit `eab1b7247dc9fe0eb3d99b332ebc42e352ffdd7d`, branch `fix/f0-canonical-headers-regressions`.
+- **Bloqueio ainda por resolver:** Vercel informa SSO Protection habilitada para todos os domínios não customizados. Acessibilidade do preview pelo Excel Web/Office.js não foi testada. Não desativar nem contornar a proteção; antes do teste, verificar acesso autorizado ao preview e se o suplemento carrega no painel do Excel.
+- `WebApplicationInfo`/escopos de identidade foram mantidos iguais aos do manifesto original; fluxo de autenticação e consentimento não foi validado por esta preparação.
+- A URL é um deployment Preview, não domínio de produção; não implica que o host esteja validado.
+
+## 2. Identificação da execução
 
 - Data/hora (incluindo fuso):
 - Responsável pela execução:
@@ -17,7 +26,7 @@
 - ID sintético exclusivo utilizado:
 - Resultado geral: **PENDENTE**
 
-## 2. Pré-condições e segurança
+## 3. Pré-condições e segurança
 
 - [ ] Usar uma cópia descartável do workbook, nunca o arquivo de produção.
 - [ ] Confirmar que a aba de teste contém os cabeçalhos esperados, sem duplicatas ou ambiguidades.
@@ -27,7 +36,7 @@
 - [ ] Confirmar que a falha será induzida apenas por um mecanismo de teste controlado e aprovado. Não desligar a rede nem interromper gravações reais para forçar a falha.
 - [ ] Não incluir tokens, e-mails pessoais, conteúdo de mensagens ou dados sensíveis nas evidências.
 
-## 3. Matriz de cenários
+## 4. Matriz de cenários
 
 Preencher **resultado observado**, **evidência** e **observações** após cada execução. Não presumir o resultado esperado como resultado real.
 
@@ -42,7 +51,7 @@ Preencher **resultado observado**, **evidência** e **observações** após cada
 
 **Nota de segurança:** M02–M06 devem usar exclusivamente workbook descartável e dados sintéticos. Para testar falha de confirmação após persistência, prefira um ponto de injeção de falha controlado em build de teste; não provoque indisponibilidade em produção.
 
-## 4. Evidências mínimas a anexar
+## 5. Evidências mínimas a anexar
 
 - Captura do Excel para Web mostrando que o ambiente é de teste, ocultando dados não necessários.
 - Log do suplemento com mensagem/resultado e ID sintético.
@@ -52,7 +61,7 @@ Preencher **resultado observado**, **evidência** e **observações** após cada
 
 Não anexar credenciais, access tokens, cookies, links privados contendo tokens ou conteúdo real de clientes.
 
-## 5. Critérios de aprovação
+## 6. Critérios de aprovação
 
 - [ ] A leitura independente realmente executa no host Excel para Web após a falha de confirmação.
 - [ ] Uma correspondência exata resulta em reconciliação positiva.
@@ -63,7 +72,7 @@ Não anexar credenciais, access tokens, cookies, links privados contendo tokens 
 - [ ] Email e SMS foram avaliados separadamente, ou foi registrada justificativa clara para qualquer cenário ainda não executado.
 - [ ] Evidências e desvios foram registrados no relatório F0.
 
-## 6. Resultado final
+## 7. Resultado final
 
 - Estado final: **PENDENTE — aguarda execução e evidências do Excel para Web**.
 - Aprovado por:
