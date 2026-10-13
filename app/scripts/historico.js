@@ -24,22 +24,24 @@ if (window.Office && Office.onReady) {
 }
 
 function normalizar(v) {
-    return String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
+    return String(v ?? "").trim().replace(/\s+/g, " ").toUpperCase();
 }
 
 function indice(mapa, nomes) {
-    for (const nome of nomes) {
-        const chave = normalizar(nome);
-        if (mapa[chave] !== undefined) return mapa[chave];
-    }
-    return -1;
+    const encontrados = [...new Set(nomes.map(normalizar).filter(chave => mapa[chave] !== undefined).map(chave => mapa[chave]))];
+    if (encontrados.length > 1) throw new Error("Aliases ambíguos para o mesmo campo: " + nomes.join(" / "));
+    return encontrados.length ? encontrados[0] : -1;
 }
 
 function encontrarCabecalho(valores, obrigatorios) {
     for (let linha = 0; linha < Math.min(valores.length, 30); linha++) {
         const mapa = {};
         (valores[linha] || []).forEach((valor, coluna) => {
-            if (String(valor ?? "").trim()) mapa[normalizar(valor)] = coluna;
+            if (String(valor ?? "").trim()) {
+                const chave = normalizar(valor);
+                if (Object.prototype.hasOwnProperty.call(mapa, chave)) throw new Error("Cabeçalho duplicado ou ambíguo no Histórico: " + chave);
+                mapa[chave] = coluna;
+            }
         });
         if (obrigatorios.every(nomes => indice(mapa, nomes) !== -1)) {
             return { linha, mapa };
