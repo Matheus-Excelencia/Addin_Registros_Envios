@@ -1203,7 +1203,8 @@ async function adicionarRegistroEmail(
         mapa["ID REGISTRO"] = indiceId;
     }
 
-    const numeroColunas = 11;
+    // A largura acompanha o cabeçalho real, incluindo colunas adicionadas pelo usuário.
+    const numeroColunas = Math.max(11, ...Object.values(mapa).filter(Number.isInteger).map(indice => indice + 1));
 
     validarEstruturaRegistro(mapa, [
         ["DATA"],
@@ -1294,6 +1295,18 @@ async function adicionarRegistroEmail(
 
     colocar(["ASSUNTO"], dados.assunto);
     colocar(["ID REGISTRO"], dados.idRegistro);
+    // Valores adicionais opcionais, identificados pelo nome da coluna.
+    // Campos sem resposta permanecem vazios; cabeçalhos existentes são preservados.
+    const extras = dados.camposPersonalizados || {};
+    if (extras && typeof extras === "object" && !Array.isArray(extras)) {
+        for (const [nome, valor] of Object.entries(extras)) {
+            const indice = obterIndice(mapa, [nome]);
+            if (indice !== -1 && indice !== indiceId &&
+                !["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "MENSAGEM"].includes(normalizar(nome))) {
+                valores[indice] = valor == null ? "" : valor;
+            }
+        }
+    }
     let confirmado = false;
 
     for (let tentativa = 1; tentativa <= 3; tentativa++) {
@@ -1301,7 +1314,7 @@ async function adicionarRegistroEmail(
         atual.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
         await context.sync();
 
-        const proximaLinha = obterProximaLinhaDados(atual, 11);
+        const proximaLinha = obterProximaLinhaDados(atual, numeroColunas);
         const colunaInicial = atual.isNullObject ? 0 : atual.columnIndex;
         const intervaloRegistro = folha.getRangeByIndexes(
             proximaLinha,
@@ -1316,7 +1329,8 @@ async function adicionarRegistroEmail(
         if (indiceMensagem !== -1) {
             intervaloRegistro.getCell(0, indiceMensagem).format.wrapText = false;
         }
-        intervaloRegistro.getCell(0, 0).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+        const indiceData = obterIndice(mapa, ["DATA"]);
+        if (indiceData !== -1) intervaloRegistro.getCell(0, indiceData).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
