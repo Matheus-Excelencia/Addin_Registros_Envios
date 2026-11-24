@@ -1341,10 +1341,9 @@ async function adicionarRegistroEmail(
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
         intervaloRegistro.load("values");
-        intervaloRegistro.load("values");
         await context.sync();
 
-        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro) && (dados.camposDinamicos || []).every(c => { const i = obterIndice(mapa,[c.nome]); const v = intervaloRegistro.values[0][i]; return i >= 0 && (typeof c.valor === "number" ? typeof v === "number" && Math.abs(v-c.valor)<1e-9 : String(v ?? "") === String(c.valor ?? "").replace(/^\x27(?=[=+\-@])/,"")); })) {
+        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro) && (dados.camposDinamicos || []).every(c => { const i = obterIndice(mapa,[c.nome]); const v = intervaloRegistro.values[0][i]; return (i < 0 && c.valor === "") || (i >= 0 && (typeof c.valor === "number" ? typeof v === "number" && Math.abs(v-c.valor)<1e-9 : String(v ?? "") === String(c.valor ?? "").replace(/^\x27(?=[=+\-@])/,""))); })) {
             const gravados = intervaloRegistro.values[0];
             for(const c of dados.camposDinamicos || []){const j=obterIndice(mapa,[c.nome]);if(j<0 || (typeof c.valor==="number" ? typeof gravados[j]!=="number" || Math.abs(gravados[j]-c.valor)>1e-9 : String(gravados[j]??"")!==String(c.valor??"").replace(/^\x27(?=[=+\-@])/,"")))throw new Error("Registro gravado, mas resposta não confirmada: "+c.nome+". Confira o ID "+dados.idRegistro+" antes de tentar novamente.");}
             confirmado = true;
