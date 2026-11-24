@@ -83,7 +83,7 @@ function coletarRespostasPersonalizadas() {
             if (!Number.isSafeInteger(numero)) throw new Error('O campo "' + pergunta.nome + '" deve ser um número inteiro.');
             respostas.push({nome: pergunta.coluna, valor: numero / (pergunta.formato === "percentual" ? 100 : 1), formato: pergunta.formato, tipo: pergunta.tipo});
         } else if (pergunta.tipo === "float") {
-            let normalizado = bruto.replace(/^R\$\s*/i, "").replace(/\s/g, "");
+            let normalizado = bruto.replace(/^R\$\s*/i, "");
             if (/^[+-]?\d{1,3}(?:\.\d{3})+$/.test(normalizado)) normalizado = normalizado.replace(/\./g, "");
             if (normalizado.includes(",")) {
                 if (!/^[+-]?(?:\d+|\d{1,3}(?:\.\d{3})+),\d+$/.test(normalizado)) throw new Error("Número decimal inválido: " + pergunta.nome);
@@ -114,6 +114,7 @@ function prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, respo
     respostas.forEach(function(resposta) {
         let indice = obterIndice(mapa, [resposta.nome]);
         if (indice === -1) {
+            if (normalizar(resposta.nome) === "VALOR") { if (resposta.valor === "") return; throw new Error("Coluna Valor ausente; confira a planilha."); }
             indice = proximaColuna++;
             mapa[normalizar(resposta.nome)] = indice;
             folha.getRangeByIndexes(
