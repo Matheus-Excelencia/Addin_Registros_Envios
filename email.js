@@ -1464,9 +1464,12 @@ async function adicionarRegistroEmail(
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
+        intervaloRegistro.load("values");
         await context.sync();
 
         if (String(celulaId.values[0][0] || "") === String(dados.idRegistro)) {
+            const gravados = intervaloRegistro.values[0];
+            for(const c of dados.camposDinamicos || []){const j=obterIndice(mapa,[c.nome]);if(j<0 || (typeof c.valor==="number" ? typeof gravados[j]!=="number" || Math.abs(gravados[j]-c.valor)>1e-9 : String(gravados[j]??"")!==String(c.valor??"").replace(/^\x27(?=[=+\-@])/,"")))throw new Error("Registro gravado, mas resposta não confirmada: "+c.nome+". Confira o ID "+dados.idRegistro+" antes de tentar novamente.");}
             confirmado = true;
             break;
         }
@@ -1676,8 +1679,8 @@ function preencherDuplicacao() {
         if (d.camposPersonalizados) {
             perguntasPersonalizadas.forEach((pergunta, i) => {
                 const campo = document.getElementById("perguntaPersonalizada_" + i);
-                if (campo && (d.camposPersonalizados[pergunta.coluna] !== undefined || d.camposPersonalizados[pergunta.nome] !== undefined)) {
-                    campo.value = d.camposPersonalizados[pergunta.coluna] ?? d.camposPersonalizados[pergunta.nome];
+                if (campo && (d.camposPersonalizados[normalizar(pergunta.coluna)] !== undefined || d.camposPersonalizados[normalizar(pergunta.nome)] !== undefined)) {
+                    campo.value = converterDuplicacao(pergunta, d.camposPersonalizados[normalizar(pergunta.coluna)] ?? d.camposPersonalizados[normalizar(pergunta.nome)]);
                 }
             });
         }
@@ -1687,3 +1690,5 @@ function preencherDuplicacao() {
         mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
     } catch(e) { localStorage.removeItem("registroDuplicado"); }
 }
+
+function converterDuplicacao(p,v){if(v===null||v===undefined||v==="")return "";if(p.tipo==="bool")return v===true||v==="Sim"?"Sim":"Não";if(typeof v==="number"){if(p.formato==="percentual")return String(v*100).replace(".",",");if(p.tipo==="date"||p.tipo==="datetime"){const d=new Date(Date.UTC(1899,11,30)+Math.round(v*86400000));return d.toISOString().slice(0,p.tipo==="date"?10:16);}if(p.tipo==="time"){const m=Math.round(v*1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");}if(p.tipo==="float")return String(v).replace(".",",");}return String(v);}
