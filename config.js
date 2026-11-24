@@ -2,6 +2,7 @@ const FORMATOS_COMPATIVEIS={text:["geral","texto"],int:["geral","inteiro","decim
 function atualizarFormatos(){const t=document.getElementById("perguntaTipo"),f=document.getElementById("perguntaFormato");const a=FORMATOS_COMPATIVEIS[t.value]||[];for(const o of f.options)o.disabled=!a.includes(o.value);if(!a.includes(f.value))f.value=a[0]||"geral";}
 let cadastrandoPergunta=false;
 let info=null;
+let perguntaEmEdicao=null;
 const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA"];
 Office.onReady(async function(){
  document.getElementById("btnVoltar").onclick=()=>location.href="taskpane.html";
@@ -60,7 +61,7 @@ function renderizarPerguntas(perguntas){
   const nome=document.createElement("strong");nome.textContent=q.nome;
   const detalhe=document.createElement("small");detalhe.textContent=(q.formulario==="ambos"?"E-mail e SMS":q.formulario==="email"?"Somente E-mail":"Somente SMS")+" · "+q.tipo+" · "+q.formato+" · Coluna: "+q.coluna+" · "+(q.obrigatoria?"Obrigatória":"Opcional");
   item.appendChild(nome);item.appendChild(detalhe);
-  if(q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);}
+  if(q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);const editar=document.createElement("button");editar.type="button";editar.textContent="Editar";editar.onclick=()=>iniciarEdicao(q);item.appendChild(editar);}
   area.appendChild(item);
  });
 }
@@ -84,6 +85,7 @@ async function obterEstruturaConfig(context){
  return {sh,u,h,cols};
 }
 async function adicionarPergunta(){
+ if(perguntaEmEdicao)return salvarEdicao();
  if(cadastrandoPergunta)return;
  cadastrandoPergunta=true; const botao=document.getElementById("btnPergunta");botao.disabled=true;
  try {
@@ -162,3 +164,19 @@ async function salvarLimite(){
 }
 
 async function alterarAtividade(q){try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const matches=[];for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][cols.pergunta])===n(q.nome))matches.push(i);if(matches.length!==1)throw new Error("Pergunta não identificada de forma única.");sh.getRangeByIndexes(u.rowIndex+matches[0],u.columnIndex+cols.ativo,1,1).values=[[q.ativo?"NAO":"SIM"]];await context.sync();});await carregar();}catch(e){status(e.message,false);}}
+
+function iniciarEdicao(q){
+ perguntaEmEdicao=q;
+ for(const [id,v] of Object.entries({perguntaNome:q.nome,perguntaFormulario:q.formulario,perguntaTipo:q.tipo,perguntaFormato:q.formato,perguntaObrigatoria:q.obrigatoria?"sim":"nao",perguntaColuna:q.coluna}))document.getElementById(id).value=v;
+ for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=true;
+ atualizarFormatos();document.getElementById("btnPergunta").textContent="Salvar edição";
+ const b=document.createElement("button");b.id="cancelarEdicao";b.type="button";b.textContent="Cancelar edição";b.onclick=encerrarEdicao;
+ if(!document.getElementById(b.id))document.getElementById("btnPergunta").after(b);
+}
+function encerrarEdicao(){perguntaEmEdicao=null;for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=false;document.getElementById("btnPergunta").textContent="Adicionar pergunta";document.getElementById("cancelarEdicao")?.remove();document.getElementById("perguntaNome").value="";document.getElementById("perguntaColuna").value="";}
+async function salvarEdicao(){
+ const q=perguntaEmEdicao,nome=document.getElementById("perguntaNome").value.trim(),formato=document.getElementById("perguntaFormato").value,obrigatoria=document.getElementById("perguntaObrigatoria").value;
+ if(!nome||/^[=+\-@]/.test(nome)||/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false);
+ if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false);
+ try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria]])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[v]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
+}
