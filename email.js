@@ -978,7 +978,8 @@ async function salvarEmail(event) {
                         historicoExterno,
                         textoMensagem,
                         assunto,
-                        idRegistro
+                        idRegistro,
+                valorProcessos: lerValorProcessos()
                     }
                 );
 
@@ -1307,6 +1308,9 @@ async function adicionarRegistroEmail(
             }
         }
     }
+    const indiceValor = obterIndice(mapa, ["VALOR"]);
+    if (indiceValor === -1 && dados.valorProcessos !== "") throw new Error("Coluna Valor não encontrada.");
+    if (indiceValor !== -1) valores[indiceValor] = dados.valorProcessos ?? "";
     let confirmado = false;
 
     for (let tentativa = 1; tentativa <= 3; tentativa++) {
@@ -1324,6 +1328,7 @@ async function adicionarRegistroEmail(
         );
 
         intervaloRegistro.values = [valores];
+        if (indiceValor !== -1) intervaloRegistro.getCell(0, indiceValor).numberFormat = [['_("R$"* #,##0.00_);_("R$"* (#,##0.00);_("R$"* "-"??_);_(@_)']];
 
         const indiceMensagem = obterIndice(mapa, ["MENSAGEM"]);
         if (indiceMensagem !== -1) {
@@ -1547,4 +1552,14 @@ function preencherDuplicacao() {
         localStorage.removeItem("registroDuplicado");
         mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
     } catch(e) { localStorage.removeItem("registroDuplicado"); }
+}
+
+function lerValorProcessos() {
+    const raw = document.getElementById("valorProcessos").value.trim();
+    if (!raw) return "";
+    const s = raw.replace(/^R\$\s*/, "");
+    if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(s)) throw new Error("Informe um valor válido, por exemplo 1.234,56.");
+    const n = Number(s.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(n)) throw new Error("Valor inválido.");
+    return n;
 }
