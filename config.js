@@ -1,3 +1,6 @@
+const FORMATOS_COMPATIVEIS={text:["geral","texto"],int:["geral","inteiro","decimal","decimal4","contabil","moeda","percentual"],float:["geral","decimal","decimal4","contabil","moeda","percentual"],date:["geral","data"],time:["geral","hora"],datetime:["geral","datahora"],bool:["geral"]};
+function atualizarFormatos(){const t=document.getElementById("perguntaTipo"),f=document.getElementById("perguntaFormato");const a=FORMATOS_COMPATIVEIS[t.value]||[];for(const o of f.options)o.disabled=!a.includes(o.value);if(!a.includes(f.value))f.value=a[0]||"geral";}
+let cadastrandoPergunta=false;
 let info=null;
 const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL"];
 Office.onReady(async function(){
@@ -6,6 +9,7 @@ Office.onReady(async function(){
  document.getElementById("btnMensagem").onclick=adicionarMensagem;
  document.getElementById("btnLimite").onclick=salvarLimite;
  document.getElementById("btnPergunta").onclick=adicionarPergunta;
+ document.getElementById("perguntaTipo").onchange=atualizarFormatos; atualizarFormatos();
  await carregar();
 });
 function n(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase()}
@@ -78,6 +82,9 @@ async function obterEstruturaConfig(context){
  return {sh,u,h,cols};
 }
 async function adicionarPergunta(){
+ if(cadastrandoPergunta)return;
+ cadastrandoPergunta=true; const botao=document.getElementById("btnPergunta");botao.disabled=true;
+ try {
  const nome=document.getElementById("perguntaNome").value.trim();
  const formulario=document.getElementById("perguntaFormulario").value;
  const tipo=document.getElementById("perguntaTipo").value;
@@ -85,6 +92,8 @@ async function adicionarPergunta(){
  const formato=document.getElementById("perguntaFormato").value;
  const coluna=document.getElementById("perguntaColuna").value.trim() || (n(nome)==="QUAL VALOR TOTAL DOS PROCESSOS"?"Valor":nome);
  if(!nome)return status("Digite o texto da pergunta.",false);
+ if(!FORMATOS_COMPATIVEIS[tipo]?.includes(formato))return status("Formato incompatível com o tipo.",false);
+ if(!["email","sms","ambos"].includes(formulario))return status("Formulário inválido.",false);
  if(n(coluna)==="VALOR"&&n(nome)!=="QUAL VALOR TOTAL DOS PROCESSOS")return status("A coluna Valor é reservada para a pergunta sobre o total dos processos.",false);
  const reservados=["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTÓRICO EXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"];
  if(reservados.includes(n(nome)) || reservados.includes(n(coluna)) || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(coluna))return status("Esse nome é reservado por um campo existente do registro. Escolha outro texto.",false);
@@ -105,6 +114,7 @@ async function adicionarPergunta(){
   status("✓ Pergunta adicionada. Ela aparecerá no(s) formulário(s) selecionado(s).");
   await carregar();
  }catch(e){status(e.message||"Erro ao adicionar pergunta.",false)}
+ } finally {cadastrandoPergunta=false;botao.disabled=false;}
 }
 async function adicionarCadastro(){
  const valor=document.getElementById("valorCadastro").value.trim(),tipo=document.getElementById("tipoCadastro").value;
