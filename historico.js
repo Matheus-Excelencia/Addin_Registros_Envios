@@ -123,7 +123,8 @@ async function carregar() {
                         mensagem: String(valor(r, cab.mapa, ["MENSAGEM"])).trim(),
                         assunto: String(valor(r, cab.mapa, ["ASSUNTO"])).trim(),
                         id: String(valor(r, cab.mapa, ["ID REGISTRO"])).trim(),
-                        emailResposta: String(valor(r, cab.mapa, ["EMAIL RESPOSTA", "E-MAIL RESPOSTA"])).trim()
+                        emailResposta: String(valor(r, cab.mapa, ["EMAIL RESPOSTA", "E-MAIL RESPOSTA"])).trim(),
+                        camposPersonalizados: Object.fromEntries(Object.entries(cab.mapa).filter(([k]) => !["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO"].includes(k)).map(([k,j]) => [k,r[j] ?? ""]))
                     });
                 }
             }
@@ -302,7 +303,8 @@ function duplicar(r) {
         historicoExterno: r.historico,
         emailResposta: r.emailResposta,
         assunto: r.assunto,
-        mensagem: r.mensagem
+        mensagem: r.mensagem,
+        camposPersonalizados: r.camposPersonalizados
     }));
     window.location.href = r.tipo === "Email" ? "email.html" : "sms.html";
 }
