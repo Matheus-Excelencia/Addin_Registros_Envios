@@ -16,7 +16,7 @@ Office.onReady(async function(){
 function n(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase()}
 function idx(m,a){for(const x of a){const k=n(x);if(m[k]!==undefined)return m[k]}return -1}
 function head(v){for(let i=0;i<Math.min(v.length,30);i++){const m={};(v[i]||[]).forEach((x,j)=>{if(String(x??"").trim())m[n(x)]=j});if(idx(m,["EMPRESAS","EMPRESA"])!==-1&&idx(m,["SUPERVISORES","SUPERVISOR"])!==-1)return{linha:i,mapa:m}}return null}
-function status(t,ok=true){const e=document.getElementById("status");e.textContent=t;e.className="status "+(ok?"sucesso":"erro")}
+function status(t,ok=true){const e=document.getElementById("status");e.textContent=t;e.className="status "+(ok?"sucesso":"erro");const local=document.getElementById("statusPergunta");if(local&& !ok){local.textContent=t;local.className="status erro"}}
 function emailValido(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim())}
 async function carregar(){
  status("● Carregando configurações...",true);
@@ -87,6 +87,7 @@ async function obterEstruturaConfig(context){
 async function adicionarPergunta(){
  if(perguntaEmEdicao)return salvarEdicao();
  if(cadastrandoPergunta)return;
+ const local=document.getElementById("statusPergunta");if(local)local.textContent="";
  cadastrandoPergunta=true; const botao=document.getElementById("btnPergunta");botao.disabled=true;
  try {
  const nome=document.getElementById("perguntaNome").value.trim();
@@ -99,9 +100,10 @@ async function adicionarPergunta(){
  if(/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))return status("A pergunta Valor já existe.",false);
  if(!FORMATOS_COMPATIVEIS[tipo]?.includes(formato))return status("Formato incompatível com o tipo.",false);
  if(!["email","sms","ambos"].includes(formulario))return status("Formulário inválido.",false);
- if(n(coluna)==="VALOR"&&n(nome)!=="QUAL VALOR TOTAL DOS PROCESSOS")return status("A coluna Valor é reservada para a pergunta sobre o total dos processos.",false);
+ if(n(coluna)==="VALOR"&&n(nome)!=="QUAL VALOR TOTAL DOS PROCESSOS")return status('A coluna "Valor" já existe e é reservada para a pergunta sobre o total dos processos.',false);
  const reservados=["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTÓRICO EXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"];
- if(reservados.includes(n(nome)) || reservados.includes(n(coluna)) || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(coluna))return status("Esse nome é reservado por um campo existente do registro. Escolha outro texto.",false);
+ if(reservados.includes(n(coluna)))return status(`A coluna "${coluna}" já é reservada por um campo do registro. Escolha outro nome.`,false);
+ if(reservados.includes(n(nome)) || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(coluna))return status("Esse nome é reservado por um campo existente do registro. Escolha outro texto.",false);
  const permitidos={text:["geral","texto"],int:["geral","inteiro","decimal","decimal4","contabil","moeda","percentual"],float:["geral","decimal","decimal4","contabil","moeda","percentual"],date:["geral","data"],time:["geral","hora"],datetime:["geral","datahora"],bool:["geral"]};
  if(!permitidos[tipo]?.includes(formato))return status("Formato incompatível com o tipo de resposta.",false);
  try{
@@ -109,7 +111,8 @@ async function adicionarPergunta(){
    const {sh,u,h,cols}=await obterEstruturaConfig(context);
    for(let i=h.linha+1;i<u.values.length;i++){
     if(n(u.values[i][cols.pergunta])===n(nome))throw new Error("Já existe uma pergunta com esse nome.");
-    if(n(u.values[i][cols.coluna])===n(coluna)&&String(u.values[i][cols.coluna]??"").trim())throw new Error("Essa coluna já está vinculada a outra pergunta.");
+    const existente=String(u.values[i][cols.coluna]||u.values[i][cols.pergunta]||"").trim();
+    if(existente&&n(existente)===n(coluna))throw new Error(`A coluna "${existente}" já está vinculada a outra pergunta. Escolha outro nome de coluna.`);
    }
    let linha=h.linha+1;
    while(linha<u.values.length&&String(u.values[linha][cols.pergunta]??"").trim())linha++;
