@@ -5,6 +5,7 @@ on:
       - feat/perguntas-dinamicas-formatos-excel
       - fix/alpha106-aviso-coluna-duplicada
       - feat/alpha106-splash-screen
+      - fix/alpha106-splash-typewriter-fade
 permissions:
   contents: read
 jobs:
