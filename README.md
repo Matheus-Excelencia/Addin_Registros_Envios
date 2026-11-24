@@ -1010,3 +1010,14 @@ Arquivos envolvidos: `config.html`, `config.js`, `email.html`, `email.js`, `sms.
 - [ ] Atualizar a documentação versionada no SharePoint e revisar antes de integrar à main.
 
 A presença do código no repositório não comprova funcionamento no Excel Web. O fechamento da versão depende dos testes acima.
+
+
+### Alpha 1.06 — revisão técnica (24/11/2026)
+
+- `perguntas.js`: módulo compartilhado dos formulários SMS e Email.
+- Configurações: cadastro, edição do texto, obrigatoriedade e formato compatível; desativação e reativação pela coluna `PERGUNTA ATIVA` na aba Config. Coluna, tipo e destino permanecem fixos na edição para preservar a semântica histórica. Mudanças de escala percentual exigem nova pergunta.
+- Histórico: encaminhamento de respostas adicionais para duplicação, com conversão conforme o tipo.
+- Gravação: proteção de cabeçalhos não reconhecidos, validação decimal e conferência das respostas gravadas.
+- Valor: campo padrão opcional, formato contábil em reais, reutilizando a coluna existente; compatibilidade com planilhas antigas mediante criação de coluna ausente.
+- REV-006, REV-010 e REV-011 dispensadas pelo responsável; SSO e manifesto preservados.
+- Estado: desenvolvimento, aguardando testes automatizados e homologação no Excel Web. Não autorizado para merge.
