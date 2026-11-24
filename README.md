@@ -4,9 +4,11 @@ Office Add-in desenvolvido para **Excel Web / Microsoft 365** com o objetivo de 
 
 O projeto utiliza uma arquitetura baseada em **Office Add-ins**, com **Task Pane**, JavaScript e integração direta com a pasta de trabalho do Excel por meio da **Excel JavaScript API**.
 
-> **Documentação técnica do projeto:** [Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQCWHNmJGBi_R5tA79npAMo9AdartnTpMtqaM0UFbAeXiAk?e=tDYYkV)
+> **Documentação técnica do projeto:** [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS)
 
 ---
+
+> **Estado desta branch:** desenvolvimento pós-alpha-1.05 (proposta alpha-1.06), aguardando validação funcional no Excel Web. As atualizações históricas abaixo descrevem versões anteriores.
 
 ## 1. Visão geral
 
@@ -673,7 +675,7 @@ A implementação atual contempla:
 
 A documentação técnica detalhada do projeto está disponível no SharePoint:
 
-**[Documentação Projeto Registro de Envios](https://excelenciacobrancaempres629.sharepoint.com/:w:/s/backofficearquivos/IQCWHNmJGBi_R5tA79npAMo9AdartnTpMtqaM0UFbAeXiAk?e=tDYYkV)**
+**[Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS)**
 
 A documentação contém detalhes de instalação, arquitetura, estrutura dos arquivos, modelo de dados, regras dos módulos, autenticação, manutenção e operação do projeto.
 
@@ -969,3 +971,42 @@ O fechamento desta atualização inclui:
 - Documentação da validação de formato de e-mail;
 - Consolidação das regras de compatibilidade e gravação;
 - Atualização do estado da linha Alpha.
+
+
+---
+
+# Atualização de desenvolvimento — 24/11/2026
+
+## Versão proposta: alpha-1.06
+
+- Base documental informada: alpha-1.05.
+- Branch: `feat/perguntas-dinamicas-formatos-excel`.
+- Estado: código disponível para testes; não constitui lançamento estável.
+- Documentação oficial: pasta SharePoint vinculada acima (acesso sujeito às permissões da organização).
+
+## Valor dos processos
+
+Os formulários Email e SMS incluem a pergunta opcional **Qual valor total dos processos?**. A resposta utiliza a coluna `Valor`, já criada após `ID REGISTRO` no workbook informado. O objetivo é armazenar números com formato contábil em reais; sem resposta, a célula deve permanecer vazia.
+
+| Aba | ID REGISTRO | Valor |
+|---|---|---|
+| Email | K | L |
+| SMS | I | J |
+
+## Perguntas personalizadas
+
+A tela Configurações permite cadastrar perguntas para Email, SMS ou ambos, com nome da coluna, obrigatoriedade, tipo de resposta e formato Excel. Os metadados são armazenados na aba Config, utilizando os cabeçalhos PERGUNTA PERSONALIZADA, FORMULARIO, TIPO RESPOSTA, OBRIGATORIA, FORMATO EXCEL e COLUNA EXCEL. Os formulários carregam as definições e identificam as colunas pelo cabeçalho, com criação de colunas adicionais quando necessário.
+
+Arquivos envolvidos: `config.html`, `config.js`, `email.html`, `email.js`, `sms.html` e `sms.js`.
+
+## Critérios de validação antes do merge
+
+- [ ] Salvar Email e SMS com Valor vazio, zero e valor decimal brasileiro.
+- [ ] Confirmar armazenamento numérico, formato contábil e reutilização da coluna Valor.
+- [ ] Cadastrar perguntas opcionais e obrigatórias para cada formulário e ambos.
+- [ ] Verificar tipos e formatos, criação e reutilização de colunas e prevenção de duplicidades.
+- [ ] Verificar preservação dos registros anteriores e IDs.
+- [ ] Testar Histórico, duplicação, Resumo, Configurações e autenticação para detectar regressões.
+- [ ] Atualizar a documentação versionada no SharePoint e revisar antes de integrar à main.
+
+A presença do código no repositório não comprova funcionamento no Excel Web. O fechamento da versão depende dos testes acima.
