@@ -2,7 +2,7 @@ const FORMATOS_COMPATIVEIS={text:["geral","texto"],int:["geral","inteiro","decim
 function atualizarFormatos(){const t=document.getElementById("perguntaTipo"),f=document.getElementById("perguntaFormato");const a=FORMATOS_COMPATIVEIS[t.value]||[];for(const o of f.options)o.disabled=!a.includes(o.value);if(!a.includes(f.value))f.value=a[0]||"geral";}
 let cadastrandoPergunta=false;
 let info=null;
-const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL"];
+const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA"];
 Office.onReady(async function(){
  document.getElementById("btnVoltar").onclick=()=>location.href="taskpane.html";
  document.getElementById("btnCadastro").onclick=adicionarCadastro;
@@ -40,7 +40,7 @@ function indicesPerguntas(mapa){return {
  tipo:idx(mapa,["TIPO RESPOSTA"]),
  obrigatoria:idx(mapa,["OBRIGATORIA"]),
  formato:idx(mapa,["FORMATO EXCEL"]),
- coluna:idx(mapa,["COLUNA EXCEL"])
+ coluna:idx(mapa,["COLUNA EXCEL"]), ativo:idx(mapa,["PERGUNTA ATIVA"])
 }}
 function lerPerguntas(valores,base,info){
  const ix=indicesPerguntas(info.mapa);if([ix.pergunta,ix.formulario,ix.tipo,ix.obrigatoria].some(v=>v<0))return [];
@@ -48,7 +48,7 @@ function lerPerguntas(valores,base,info){
  for(let i=info.linha+1;i<valores.length;i++){
   const r=valores[i]||[],nome=String(r[ix.pergunta]??"").trim();
   if(!nome)continue;
-  resultado.push({nome,formulario:String(r[ix.formulario]||"ambos").toLowerCase(),tipo:String(r[ix.tipo]||"text").toLowerCase(),obrigatoria:n(r[ix.obrigatoria])==="SIM"||r[ix.obrigatoria]===true,linha:base+i,formato:ix.formato<0?"geral":String(r[ix.formato]||"geral"),coluna:ix.coluna<0?nome:String(r[ix.coluna]||nome)});
+  resultado.push({nome,formulario:String(r[ix.formulario]||"ambos").toLowerCase(),tipo:String(r[ix.tipo]||"text").toLowerCase(),obrigatoria:n(r[ix.obrigatoria])==="SIM"||r[ix.obrigatoria]===true,linha:base+i,ativo:ix.ativo<0||n(r[ix.ativo])!=="NAO",formato:ix.formato<0?"geral":String(r[ix.formato]||"geral"),coluna:ix.coluna<0?nome:String(r[ix.coluna]||nome)});
  }
  return resultado;
 }
@@ -59,7 +59,9 @@ function renderizarPerguntas(perguntas){
   const item=document.createElement("div");item.className="pergunta-item";
   const nome=document.createElement("strong");nome.textContent=q.nome;
   const detalhe=document.createElement("small");detalhe.textContent=(q.formulario==="ambos"?"E-mail e SMS":q.formulario==="email"?"Somente E-mail":"Somente SMS")+" · "+q.tipo+" · "+q.formato+" · Coluna: "+q.coluna+" · "+(q.obrigatoria?"Obrigatória":"Opcional");
-  item.appendChild(nome);item.appendChild(detalhe);area.appendChild(item);
+  item.appendChild(nome);item.appendChild(detalhe);
+  if(q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);}
+  area.appendChild(item);
  });
 }
 async function obterEstruturaConfig(context){
@@ -109,7 +111,7 @@ async function adicionarPergunta(){
    }
    let linha=h.linha+1;
    while(linha<u.values.length&&String(u.values[linha][cols.pergunta]??"").trim())linha++;
-   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[valor]];
+   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[valor]];
    await context.sync();
   });
   document.getElementById("perguntaNome").value="";
@@ -158,3 +160,5 @@ async function salvarLimite(){
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[limite]];await context.sync();
  });status("✓ Limite SMS atualizado.")}catch(e){status(e.message||"Erro ao salvar.",false)}
 }
+
+async function alterarAtividade(q){try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const matches=[];for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][cols.pergunta])===n(q.nome))matches.push(i);if(matches.length!==1)throw new Error("Pergunta não identificada de forma única.");sh.getRangeByIndexes(u.rowIndex+matches[0],u.columnIndex+cols.ativo,1,1).values=[[q.ativo?"NAO":"SIM"]];await context.sync();});await carregar();}catch(e){status(e.message,false);}}
