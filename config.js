@@ -92,12 +92,14 @@ async function adicionarPergunta(){
  const formato=document.getElementById("perguntaFormato").value;
  const coluna=document.getElementById("perguntaColuna").value.trim() || (n(nome)==="QUAL VALOR TOTAL DOS PROCESSOS"?"Valor":nome);
  if(!nome)return status("Digite o texto da pergunta.",false);
+ if(/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))return status("A pergunta Valor já existe.",false);
  if(!FORMATOS_COMPATIVEIS[tipo]?.includes(formato))return status("Formato incompatível com o tipo.",false);
  if(!["email","sms","ambos"].includes(formulario))return status("Formulário inválido.",false);
  if(n(coluna)==="VALOR"&&n(nome)!=="QUAL VALOR TOTAL DOS PROCESSOS")return status("A coluna Valor é reservada para a pergunta sobre o total dos processos.",false);
  const reservados=["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTÓRICO EXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"];
  if(reservados.includes(n(nome)) || reservados.includes(n(coluna)) || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(coluna))return status("Esse nome é reservado por um campo existente do registro. Escolha outro texto.",false);
- if(!["text","int","float","date","time","datetime","bool"].includes(tipo))return status("Tipo de resposta inválido.",false);
+ const permitidos={text:["geral","texto"],int:["geral","inteiro","decimal","decimal4","contabil","moeda","percentual"],float:["geral","decimal","decimal4","contabil","moeda","percentual"],date:["geral","data"],time:["geral","hora"],datetime:["geral","datahora"],bool:["geral"]};
+ if(!permitidos[tipo]?.includes(formato))return status("Formato incompatível com o tipo de resposta.",false);
  try{
   await Excel.run(async context=>{
    const {sh,u,h,cols}=await obterEstruturaConfig(context);
