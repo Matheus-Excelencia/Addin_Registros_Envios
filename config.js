@@ -2,6 +2,7 @@ const FORMATOS_COMPATIVEIS={text:["geral","texto"],int:["geral","inteiro","decim
 function atualizarFormatos(){const t=document.getElementById("perguntaTipo"),f=document.getElementById("perguntaFormato");const a=FORMATOS_COMPATIVEIS[t.value]||[];for(const o of f.options)o.disabled=!a.includes(o.value);if(!a.includes(f.value))f.value=a[0]||"geral";}
 let cadastrandoPergunta=false;
 let info=null;
+let limiteMensagemSMS=160;
 let perguntaEmEdicao=null;
 const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA"];
 Office.onReady(async function(){
@@ -11,6 +12,8 @@ Office.onReady(async function(){
  document.getElementById("btnLimite").onclick=salvarLimite;
  document.getElementById("btnPergunta").onclick=adicionarPergunta;
  document.getElementById("perguntaTipo").onchange=atualizarFormatos; atualizarFormatos();
+ document.getElementById("tipoMensagem").onchange=atualizarContadorSMS;
+ document.getElementById("textoMensagem").oninput=atualizarContadorSMS;
  await carregar();
 });
 function n(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase()}
@@ -28,7 +31,7 @@ async function carregar(){
    info=head(u.values);if(!info)throw new Error("Cabeçalho do Config não encontrado.");
    const il=idx(info.mapa,["LIMITE SMS","LIMITE_SMS"]);let lim=160;
    if(il!==-1)for(let i=info.linha+1;i<u.values.length;i++){const x=Number(u.values[i][il]);if(Number.isInteger(x)&&x>0){lim=x;break}}
-   document.getElementById("limite").value=lim;
+   document.getElementById("limite").value=lim;limiteMensagemSMS=lim;atualizarContadorSMS();
    const perguntas=lerPerguntas(u.values, u.rowIndex||0, info);
    renderizarPerguntas(perguntas);
   });
@@ -55,13 +58,14 @@ function lerPerguntas(valores,base,info){
 }
 function renderizarPerguntas(perguntas){
  const area=document.getElementById("listaPerguntas");area.innerHTML="";
- perguntas=[{nome:"Qual valor total dos processos?",formulario:"ambos",tipo:"float",formato:"contabil",coluna:"Valor",obrigatoria:false},...perguntas.filter(q=>n(q.coluna)!=="VALOR" && !/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(q.nome)))];
+ const padrao=perguntas.find(q=>n(q.coluna)==="VALOR");
+ perguntas=[{nome:padrao?.nome||"Qual valor total dos processos?",formulario:"ambos",tipo:"float",formato:["geral","decimal","decimal4","contabil","moeda"].includes(padrao?.formato)?padrao.formato:"contabil",coluna:"Valor",obrigatoria:padrao?.obrigatoria||false,ativo:true,padrao:true},...perguntas.filter(q=>n(q.coluna)!=="VALOR" && !/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(q.nome)))];
  perguntas.forEach(q=>{
   const item=document.createElement("div");item.className="pergunta-item";
   const nome=document.createElement("strong");nome.textContent=q.nome;
   const detalhe=document.createElement("small");detalhe.textContent=(q.formulario==="ambos"?"E-mail e SMS":q.formulario==="email"?"Somente E-mail":"Somente SMS")+" · "+q.tipo+" · "+q.formato+" · Coluna: "+q.coluna+" · "+(q.obrigatoria?"Obrigatória":"Opcional");
-  item.appendChild(nome);item.appendChild(detalhe);
-  if(q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);const editar=document.createElement("button");editar.type="button";editar.textContent="Editar";editar.onclick=()=>iniciarEdicao(q);item.appendChild(editar);}
+  item.appendChild(nome);item.appendChild(detalhe);const a=document.createElement("small");a.textContent=q.padrao?"Padrão · Ativa":q.ativo?"Ativa":"Desativada";a.className="pergunta-situacao";item.appendChild(a);
+  if(!q.padrao&&q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);}const editar=document.createElement("button");editar.type="button";editar.textContent="Editar";editar.onclick=()=>iniciarEdicao(q);item.appendChild(editar);
   area.appendChild(item);
  });
 }
@@ -142,6 +146,7 @@ async function adicionarCadastro(){
 async function adicionarMensagem(){
  const tipo=document.getElementById("tipoMensagem").value,nome=document.getElementById("nomeMensagem").value.trim(),texto=document.getElementById("textoMensagem").value;
  if(!nome||!texto)return status("Informe o nome e o texto da mensagem.",false);
+ if(tipo==="sms"&&texto.length>limiteMensagemSMS)return atualizarContadorSMS();
  try{await Excel.run(async context=>{
   const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);
   u.load(["values","isNullObject","rowIndex","columnIndex"]);await context.sync();
@@ -152,7 +157,7 @@ async function adicionarMensagem(){
   let r=h.linha+1;while(r<u.values.length&&(String(u.values[r][nc]??"").trim()||String(u.values[r][tc]??"").trim()))r++;
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+nc,1,1).values=[[nome]];
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+tc,1,1).values=[[texto]];await context.sync();
- });document.getElementById("nomeMensagem").value="";document.getElementById("textoMensagem").value="";status("✓ Mensagem adicionada.")}catch(e){status(e.message||"Erro ao adicionar.",false)}
+ });document.getElementById("nomeMensagem").value="";document.getElementById("textoMensagem").value="";atualizarContadorSMS();status("✓ Mensagem adicionada.")}catch(e){status(e.message||"Erro ao adicionar.",false)}
 }
 async function salvarLimite(){
  const limite=Number(document.getElementById("limite").value);
@@ -163,23 +168,28 @@ async function salvarLimite(){
   const h=head(u.values),col=idx(h.mapa,["LIMITE SMS","LIMITE_SMS"]);if(col===-1)throw new Error("Coluna LIMITE SMS não encontrada.");
   let r=h.linha+1;while(r<u.values.length&&!Number.isInteger(Number(u.values[r][col])))r++;
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[limite]];await context.sync();
- });status("✓ Limite SMS atualizado.")}catch(e){status(e.message||"Erro ao salvar.",false)}
+ });limiteMensagemSMS=limite;atualizarContadorSMS();status("✓ Limite SMS atualizado.")}catch(e){status(e.message||"Erro ao salvar.",false)}
 }
 
 async function alterarAtividade(q){try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const matches=[];for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][cols.pergunta])===n(q.nome))matches.push(i);if(matches.length!==1)throw new Error("Pergunta não identificada de forma única.");sh.getRangeByIndexes(u.rowIndex+matches[0],u.columnIndex+cols.ativo,1,1).values=[[q.ativo?"NAO":"SIM"]];await context.sync();});await carregar();}catch(e){status(e.message,false);}}
 
 function iniciarEdicao(q){
  perguntaEmEdicao=q;
+ document.getElementById("editorPergunta")?.classList?.add("editando");
+ document.getElementById("perguntaNome")?.scrollIntoView?.({block:"center"});
  for(const [id,v] of Object.entries({perguntaNome:q.nome,perguntaFormulario:q.formulario,perguntaTipo:q.tipo,perguntaFormato:q.formato,perguntaObrigatoria:q.obrigatoria?"sim":"nao",perguntaColuna:q.coluna}))document.getElementById(id).value=v;
  for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=true;
  atualizarFormatos();document.getElementById("btnPergunta").textContent="Salvar edição";
  const b=document.createElement("button");b.id="cancelarEdicao";b.type="button";b.textContent="Cancelar edição";b.onclick=encerrarEdicao;
  if(!document.getElementById(b.id))document.getElementById("btnPergunta").after(b);
 }
-function encerrarEdicao(){perguntaEmEdicao=null;for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=false;document.getElementById("btnPergunta").textContent="Adicionar pergunta";document.getElementById("cancelarEdicao")?.remove();document.getElementById("perguntaNome").value="";document.getElementById("perguntaColuna").value="";}
+function encerrarEdicao(){document.getElementById("editorPergunta")?.classList?.remove("editando");perguntaEmEdicao=null;for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=false;document.getElementById("btnPergunta").textContent="Adicionar pergunta";document.getElementById("cancelarEdicao")?.remove();document.getElementById("perguntaNome").value="";document.getElementById("perguntaColuna").value="";}
 async function salvarEdicao(){
  const q=perguntaEmEdicao,nome=document.getElementById("perguntaNome").value.trim(),formato=document.getElementById("perguntaFormato").value,obrigatoria=document.getElementById("perguntaObrigatoria").value;
- if(!nome||/^[=+\-@]/.test(nome)||/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false);
+ if(!nome||/^[=+\-@]/.test(nome)||(!q.padrao&&/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false);
+ if(q.padrao&&!["geral","decimal","decimal4","contabil","moeda"].includes(formato))return status("Formato inválido para Valor.",false);
  if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false);
- try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria]])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[v]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
+ try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[v]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
 }
+
+function atualizarContadorSMS(){const tipo=document.getElementById("tipoMensagem"),campo=document.getElementById("textoMensagem"),contador=document.getElementById("contadorMensagemSMS"),botao=document.getElementById("btnMensagem");if(!tipo||!campo||!contador||!botao)return;const sms=tipo.value==="sms",n=campo.value.length,excesso=sms&&n>limiteMensagemSMS;contador.hidden=!sms;contador.textContent=n+" / "+limiteMensagemSMS+" caracteres"+(excesso?" — limite excedido":"");contador.className=excesso?"contador-sms excesso":"contador-sms";botao.disabled=excesso;}
