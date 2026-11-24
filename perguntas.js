@@ -7,6 +7,7 @@ function carregarPerguntasPersonalizadas(valores, info) {
     const iObrigatoria = obterIndice(info.mapa, ["OBRIGATORIA"]);
     const iFormato = obterIndice(info.mapa, ["FORMATO EXCEL"]);
     const iColuna = obterIndice(info.mapa, ["COLUNA EXCEL"]);
+    const iAtivo = obterIndice(info.mapa, ["PERGUNTA ATIVA"]);
     perguntasPersonalizadas = [{nome:"Qual valor total dos processos?", coluna:"Valor", formato:"contabil", tipo:"float", obrigatoria:false}];
     if ([iPergunta, iFormulario, iTipo, iObrigatoria].some(i => i < 0)) {
         renderizarPerguntasPersonalizadas();
@@ -15,7 +16,7 @@ function carregarPerguntasPersonalizadas(valores, info) {
     for (let linha = info.linha + 1; linha < valores.length; linha++) {
         const r = valores[linha] || [];
         const nome = String(r[iPergunta] ?? "").trim();
-        if (!nome) continue;
+        if (!nome || (iAtivo >= 0 && normalizar(r[iAtivo]) === "NAO")) continue;
         const formulario = String(r[iFormulario] || "ambos").toLowerCase();
         if (formulario !== "ambos" && formulario !== TIPO_FORMULARIO) continue;
         const colunaConfigurada = String(r[iColuna] || nome).trim();
