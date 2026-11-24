@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feat/perguntas-dinamicas-formatos-excel
+      - fix/alpha106-aviso-coluna-duplicada
 permissions:
   contents: read
 jobs:
