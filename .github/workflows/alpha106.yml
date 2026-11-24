@@ -1,0 +1,17 @@
+name: Alpha 1.06 tests
+on:
+  push:
+    branches:
+      - feat/perguntas-dinamicas-formatos-excel
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: JavaScript syntax
+        run: find . -name '*.js' -not -path './.git/*' -print0 | xargs -0 -r -n1 node --check
+      - name: Unit tests
+        run: node --test tests/alpha106.test.cjs

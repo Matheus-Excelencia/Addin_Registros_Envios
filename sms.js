@@ -2,6 +2,10 @@ let configInfo = null;
 let mensagensSMS = [];
 let statusLog = [];
 let limiteSMS = 160;
+const TIPO_FORMULARIO = "sms";
+
+
+
 
 Office.onReady(async function () {
     document.getElementById("btnVoltar").addEventListener("click", function () {
@@ -14,6 +18,7 @@ Office.onReady(async function () {
 
     prepararLog();
     await carregarDados();
+    if (!document.getElementById("perguntasPersonalizadas").children.length) renderizarPerguntasPersonalizadas();
     preencherDuplicacao();
 });
 
@@ -169,6 +174,7 @@ async function carregarDados() {
             atualizarContador();
 
             carregarMensagensSMS(usado.values, configInfo);
+            carregarPerguntasPersonalizadas(usado.values, configInfo);
         });
 
         await identificarUsuario();
@@ -316,6 +322,7 @@ async function salvarSMS(event) {
         const obs = document.getElementById("obs").value.trim();
         const historicoExterno = document.getElementById("historicoExterno").value.trim();
         const idRegistro = gerarIdRegistro();
+        const camposDinamicos = coletarRespostasPersonalizadas();
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
 
@@ -336,7 +343,8 @@ async function salvarSMS(event) {
                 obs,
                 historicoExterno,
                 textoMensagem,
-                idRegistro
+                idRegistro,
+                camposDinamicos
             });
 
             await atualizarConfigSMS(context, {
@@ -351,6 +359,7 @@ async function salvarSMS(event) {
         document.getElementById("formSms").reset();
         document.getElementById("mensagem").selectedIndex = 0;
         document.getElementById("textoMensagem").value = "";
+        document.querySelectorAll("#perguntasPersonalizadas input, #perguntasPersonalizadas textarea, #perguntasPersonalizadas select").forEach(c => c.value = "");
         atualizarContador();
         mostrarStatus(
             "✓ Registro salvo com sucesso.\nID: " + idRegistro,
@@ -407,6 +416,7 @@ async function adicionarRegistroSMS(context, dados) {
     }
 
     if (linhaCabecalho === -1) {
+        if (!usado.isNullObject) throw new Error("Cabeçalho não reconhecido; nenhum dado foi alterado.");
         folha.getRange("A1:H1").values = [["Data", "Realizado por", "Empresa", "Qtde", "Supervisor", "Obs.", "Historico Externo", "Mensagem"]];
         linhaCabecalho = 0;
         ["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "SUPERVISOR", "OBS.", "HISTORICO EXTERNO", "MENSAGEM"].forEach(function (nome, indice) {
@@ -419,7 +429,7 @@ async function adicionarRegistroSMS(context, dados) {
     let indiceId = obterIndice(mapa, ["ID REGISTRO"]);
     if (indiceId === -1) {
         const indices = Object.values(mapa).filter(function (valor) { return Number.isInteger(valor); });
-        indiceId = indices.length > 0 ? Math.max.apply(null, indices) + 1 : 8;
+        indiceId = Math.max(usado.isNullObject ? 0 : usado.values[0].length, indices.length > 0 ? Math.max(...indices) + 1 : 8);
         const colunaId = (usado.isNullObject ? 0 : usado.columnIndex) + indiceId;
         folha.getRangeByIndexes(
             (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
@@ -430,8 +440,9 @@ async function adicionarRegistroSMS(context, dados) {
         mapa["ID REGISTRO"] = indiceId;
     }
 
-    // A largura acompanha o cabeçalho real, incluindo colunas adicionadas pelo usuário.
-    const numeroColunas = Math.max(9, ...Object.values(mapa).filter(Number.isInteger).map(indice => indice + 1));
+    prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, dados.camposDinamicos || []);
+    const indiceValor = obterIndice(mapa, ["VALOR"]);
+    const numeroColunas = Math.max(9, ...Object.values(mapa).filter(Number.isInteger).map(i => i + 1));
 
     validarEstruturaRegistro(mapa, [
         ["DATA"],
@@ -462,18 +473,7 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["HISTORICO EXTERNO", "HISTÓRICO EXTERNO", "HISTORICOEXTERNO", "HISTÓRICOEXTERNO"], dados.historicoExterno);
     colocar(["MENSAGEM"], dados.textoMensagem);
     colocar(["ID REGISTRO"], dados.idRegistro);
-    // Valores adicionais opcionais, identificados pelo nome da coluna.
-    // Campos sem resposta permanecem vazios; cabeçalhos existentes são preservados.
-    const extras = dados.camposPersonalizados || {};
-    if (extras && typeof extras === "object" && !Array.isArray(extras)) {
-        for (const [nome, valor] of Object.entries(extras)) {
-            const indice = obterIndice(mapa, [nome]);
-            if (indice !== -1 && indice !== indiceId &&
-                !["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "MENSAGEM"].includes(normalizar(nome))) {
-                valores[indice] = valor == null ? "" : valor;
-            }
-        }
-    }
+    (dados.camposDinamicos || []).forEach(c => colocar([c.nome], c.valor));
     let confirmado = false;
 
     for (let tentativa = 1; tentativa <= 3; tentativa++) {
@@ -493,15 +493,27 @@ async function adicionarRegistroSMS(context, dados) {
         intervaloRegistro.values = [valores];
         const indiceData = obterIndice(mapa, ["DATA"]);
         if (indiceData !== -1) intervaloRegistro.getCell(0, indiceData).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+        const formatos = {contabil:'_ "R$" * #,##0.00_ ;_ "R$" * -#,##0.00_ ;_ "R$" * "-"??_ ;_ @_ ',moeda:'"R$" #,##0.00',inteiro:'#,##0',decimal:'#,##0.00',decimal4:'#,##0.0000',percentual:'0.00%',data:'dd/mm/yyyy',hora:'hh:mm',datahora:'dd/mm/yyyy hh:mm',texto:'@'};
+        if (indiceValor !== -1) intervaloRegistro.getCell(0, indiceValor).numberFormat = [[formatos.contabil]];
+        (dados.camposDinamicos || []).forEach(c => {
+            const indice = obterIndice(mapa,[c.nome]);
+            if (indice >= 0 && formatos[c.formato]) intervaloRegistro.getCell(0,indice).numberFormat=[[formatos[c.formato]]];
+        });
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
+        intervaloRegistro.load("values");
         await context.sync();
 
-        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro)) {
-            confirmado = true;
-            break;
+        if (String(celulaId.values[0][0] || "") !== String(dados.idRegistro)) throw new Error("Gravação não confirmada. Confira o ID "+dados.idRegistro+" antes de tentar novamente.");
+        const gravados = intervaloRegistro.values[0];
+        for(const c of dados.camposDinamicos || []){
+            const j=obterIndice(mapa,[c.nome]);
+            if(j<0 && c.valor==="")continue;
+            if(j<0 || (typeof c.valor==="number" ? typeof gravados[j]!=="number" || Math.abs(gravados[j]-c.valor)>1e-9 : String(gravados[j]??"")!==String(c.valor??"").replace(/^\x27(?=[=+\-@])/,"")))throw new Error("Registro gravado, mas resposta não confirmada: "+c.nome+". Confira o ID "+dados.idRegistro+" antes de tentar novamente.");
         }
+        confirmado=true;
+        break;
     }
 
     if (!confirmado) {
@@ -578,10 +590,21 @@ function preencherDuplicacao() {
         const d = JSON.parse(bruto);
         if (d.tipo !== "sms") return;
 
-        Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
-        const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
+        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",historicoExterno:"historicoExterno",};
+        Object.keys(campos).forEach(k => { if (d[k] !== undefined) { const el = document.getElementById(campos[k]); if(el) el.value = d[k]; }; });
+        if (d.camposPersonalizados) {
+            perguntasPersonalizadas.forEach((pergunta, i) => {
+                const campo = document.getElementById("perguntaPersonalizada_" + i);
+                if (campo && (d.camposPersonalizados[normalizar(pergunta.coluna)] !== undefined || d.camposPersonalizados[normalizar(pergunta.nome)] !== undefined)) {
+                    campo.value = formatarDuplicacao(pergunta, d.camposPersonalizados[normalizar(pergunta.coluna)] ?? d.camposPersonalizados[normalizar(pergunta.nome)]);
+                }
+            });
+        }
+                const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
         localStorage.removeItem("registroDuplicado");
         mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
     } catch(e) { localStorage.removeItem("registroDuplicado"); }
 }
+
+function converterDuplicacao(p,v){if(v===null||v===undefined||v==="")return "";if(p.tipo==="bool")return v===true||v==="Sim"?"Sim":"Não";if(typeof v==="number"){if(p.formato==="percentual")return String(v*100).replace(".",",");if(p.tipo==="date"||p.tipo==="datetime"){const d=new Date(Date.UTC(1899,11,30)+Math.round(v*86400000));return d.toISOString().slice(0,p.tipo==="date"?10:16);}if(p.tipo==="time"){const m=Math.round(v*1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");}if(p.tipo==="float")return String(v).replace(".",",");}return String(v);}
