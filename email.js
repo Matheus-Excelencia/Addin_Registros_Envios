@@ -1343,12 +1343,15 @@ async function adicionarRegistroEmail(
         intervaloRegistro.load("values");
         await context.sync();
 
-        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro) && (dados.camposDinamicos || []).every(c => { const i = obterIndice(mapa,[c.nome]); const v = intervaloRegistro.values[0][i]; return (i < 0 && c.valor === "") || (i >= 0 && (typeof c.valor === "number" ? typeof v === "number" && Math.abs(v-c.valor)<1e-9 : String(v ?? "") === String(c.valor ?? "").replace(/^\x27(?=[=+\-@])/,""))); })) {
-            const gravados = intervaloRegistro.values[0];
-            for(const c of dados.camposDinamicos || []){const j=obterIndice(mapa,[c.nome]);if(j<0 || (typeof c.valor==="number" ? typeof gravados[j]!=="number" || Math.abs(gravados[j]-c.valor)>1e-9 : String(gravados[j]??"")!==String(c.valor??"").replace(/^\x27(?=[=+\-@])/,"")))throw new Error("Registro gravado, mas resposta não confirmada: "+c.nome+". Confira o ID "+dados.idRegistro+" antes de tentar novamente.");}
-            confirmado = true;
-            break;
+        if (String(celulaId.values[0][0] || "") !== String(dados.idRegistro)) throw new Error("Gravação não confirmada. Confira o ID "+dados.idRegistro+" antes de tentar novamente.");
+        const gravados = intervaloRegistro.values[0];
+        for(const c of dados.camposDinamicos || []){
+            const j=obterIndice(mapa,[c.nome]);
+            if(j<0 && c.valor==="")continue;
+            if(j<0 || (typeof c.valor==="number" ? typeof gravados[j]!=="number" || Math.abs(gravados[j]-c.valor)>1e-9 : String(gravados[j]??"")!==String(c.valor??"").replace(/^\x27(?=[=+\-@])/,"")))throw new Error("Registro gravado, mas resposta não confirmada: "+c.nome+". Confira o ID "+dados.idRegistro+" antes de tentar novamente.");
         }
+        confirmado=true;
+        break;
     }
 
     if (!confirmado) {
@@ -1556,7 +1559,7 @@ function preencherDuplicacao() {
             perguntasPersonalizadas.forEach((pergunta, i) => {
                 const campo = document.getElementById("perguntaPersonalizada_" + i);
                 if (campo && (d.camposPersonalizados[normalizar(pergunta.coluna)] !== undefined || d.camposPersonalizados[normalizar(pergunta.nome)] !== undefined)) {
-                    campo.value = converterDuplicacao(pergunta, d.camposPersonalizados[normalizar(pergunta.coluna)] ?? d.camposPersonalizados[normalizar(pergunta.nome)]);
+                    campo.value = formatarDuplicacao(pergunta, d.camposPersonalizados[normalizar(pergunta.coluna)] ?? d.camposPersonalizados[normalizar(pergunta.nome)]);
                 }
             });
         }
