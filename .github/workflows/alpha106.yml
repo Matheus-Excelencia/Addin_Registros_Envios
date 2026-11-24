@@ -4,6 +4,7 @@ on:
     branches:
       - feat/perguntas-dinamicas-formatos-excel
       - fix/alpha106-aviso-coluna-duplicada
+      - feat/alpha106-splash-screen
 permissions:
   contents: read
 jobs:
