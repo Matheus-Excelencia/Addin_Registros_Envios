@@ -2,6 +2,133 @@ let configInfo = null;
 let mensagensSMS = [];
 let statusLog = [];
 let limiteSMS = 160;
+const TIPO_FORMULARIO = "sms";
+
+/* PERGUNTAS PERSONALIZADAS CONFIGURADAS NA ABA CONFIG */
+let perguntasPersonalizadas = [{nome:"Qual valor total dos processos?", coluna:"Valor", formato:"contabil", tipo:"float", obrigatoria:false}];
+function carregarPerguntasPersonalizadas(valores, info) {
+    const iPergunta = obterIndice(info.mapa, ["PERGUNTA PERSONALIZADA"]);
+    const iFormulario = obterIndice(info.mapa, ["FORMULARIO"]);
+    const iTipo = obterIndice(info.mapa, ["TIPO RESPOSTA"]);
+    const iObrigatoria = obterIndice(info.mapa, ["OBRIGATORIA"]);
+    const iFormato = obterIndice(info.mapa, ["FORMATO EXCEL"]);
+    const iColuna = obterIndice(info.mapa, ["COLUNA EXCEL"]);
+    perguntasPersonalizadas = [{nome:"Qual valor total dos processos?", coluna:"Valor", formato:"contabil", tipo:"float", obrigatoria:false}];
+    if ([iPergunta, iFormulario, iTipo, iObrigatoria].some(i => i < 0)) {
+        renderizarPerguntasPersonalizadas();
+        return;
+    }
+    for (let linha = info.linha + 1; linha < valores.length; linha++) {
+        const r = valores[linha] || [];
+        const nome = String(r[iPergunta] ?? "").trim();
+        if (!nome) continue;
+        const formulario = String(r[iFormulario] || "ambos").toLowerCase();
+        if (formulario !== "ambos" && formulario !== TIPO_FORMULARIO) continue;
+        const colunaConfigurada = String(r[iColuna] || nome).trim();
+        if (["VALOR","QUAL VALOR TOTAL DOS PROCESSOS?","QUAL VALOR TOTAL DOS PROCESSOS","DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO"].includes(normalizar(colunaConfigurada)) || perguntasPersonalizadas.some(q => normalizar(q.coluna) === normalizar(colunaConfigurada))) continue;
+        perguntasPersonalizadas.push({
+            nome,
+            coluna: iColuna < 0 ? (normalizar(nome) === "QUAL VALOR TOTAL DOS PROCESSOS" ? "Valor" : nome) : String(r[iColuna] || (normalizar(nome) === "QUAL VALOR TOTAL DOS PROCESSOS" ? "Valor" : nome)).trim(),
+            formato: iFormato < 0 ? (normalizar(nome) === "QUAL VALOR TOTAL DOS PROCESSOS" ? "contabil" : "geral") : String(r[iFormato] || "geral").toLowerCase(),
+            tipo: String(r[iTipo] || "text").toLowerCase(),
+            obrigatoria: normalizar(r[iObrigatoria]) === "SIM" || r[iObrigatoria] === true
+        });
+    }
+    renderizarPerguntasPersonalizadas();
+}
+function renderizarPerguntasPersonalizadas() {
+    const area = document.getElementById("perguntasPersonalizadas");
+    if (!area) return;
+    area.innerHTML = "";
+    perguntasPersonalizadas.forEach((pergunta, i) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "campo";
+        const label = document.createElement("label");
+        label.htmlFor = "perguntaPersonalizada_" + i;
+        label.textContent = pergunta.nome + (pergunta.obrigatoria ? " *" : " (opcional)");
+        const input = document.createElement(pergunta.tipo === "text" ? "textarea" : pergunta.tipo === "bool" ? "select" : "input");
+        input.id = "perguntaPersonalizada_" + i;
+        input.dataset.pergunta = pergunta.nome;
+        input.dataset.tipo = pergunta.tipo;
+        input.rows = 2;
+        if (pergunta.tipo === "bool") {
+            [["", "Selecione"], ["Sim", "Sim"], ["Não", "Não"]].forEach(([v,t]) => { const opt=document.createElement("option");opt.value=v;opt.textContent=t;input.appendChild(opt); });
+        } else if (["date","time","datetime"].includes(pergunta.tipo)) {
+            input.type = pergunta.tipo === "datetime" ? "datetime-local" : pergunta.tipo;
+        } else if (pergunta.tipo === "int") {
+            input.type = "number";
+            input.step = "1";
+            input.inputMode = "numeric";
+        } else if (pergunta.tipo === "float") {
+            input.type = "text";
+            input.inputMode = "decimal";
+            input.placeholder = "Ex.: 1234,56 ou 1.234,56";
+        } else {
+            input.placeholder = "Digite sua resposta";
+        }
+        input.required = pergunta.obrigatoria;
+        if (pergunta.obrigatoria) input.setAttribute("aria-required", "true");
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        area.appendChild(wrapper);
+    });
+}
+function coletarRespostasPersonalizadas() {
+    const respostas = [];
+    perguntasPersonalizadas.forEach((pergunta, i) => {
+        const campo = document.getElementById("perguntaPersonalizada_" + i);
+        const bruto = campo ? campo.value.trim() : "";
+        if (!bruto) {
+            if (pergunta.obrigatoria) throw new Error('Preencha o campo "' + pergunta.nome + '".');
+            respostas.push({nome: pergunta.coluna, valor: "", formato: pergunta.formato, tipo: pergunta.tipo});
+            return;
+        }
+        if (pergunta.tipo === "int") {
+            const numero = Number(bruto);
+            if (!Number.isInteger(numero)) throw new Error('O campo "' + pergunta.nome + '" deve ser um número inteiro.');
+            respostas.push({nome: pergunta.coluna, valor: numero / (pergunta.formato === "percentual" ? 100 : 1), formato: pergunta.formato, tipo: pergunta.tipo});
+        } else if (pergunta.tipo === "float") {
+            let normalizado = bruto.replace(/^R\$\s*/i, "").replace(/\s/g, "");
+            if (/^[+-]?\d{1,3}(?:\.\d{3})+$/.test(normalizado)) normalizado = normalizado.replace(/\./g, "");
+            if (normalizado.includes(",")) {
+                normalizado = normalizado.replace(/\./g, "").replace(",", ".");
+            }
+            if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(normalizado) || !Number.isFinite(Number(normalizado))) {
+                throw new Error('O campo "' + pergunta.nome + '" deve ser um número decimal válido. Exemplo: 1.234,56.');
+            }
+            respostas.push({nome: pergunta.coluna, valor: Number(normalizado) / (pergunta.formato === "percentual" ? 100 : 1), formato: pergunta.formato, tipo: pergunta.tipo});
+        } else {
+            if (pergunta.tipo === "date" || pergunta.tipo === "datetime") {
+                const d = new Date(pergunta.tipo === "date" ? bruto + "T00:00:00" : bruto);
+                if (Number.isNaN(d.getTime())) throw new Error('Data inválida em "' + pergunta.nome + '".');
+                const serial = (Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes())-Date.UTC(1899,11,30))/86400000;
+                respostas.push({nome: pergunta.coluna, valor: serial, formato: pergunta.formato === "geral" ? (pergunta.tipo === "date" ? "data" : "datahora") : pergunta.formato, tipo: pergunta.tipo});
+            } else if (pergunta.tipo === "time") {
+                if (!/^\d{2}:\d{2}$/.test(bruto)) throw new Error('Hora inválida em "' + pergunta.nome + '".');
+                const [h,m]=bruto.split(":").map(Number);
+                if(h>23||m>59)throw new Error('Hora inválida em "' + pergunta.nome + '".');
+                respostas.push({nome: pergunta.coluna, valor: (h*60+m)/1440, formato: pergunta.formato === "geral" ? "hora" : pergunta.formato, tipo: pergunta.tipo});
+            } else respostas.push({nome: pergunta.coluna, valor: pergunta.tipo === "bool" ? bruto === "Sim" : (/^[=+\-@]/.test(bruto) ? "'" + bruto : bruto), formato: pergunta.formato, tipo: pergunta.tipo});
+        }
+    });
+    return respostas;
+}
+function prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, respostas) {
+    let proximaColuna = Math.max(-1, ...Object.values(mapa).filter(Number.isInteger)) + 1;
+    respostas.forEach(function(resposta) {
+        let indice = obterIndice(mapa, [resposta.nome]);
+        if (indice === -1) {
+            indice = proximaColuna++;
+            mapa[normalizar(resposta.nome)] = indice;
+            folha.getRangeByIndexes(
+                (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
+                (usado.isNullObject ? 0 : usado.columnIndex) + indice,
+                1, 1
+            ).values = [[resposta.nome]];
+        }
+    });
+}
+
 
 Office.onReady(async function () {
     document.getElementById("btnVoltar").addEventListener("click", function () {
@@ -14,6 +141,7 @@ Office.onReady(async function () {
 
     prepararLog();
     await carregarDados();
+    if (!document.getElementById("perguntasPersonalizadas").children.length) renderizarPerguntasPersonalizadas();
     preencherDuplicacao();
 });
 
@@ -169,6 +297,7 @@ async function carregarDados() {
             atualizarContador();
 
             carregarMensagensSMS(usado.values, configInfo);
+            carregarPerguntasPersonalizadas(usado.values, configInfo);
         });
 
         await identificarUsuario();
@@ -316,6 +445,7 @@ async function salvarSMS(event) {
         const obs = document.getElementById("obs").value.trim();
         const historicoExterno = document.getElementById("historicoExterno").value.trim();
         const idRegistro = gerarIdRegistro();
+        const camposDinamicos = coletarRespostasPersonalizadas();
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
 
@@ -337,7 +467,7 @@ async function salvarSMS(event) {
                 historicoExterno,
                 textoMensagem,
                 idRegistro,
-                valorProcessos: lerValorProcessos()
+                camposDinamicos
             });
 
             await atualizarConfigSMS(context, {
@@ -352,6 +482,7 @@ async function salvarSMS(event) {
         document.getElementById("formSms").reset();
         document.getElementById("mensagem").selectedIndex = 0;
         document.getElementById("textoMensagem").value = "";
+        document.querySelectorAll("#perguntasPersonalizadas input, #perguntasPersonalizadas textarea, #perguntasPersonalizadas select").forEach(c => c.value = "");
         atualizarContador();
         mostrarStatus(
             "✓ Registro salvo com sucesso.\nID: " + idRegistro,
@@ -431,8 +562,10 @@ async function adicionarRegistroSMS(context, dados) {
         mapa["ID REGISTRO"] = indiceId;
     }
 
-    // A largura acompanha o cabeçalho real, incluindo colunas adicionadas pelo usuário.
-    const numeroColunas = Math.max(9, ...Object.values(mapa).filter(Number.isInteger).map(indice => indice + 1));
+    const indiceValor = obterIndice(mapa, ["VALOR"]);
+    if (indiceValor === -1) throw new Error("A coluna Valor não foi encontrada. Confira o cabeçalho existente.");
+    prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, dados.camposDinamicos || []);
+    const numeroColunas = Math.max(9, ...Object.values(mapa).filter(Number.isInteger).map(i => i + 1));
 
     validarEstruturaRegistro(mapa, [
         ["DATA"],
@@ -463,21 +596,7 @@ async function adicionarRegistroSMS(context, dados) {
     colocar(["HISTORICO EXTERNO", "HISTÓRICO EXTERNO", "HISTORICOEXTERNO", "HISTÓRICOEXTERNO"], dados.historicoExterno);
     colocar(["MENSAGEM"], dados.textoMensagem);
     colocar(["ID REGISTRO"], dados.idRegistro);
-    // Valores adicionais opcionais, identificados pelo nome da coluna.
-    // Campos sem resposta permanecem vazios; cabeçalhos existentes são preservados.
-    const extras = dados.camposPersonalizados || {};
-    if (extras && typeof extras === "object" && !Array.isArray(extras)) {
-        for (const [nome, valor] of Object.entries(extras)) {
-            const indice = obterIndice(mapa, [nome]);
-            if (indice !== -1 && indice !== indiceId &&
-                !["DATA", "REALIZADO POR", "EMPRESA", "QTDE", "MENSAGEM"].includes(normalizar(nome))) {
-                valores[indice] = valor == null ? "" : valor;
-            }
-        }
-    }
-    const indiceValor = obterIndice(mapa, ["VALOR"]);
-    if (indiceValor === -1 && dados.valorProcessos !== "") throw new Error("Coluna Valor não encontrada.");
-    if (indiceValor !== -1) valores[indiceValor] = dados.valorProcessos ?? "";
+    (dados.camposDinamicos || []).forEach(c => colocar([c.nome], c.valor));
     let confirmado = false;
 
     for (let tentativa = 1; tentativa <= 3; tentativa++) {
@@ -495,9 +614,14 @@ async function adicionarRegistroSMS(context, dados) {
         );
 
         intervaloRegistro.values = [valores];
-        if (indiceValor !== -1) intervaloRegistro.getCell(0, indiceValor).numberFormat = [['_("R$"* #,##0.00_);_("R$"* (#,##0.00);_("R$"* "-"??_);_(@_)']];
         const indiceData = obterIndice(mapa, ["DATA"]);
         if (indiceData !== -1) intervaloRegistro.getCell(0, indiceData).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
+        const formatos = {contabil:'_ "R$" * #,##0.00_ ;_ "R$" * -#,##0.00_ ;_ "R$" * "-"??_ ;_ @_ ',moeda:'"R$" #,##0.00',inteiro:'#,##0',decimal:'#,##0.00',decimal4:'#,##0.0000',percentual:'0.00%',data:'dd/mm/yyyy',hora:'hh:mm',datahora:'dd/mm/yyyy hh:mm',texto:'@'};
+        intervaloRegistro.getCell(0, indiceValor).numberFormat = [[formatos.contabil]];
+        (dados.camposDinamicos || []).forEach(c => {
+            const indice = obterIndice(mapa,[c.nome]);
+            if (indice >= 0 && formatos[c.formato]) intervaloRegistro.getCell(0,indice).numberFormat=[[formatos[c.formato]]];
+        });
 
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
@@ -584,19 +708,17 @@ function preencherDuplicacao() {
         if (d.tipo !== "sms") return;
 
         Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
-        const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
+        if (d.camposPersonalizados) {
+            perguntasPersonalizadas.forEach((pergunta, i) => {
+                const campo = document.getElementById("perguntaPersonalizada_" + i);
+                if (campo && (d.camposPersonalizados[pergunta.coluna] !== undefined || d.camposPersonalizados[pergunta.nome] !== undefined)) {
+                    campo.value = d.camposPersonalizados[pergunta.coluna] ?? d.camposPersonalizados[pergunta.nome];
+                }
+            });
+        }
+                const opcao = mensagensSMS.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
         localStorage.removeItem("registroDuplicado");
         mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
     } catch(e) { localStorage.removeItem("registroDuplicado"); }
-}
-
-function lerValorProcessos() {
-    const raw = document.getElementById("valorProcessos").value.trim();
-    if (!raw) return "";
-    const s = raw.replace(/^R\$\s*/, "");
-    if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(s)) throw new Error("Informe um valor válido, por exemplo 1.234,56.");
-    const n = Number(s.replace(/\./g, "").replace(",", "."));
-    if (!Number.isFinite(n)) throw new Error("Valor inválido.");
-    return n;
 }
