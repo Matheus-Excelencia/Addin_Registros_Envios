@@ -82,12 +82,13 @@ function coletarRespostasPersonalizadas() {
         }
         if (pergunta.tipo === "int") {
             const numero = Number(bruto);
-            if (!Number.isInteger(numero)) throw new Error('O campo "' + pergunta.nome + '" deve ser um número inteiro.');
+            if (!Number.isSafeInteger(numero)) throw new Error('O campo "' + pergunta.nome + '" deve ser um número inteiro.');
             respostas.push({nome: pergunta.coluna, valor: numero / (pergunta.formato === "percentual" ? 100 : 1), formato: pergunta.formato, tipo: pergunta.tipo});
         } else if (pergunta.tipo === "float") {
             let normalizado = bruto.replace(/^R\$\s*/i, "").replace(/\s/g, "");
             if (/^[+-]?\d{1,3}(?:\.\d{3})+$/.test(normalizado)) normalizado = normalizado.replace(/\./g, "");
             if (normalizado.includes(",")) {
+                if (!/^[+-]?(?:\d+|\d{1,3}(?:\.\d{3})+),\d+$/.test(normalizado)) throw new Error("Número decimal inválido: " + pergunta.nome);
                 normalizado = normalizado.replace(/\./g, "").replace(",", ".");
             }
             if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(normalizado) || !Number.isFinite(Number(normalizado))) {
@@ -111,7 +112,7 @@ function coletarRespostasPersonalizadas() {
     return respostas;
 }
 function prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, respostas) {
-    let proximaColuna = Math.max(-1, ...Object.values(mapa).filter(Number.isInteger)) + 1;
+    let proximaColuna = Math.max(usado.isNullObject ? 0 : usado.values[0].length, Math.max(-1, ...Object.values(mapa).filter(Number.isInteger)) + 1);
     respostas.forEach(function(resposta) {
         let indice = obterIndice(mapa, [resposta.nome]);
         if (indice === -1) {
@@ -1281,6 +1282,7 @@ async function adicionarRegistroEmail(
 
 
     if (linhaCabecalho === -1) {
+        if (!usado.isNullObject) throw new Error("Cabeçalho não reconhecido; nenhum dado foi alterado.");
 
         folha
             .getRange("A1:J1")
@@ -1324,7 +1326,7 @@ async function adicionarRegistroEmail(
     let indiceId = obterIndice(mapa, ["ID REGISTRO"]);
     if (indiceId === -1) {
         const indices = Object.values(mapa).filter(function (valor) { return Number.isInteger(valor); });
-        indiceId = indices.length > 0 ? Math.max.apply(null, indices) + 1 : 10;
+        indiceId = Math.max(usado.isNullObject ? 0 : usado.values[0].length, indices.length > 0 ? Math.max(...indices) + 1 : 10);
         const colunaId = (usado.isNullObject ? 0 : usado.columnIndex) + indiceId;
         folha.getRangeByIndexes(
             (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
@@ -1335,9 +1337,8 @@ async function adicionarRegistroEmail(
         mapa["ID REGISTRO"] = indiceId;
     }
 
-    const indiceValor = obterIndice(mapa, ["VALOR"]);
-    if (indiceValor === -1) throw new Error("A coluna Valor não foi encontrada. Confira o cabeçalho existente.");
     prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, dados.camposDinamicos || []);
+    const indiceValor = obterIndice(mapa, ["VALOR"]);
     const numeroColunas = Math.max(11, ...Object.values(mapa).filter(Number.isInteger).map(i => i + 1));
 
     validarEstruturaRegistro(mapa, [
@@ -1455,7 +1456,7 @@ async function adicionarRegistroEmail(
         const indiceData = obterIndice(mapa, ["DATA"]);
         if (indiceData !== -1) intervaloRegistro.getCell(0, indiceData).numberFormat = [["dd/mm/yyyy hh:mm:ss"]];
         const formatos = {contabil:'_ "R$" * #,##0.00_ ;_ "R$" * -#,##0.00_ ;_ "R$" * "-"??_ ;_ @_ ',moeda:'"R$" #,##0.00',inteiro:'#,##0',decimal:'#,##0.00',decimal4:'#,##0.0000',percentual:'0.00%',data:'dd/mm/yyyy',hora:'hh:mm',datahora:'dd/mm/yyyy hh:mm',texto:'@'};
-        intervaloRegistro.getCell(0, indiceValor).numberFormat = [[formatos.contabil]];
+        if (indiceValor !== -1) intervaloRegistro.getCell(0, indiceValor).numberFormat = [[formatos.contabil]];
         (dados.camposDinamicos || []).forEach(c => {
             const indice = obterIndice(mapa,[c.nome]);
             if (indice >= 0 && formatos[c.formato]) intervaloRegistro.getCell(0,indice).numberFormat=[[formatos[c.formato]]];
@@ -1670,7 +1671,8 @@ function preencherDuplicacao() {
         const d = JSON.parse(bruto);
         if (d.tipo !== "email") return;
 
-        Object.keys(campos).forEach(k => { if (d[k] !== undefined) document.getElementById(campos[k]).value = d[k]; });
+        const campos = {realizadoPor:"realizadoPor",empresa:"empresa",qtde:"qtde",supervisor:"supervisor",historicoExterno:"historicoExterno",emailResposta:"emailResposta",assunto:"assunto",};
+        Object.keys(campos).forEach(k => { if (d[k] !== undefined) { const el = document.getElementById(campos[k]); if(el) el.value = d[k]; }; });
         if (d.camposPersonalizados) {
             perguntasPersonalizadas.forEach((pergunta, i) => {
                 const campo = document.getElementById("perguntaPersonalizada_" + i);
