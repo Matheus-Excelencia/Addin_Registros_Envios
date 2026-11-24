@@ -16,7 +16,13 @@ function carregarPerguntasPersonalizadas(valores, info) {
     for (let linha = info.linha + 1; linha < valores.length; linha++) {
         const r = valores[linha] || [];
         const nome = String(r[iPergunta] ?? "").trim();
-        if (!nome || (iAtivo >= 0 && normalizar(r[iAtivo]) === "NAO")) continue;
+        if (!nome) continue;
+        if (normalizar(r[iColuna]) === "VALOR" && String(r[iFormulario]).toLowerCase()==="ambos" && String(r[iTipo]).toLowerCase()==="float") {
+            const formato=String(r[iFormato]||"contabil").toLowerCase();
+            perguntasPersonalizadas[0]={nome,coluna:"Valor",tipo:"float",formato:["geral","decimal","decimal4","contabil","moeda"].includes(formato)?formato:"contabil",obrigatoria:normalizar(r[iObrigatoria])==="SIM"||r[iObrigatoria]===true};
+            continue;
+        }
+        if (iAtivo >= 0 && normalizar(r[iAtivo]) === "NAO") continue;
         const formulario = String(r[iFormulario] || "ambos").toLowerCase();
         if (formulario !== "ambos" && formulario !== TIPO_FORMULARIO) continue;
         const colunaConfigurada = String(r[iColuna] || nome).trim();
