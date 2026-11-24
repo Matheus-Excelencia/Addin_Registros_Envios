@@ -1465,9 +1465,10 @@ async function adicionarRegistroEmail(
         const celulaId = intervaloRegistro.getCell(0, indiceId);
         celulaId.load("values");
         intervaloRegistro.load("values");
+        intervaloRegistro.load("values");
         await context.sync();
 
-        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro)) {
+        if (String(celulaId.values[0][0] || "") === String(dados.idRegistro) && (dados.camposDinamicos || []).every(c => { const i = obterIndice(mapa,[c.nome]); const v = intervaloRegistro.values[0][i]; return i >= 0 && (typeof c.valor === "number" ? typeof v === "number" && Math.abs(v-c.valor)<1e-9 : String(v ?? "") === String(c.valor ?? "").replace(/^\x27(?=[=+\-@])/,"")); })) {
             const gravados = intervaloRegistro.values[0];
             for(const c of dados.camposDinamicos || []){const j=obterIndice(mapa,[c.nome]);if(j<0 || (typeof c.valor==="number" ? typeof gravados[j]!=="number" || Math.abs(gravados[j]-c.valor)>1e-9 : String(gravados[j]??"")!==String(c.valor??"").replace(/^\x27(?=[=+\-@])/,"")))throw new Error("Registro gravado, mas resposta não confirmada: "+c.nome+". Confira o ID "+dados.idRegistro+" antes de tentar novamente.");}
             confirmado = true;
@@ -1692,3 +1693,15 @@ function preencherDuplicacao() {
 }
 
 function converterDuplicacao(p,v){if(v===null||v===undefined||v==="")return "";if(p.tipo==="bool")return v===true||v==="Sim"?"Sim":"Não";if(typeof v==="number"){if(p.formato==="percentual")return String(v*100).replace(".",",");if(p.tipo==="date"||p.tipo==="datetime"){const d=new Date(Date.UTC(1899,11,30)+Math.round(v*86400000));return d.toISOString().slice(0,p.tipo==="date"?10:16);}if(p.tipo==="time"){const m=Math.round(v*1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");}if(p.tipo==="float")return String(v).replace(".",",");}return String(v);}
+
+function formatarDuplicacao(q,v){
+ if(v===undefined||v===null||v==="")return "";
+ if(q.tipo==="bool")return v===true||String(v).toLowerCase()==="true"||v==="Sim"?"Sim":"Não";
+ if(typeof v==="number"){
+  if(q.tipo==="date"||q.tipo==="datetime"){const d=new Date(Date.UTC(1899,11,30)+Math.round(v*86400000));return d.toISOString().slice(0,q.tipo==="date"?10:16);}
+  if(q.tipo==="time"){const m=Math.round(v*1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");}
+  if(q.formato==="percentual")v*=100;
+  if(q.tipo==="float")return String(v).replace(".",",");
+ }
+ return String(v);
+}
