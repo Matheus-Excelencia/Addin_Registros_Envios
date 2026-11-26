@@ -698,6 +698,7 @@ function atualizarStatusUsuario(texto, tipo) {
 }
 
 async function identificarUsuario() {
+    if(window.REGISTROS_DEMO===true){const campo=document.getElementById("realizadoPor");if(campo)campo.readOnly=false;atualizarStatusUsuario("Selecione um operador fictício.","");return;}
 
     const campo =
         document.getElementById(
