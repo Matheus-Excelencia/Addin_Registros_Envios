@@ -7,7 +7,7 @@
 
 </div>
 
-> Alpha 1.07 em desenvolvimento nesta branch; Alpha 1.06 permanece a versão publicada.
+> Alpha 2.0 em desenvolvimento nesta branch; Alpha 1.06 permanece a versão publicada.
 
 <div align="center">
 <img src="assets/icon-80.png" width="80" alt="Ícone Registros de Envios">
