@@ -1,29 +1,22 @@
 <div align="center">
 <img src="assets/brand-registros.svg" width="96" alt="Registros de Envios">
 
-**Menos retrabalho. Mais controle.**
-
-[Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html)
-
-</div>
-
-> Alpha 2.0 em desenvolvimento nesta branch; Alpha 1.06 permanece a versão publicada.
-
-<div align="center">
-<img src="assets/icon-80.png" width="80" alt="Ícone Registros de Envios">
-
 # Registros de Envios
 
 **Suplemento corporativo para Microsoft Excel Web**
 
+*Menos retrabalho. Mais controle.*
+
 ![Desenvolvimento](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
-![Vercel](https://img.shields.io/badge/Vercel-Produção-black)
+![Vercel](https://img.shields.io/badge/Vercel-Produção%20Alpha%201.06-black)
 
-[Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação)
+[Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação)
 
 </div>
+
+> Alpha 2.0 em desenvolvimento; Alpha 1.06 permanece a versão publicada. Os links públicos apontam para a produção.
 
 ## Visão geral
 
@@ -36,8 +29,8 @@ O Registros de Envios padroniza o registro operacional de campanhas de E-mail e 
 | Novo Registro | Escolha entre E-mail e SMS |
 | E-mail | Registro, validação de endereço, assunto e mensagem |
 | SMS | Registro, contador e limite configurável |
-| Histórico | Filtros, ordenação, duplicação e navegação até a linha |
-| Resumo | Consolidação por período |
+| Histórico | Filtros, ordenação, duplicação, perguntas personalizadas e navegação até a linha |
+| Resumo | Consolidação por período, cards, lista e gráficos |
 | Configurações | Listas, mensagens, perguntas dinâmicas e formatos Excel |
 | Identidade | Microsoft SSO, com contingência manual nos formulários |
 
@@ -46,7 +39,7 @@ O Registros de Envios padroniza o registro operacional de campanhas de E-mail e 
 - Identidade visual compartilhada, temas persistentes e abertura de sete segundos com botão Continuar.
 - Resumo em cards, lista e gráficos; regras de visibilidade de perguntas no Histórico e Resumo.
 - Duplicação pelo fluxo existente do Histórico, incluindo respostas personalizadas.
-- Demonstração sem SSO; autenticação real preservada.
+- Demonstração sem SSO, com reinício dos dados fictícios e da abertura; autenticação real preservada.
 - Homologação pendente; não instalar como versão de produção.
 
 ### Novidades da Alpha 1.06
@@ -106,7 +99,7 @@ HTML, CSS e JavaScript compõem a interface; Office.js integra o workbook. O có
 | K | ID REGISTRO | — |
 | L | Valor | — |
 
-A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores, nomes e textos de mensagens de E-mail/SMS e limite SMS (A–I). Metadados adicionais incluem PERGUNTA PERSONALIZADA, FORMULARIO, TIPO RESPOSTA, OBRIGATORIA, FORMATO EXCEL, COLUNA EXCEL e PERGUNTA ATIVA. Perguntas adicionais usam cabeçalhos próprios. Preserve a estrutura oficial; não presuma migração automática de qualquer planilha antiga.
+A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores, nomes e textos de mensagens de E-mail/SMS e limite SMS (A–I). Metadados adicionais incluem PERGUNTA PERSONALIZADA, FORMULARIO, TIPO RESPOSTA, OBRIGATORIA, FORMATO EXCEL, COLUNA EXCEL e PERGUNTA ATIVA, EXIBIR HISTORICO e EXIBIR RESUMO. Perguntas adicionais usam cabeçalhos próprios. Preserve a estrutura oficial; não presuma migração automática de qualquer planilha antiga.
 
 ## Regras e segurança
 
@@ -138,6 +131,9 @@ As suítes são cumulativas. A última homologação visual relatou que as melho
 | email.* / sms.* | Formulários e gravação |
 | perguntas.js | Regras compartilhadas de perguntas |
 | config.* | Configurações |
+| brand.css / brand.js | Identidade visual e temas |
+| question-visibility.js | Regras de exibição no Histórico e Resumo |
+| demo/ | Ambiente demonstrativo com dados fictícios |
 | commands.* / assets/ | Comandos e ícones |
 | tests/alpha106.test.cjs | Suíte automatizada |
 
@@ -156,6 +152,6 @@ Execute `node --test tests/alpha106.test.cjs` na raiz do projeto com Node.js. Tr
 
 **Grupo Excelência · Registros de Envios**  
 Responsabilidade técnica: Matheus Passos  
-Uso corporativo · Alpha 1.06
+Uso corporativo · Alpha 2.0 em desenvolvimento
 
 </div>
