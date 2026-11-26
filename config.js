@@ -4,7 +4,7 @@ let cadastrandoPergunta=false;
 let info=null;
 let limiteMensagemSMS=160;
 let perguntaEmEdicao=null;
-const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA"];
+const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA","EXIBIR HISTORICO","EXIBIR RESUMO"];
 Office.onReady(async function(){
  document.getElementById("btnVoltar").onclick=()=>location.href="taskpane.html";
  document.getElementById("btnCadastro").onclick=adicionarCadastro;
@@ -44,7 +44,7 @@ function indicesPerguntas(mapa){return {
  tipo:idx(mapa,["TIPO RESPOSTA"]),
  obrigatoria:idx(mapa,["OBRIGATORIA"]),
  formato:idx(mapa,["FORMATO EXCEL"]),
- coluna:idx(mapa,["COLUNA EXCEL"]), ativo:idx(mapa,["PERGUNTA ATIVA"])
+ coluna:idx(mapa,["COLUNA EXCEL"]), ativo:idx(mapa,["PERGUNTA ATIVA"]),historico:idx(mapa,["EXIBIR HISTORICO"]),resumo:idx(mapa,["EXIBIR RESUMO"])
 }}
 function lerPerguntas(valores,base,info){
  const ix=indicesPerguntas(info.mapa);if([ix.pergunta,ix.formulario,ix.tipo,ix.obrigatoria].some(v=>v<0))return [];
@@ -52,19 +52,19 @@ function lerPerguntas(valores,base,info){
  for(let i=info.linha+1;i<valores.length;i++){
   const r=valores[i]||[],nome=String(r[ix.pergunta]??"").trim();
   if(!nome)continue;
-  resultado.push({nome,formulario:String(r[ix.formulario]||"ambos").toLowerCase(),tipo:String(r[ix.tipo]||"text").toLowerCase(),obrigatoria:n(r[ix.obrigatoria])==="SIM"||r[ix.obrigatoria]===true,linha:base+i,ativo:ix.ativo<0||n(r[ix.ativo])!=="NAO",formato:ix.formato<0?"geral":String(r[ix.formato]||"geral"),coluna:ix.coluna<0?nome:String(r[ix.coluna]||nome)});
+  resultado.push({historico:String(r[ix.historico]|| (n(r[ix.coluna])==="VALOR"?"sempre":"oculto")),resumo:String(r[ix.resumo]||(n(r[ix.coluna])==="VALOR"?"opcional":"oculto")),nome,formulario:String(r[ix.formulario]||"ambos").toLowerCase(),tipo:String(r[ix.tipo]||"text").toLowerCase(),obrigatoria:n(r[ix.obrigatoria])==="SIM"||r[ix.obrigatoria]===true,linha:base+i,ativo:ix.ativo<0||n(r[ix.ativo])!=="NAO",formato:ix.formato<0?"geral":String(r[ix.formato]||"geral"),coluna:ix.coluna<0?nome:String(r[ix.coluna]||nome)});
  }
  return resultado;
 }
 function renderizarPerguntas(perguntas){
  const area=document.getElementById("listaPerguntas");area.innerHTML="";
  const padrao=perguntas.find(q=>n(q.coluna)==="VALOR");
- perguntas=[{nome:padrao?.nome||"Qual valor total dos processos?",formulario:"ambos",tipo:"float",formato:["geral","decimal","decimal4","contabil","moeda"].includes(padrao?.formato)?padrao.formato:"contabil",coluna:"Valor",obrigatoria:padrao?.obrigatoria||false,ativo:true,padrao:true},...perguntas.filter(q=>n(q.coluna)!=="VALOR" && !/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(q.nome)))];
+ perguntas=[{nome:padrao?.nome||"Qual valor total dos processos?",formulario:"ambos",tipo:"float",formato:["geral","decimal","decimal4","contabil","moeda"].includes(padrao?.formato)?padrao.formato:"contabil",coluna:"Valor",obrigatoria:padrao?.obrigatoria||false,ativo:true,padrao:true,historico:padrao?.historico||"sempre",resumo:padrao?.resumo||"opcional"},...perguntas.filter(q=>n(q.coluna)!=="VALOR" && !/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(q.nome)))];
  perguntas.forEach(q=>{
   const item=document.createElement("div");item.className="pergunta-item";
   const nome=document.createElement("strong");nome.textContent=q.nome;
   const detalhe=document.createElement("small");detalhe.textContent=(q.formulario==="ambos"?"E-mail e SMS":q.formulario==="email"?"Somente E-mail":"Somente SMS")+" · "+q.tipo+" · "+q.formato+" · Coluna: "+q.coluna+" · "+(q.obrigatoria?"Obrigatória":"Opcional");
-  item.appendChild(nome);item.appendChild(detalhe);const a=document.createElement("small");a.textContent=q.padrao?"Padrão · Ativa":q.ativo?"Ativa":"Desativada";a.className="pergunta-situacao";item.appendChild(a);
+  item.appendChild(nome);item.appendChild(detalhe);const vis=document.createElement("small");vis.textContent="Histórico: "+q.historico+" · Resumo: "+q.resumo;item.appendChild(vis);const a=document.createElement("small");a.textContent=q.padrao?"Padrão · Ativa":q.ativo?"Ativa":"Desativada";a.className="pergunta-situacao";item.appendChild(a);
   if(!q.padrao&&q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);}const editar=document.createElement("button");editar.type="button";editar.textContent="Editar";editar.onclick=()=>iniciarEdicao(q);item.appendChild(editar);
   area.appendChild(item);
  });
@@ -120,7 +120,7 @@ async function adicionarPergunta(){
    }
    let linha=h.linha+1;
    while(linha<u.values.length&&String(u.values[linha][cols.pergunta]??"").trim())linha++;
-   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[valor]];
+   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[valor]];
    await context.sync();
   });
   document.getElementById("perguntaNome").value="";
@@ -177,7 +177,7 @@ function iniciarEdicao(q){
  perguntaEmEdicao=q;
  document.getElementById("editorPergunta")?.classList?.add("editando");
  document.getElementById("perguntaNome")?.scrollIntoView?.({block:"center"});
- for(const [id,v] of Object.entries({perguntaNome:q.nome,perguntaFormulario:q.formulario,perguntaTipo:q.tipo,perguntaFormato:q.formato,perguntaObrigatoria:q.obrigatoria?"sim":"nao",perguntaColuna:q.coluna}))document.getElementById(id).value=v;
+ for(const [id,v] of Object.entries({perguntaNome:q.nome,perguntaFormulario:q.formulario,perguntaTipo:q.tipo,perguntaFormato:q.formato,perguntaObrigatoria:q.obrigatoria?"sim":"nao",perguntaColuna:q.coluna,perguntaHistorico:q.historico||"oculto",perguntaResumo:q.resumo||"oculto"}))document.getElementById(id).value=v;
  for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=true;
  atualizarFormatos();document.getElementById("btnPergunta").textContent="Salvar edição";
  const b=document.createElement("button");b.id="cancelarEdicao";b.type="button";b.textContent="Cancelar edição";b.onclick=encerrarEdicao;
@@ -189,7 +189,7 @@ async function salvarEdicao(){
  if(!nome||/^[=+\-@]/.test(nome)||(!q.padrao&&/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false);
  if(q.padrao&&!["geral","decimal","decimal4","contabil","moeda"].includes(formato))return status("Formato inválido para Valor.",false);
  if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false);
- try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[v]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
+ try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[v]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
 }
 
 function atualizarContadorSMS(){const tipo=document.getElementById("tipoMensagem"),campo=document.getElementById("textoMensagem"),contador=document.getElementById("contadorMensagemSMS"),botao=document.getElementById("btnMensagem");if(!tipo||!campo||!contador||!botao)return;const sms=tipo.value==="sms",n=campo.value.length,excesso=sms&&n>limiteMensagemSMS;contador.hidden=!sms;contador.textContent=n+" / "+limiteMensagemSMS+" caracteres"+(excesso?" — limite excedido":"");contador.className=excesso?"contador-sms excesso":"contador-sms";botao.disabled=excesso;}
