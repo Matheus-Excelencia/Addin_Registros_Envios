@@ -137,9 +137,13 @@ As suítes são cumulativas. A última homologação visual relatou que as melho
 | commands.* / assets/ | Comandos e ícones |
 | tests/alpha106.test.cjs | Suíte automatizada |
 
-Execute `node --test tests/alpha106.test.cjs` na raiz do projeto com Node.js. Trabalhe em branch separada para alterações funcionais, valide o Excel Web, preserve manifesto e SSO, crie backup antes do merge autorizado e confira o deploy. Atualize parâmetros de cache quando necessário.
+Execute `node --test tests/*.test.cjs` na raiz do projeto com Node.js. Trabalhe em branch separada para alterações funcionais, valide o Excel Web, preserve manifesto e SSO, crie backup antes do merge autorizado e confira o deploy. Atualize parâmetros de cache quando necessário.
 
 ## Documentação
+
+- [Manual Alpha 2.0 (rascunho)](docs/MAN-REG-001-ALPHA-20.md)
+- [Revisão de segurança](docs/ALPHA-20-SEGURANCA.md)
+- [Homologação](docs/ALPHA-20-HOMOLOGACAO.md)
 
 - [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS) (acesso corporativo).
 - DOC-REG-007 — Alpha 1.06: edição preparada para aprovação documental.

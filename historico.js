@@ -295,7 +295,7 @@ async function irParaRegistro(r) {
 }
 
 function duplicar(r) {
-    (window.REGISTROS_DEMO?sessionStorage:localStorage).setItem("registroDuplicado", JSON.stringify({
+    sessionStorage.setItem("registroDuplicado", JSON.stringify({
         tipo: r.tipo === "Email" ? "email" : "sms",
         realizadoPor: r.realizadoPor,
         empresa: r.empresa,
