@@ -31,20 +31,18 @@ function digitarBoasVindas(campos, duracao, reduzido){
     passo();return concluir;
 }
 async function iniciarBoasVindas(){
-    const tela=document.getElementById("boasVindas"),menu=document.getElementById("menuPrincipal");
-    if(!menu)return;
-    if(!tela){menu.hidden=false;return;}
-    try{if(sessionStorage.getItem("splash106")){menu.hidden=false;return;}sessionStorage.setItem("splash106","1");}catch{}
-    menu.hidden=true;menu.inert=true;
-    let dados={},timeout;
-    try{if(window.REGISTROS_DEMO===true)throw new Error("Demo");const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800);})]);dados=dadosBoasVindas(token);}catch{}finally{clearTimeout(timeout);}
-    const texto=textoBoasVindas(dados);
-    const reduzido=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
-    tela.style.setProperty("--duracao",texto.duracao+"ms");
-    tela.hidden=false;
-    const parar=digitarBoasVindas([[document.getElementById("saudacao"),texto.saudacao],[document.getElementById("nomeBoasVindas"),texto.nome],[document.getElementById("mensagemBoasVindas"),texto.mensagem]],texto.duracao,reduzido);
-    let encerrada=false,timer;
-    const fechar=()=>{if(encerrada)return;encerrada=true;clearTimeout(timer);parar();menu.hidden=false;tela.classList.add("saindo");const finalizar=()=>{tela.hidden=true;menu.inert=false;};if(reduzido)finalizar();else setTimeout(finalizar,800);};
-    document.getElementById("pularBoasVindas").onclick=fechar;
-    timer=setTimeout(fechar,texto.duracao);
+ const tela=document.getElementById("boasVindas"),menu=document.getElementById("menuPrincipal");
+ if(!menu)return;if(!tela){menu.hidden=false;return;}
+ const demo=window.REGISTROS_DEMO===true;
+ try{if(sessionStorage.getItem("splash20")){menu.hidden=false;return;}sessionStorage.setItem("splash20","1");}catch{}
+ const reduced=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const greeting=document.getElementById("saudacao"),name=document.getElementById("nomeBoasVindas"),message=document.getElementById("mensagemBoasVindas"),skip=document.getElementById("pularBoasVindas");
+ let closed=false,timer,timeout;
+ const close=()=>{if(closed)return;closed=true;clearTimeout(timer);menu.hidden=false;menu.inert=false;tela.classList.add("saindo");tela.style.pointerEvents="none";if(reduced)tela.hidden=true;else setTimeout(()=>{tela.hidden=true},1100);};
+ skip.onclick=close;menu.hidden=true;menu.inert=true;
+ greeting.textContent=demo?"Bem-vindo,":"Bem-vindo!";name.textContent=demo?"Demo!":"";message.textContent="Estávamos esperando por você.";
+ if(demo)document.querySelector(".welcome-version").textContent="ALPHA 2.0 · AMBIENTE DEMONSTRATIVO";
+ tela.style.setProperty("--duracao","7000ms");tela.hidden=false;timer=setTimeout(close,7000);
+ if(demo)return;
+ try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800)})]);if(closed)return;const t=textoBoasVindas(dadosBoasVindas(token));greeting.textContent=t.saudacao+(t.nome?",":"!");name.textContent=t.nome;message.textContent=t.mensagem||"Estávamos esperando por você.";if(t.mensagem){clearTimeout(timer);timer=setTimeout(close,9500);}}catch{}finally{clearTimeout(timeout);}
 }
