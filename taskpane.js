@@ -44,5 +44,5 @@ async function iniciarBoasVindas(){
  if(demo)document.querySelector(".welcome-version").textContent="ALPHA 2.0 · AMBIENTE DEMONSTRATIVO";
  tela.style.setProperty("--duracao","7000ms");tela.hidden=false;timer=setTimeout(close,7000);
  if(demo)return;
- try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800)})]);if(closed)return;const t=textoBoasVindas(dadosBoasVindas(token));greeting.textContent=t.saudacao+(t.nome?",":"!");name.textContent=t.nome;message.textContent=t.mensagem||"Estávamos esperando por você.";if(t.mensagem){clearTimeout(timer);timer=setTimeout(close,9500);}}catch{}finally{clearTimeout(timeout);}
+ try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800)})]);if(closed)return;const t=textoBoasVindas(dadosBoasVindas(token));greeting.textContent=t.saudacao+(t.nome?",":"!");name.textContent=t.nome;message.textContent=t.mensagem||"Estávamos esperando por você.";if(t.mensagem){tela.style.setProperty("--duracao","9500ms");clearTimeout(timer);timer=setTimeout(close,9500);}}catch{}finally{clearTimeout(timeout);}
 }
