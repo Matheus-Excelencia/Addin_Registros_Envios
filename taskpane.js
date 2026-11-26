@@ -37,7 +37,7 @@ async function iniciarBoasVindas(){
     try{if(sessionStorage.getItem("splash106")){menu.hidden=false;return;}sessionStorage.setItem("splash106","1");}catch{}
     menu.hidden=true;menu.inert=true;
     let dados={},timeout;
-    try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800);})]);dados=dadosBoasVindas(token);}catch{}finally{clearTimeout(timeout);}
+    try{if(window.REGISTROS_DEMO===true)throw new Error("Demo");const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800);})]);dados=dadosBoasVindas(token);}catch{}finally{clearTimeout(timeout);}
     const texto=textoBoasVindas(dados);
     const reduzido=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
     tela.style.setProperty("--duracao",texto.duracao+"ms");
