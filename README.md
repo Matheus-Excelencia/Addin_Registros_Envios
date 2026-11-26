@@ -1,16 +1,18 @@
 <div align="center">
-<img src="assets/icon-80.png" width="80" alt="Ícone Registros de Envios">
+<img src="assets/brand-registros.svg" width="96" alt="Registros de Envios">
 
 # Registros de Envios
 
 **Suplemento corporativo para Microsoft Excel Web**
+
+*Menos retrabalho. Mais controle.*
 
 ![Versão](https://img.shields.io/badge/versão-Alpha%201.06-217346)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
 ![Vercel](https://img.shields.io/badge/Vercel-Produção-black)
 
-[Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação)
+[Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação)
 
 </div>
 
