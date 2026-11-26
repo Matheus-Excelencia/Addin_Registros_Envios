@@ -16,7 +16,7 @@
 
 **Suplemento corporativo para Microsoft Excel Web**
 
-![Versão](https://img.shields.io/badge/versão-Alpha%201.06-217346)
+![Desenvolvimento](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
 ![Vercel](https://img.shields.io/badge/Vercel-Produção-black)
@@ -40,6 +40,14 @@ O Registros de Envios padroniza o registro operacional de campanhas de E-mail e 
 | Resumo | Consolidação por período |
 | Configurações | Listas, mensagens, perguntas dinâmicas e formatos Excel |
 | Identidade | Microsoft SSO, com contingência manual nos formulários |
+
+### Alpha 2.0 — em desenvolvimento
+
+- Identidade visual compartilhada, temas persistentes e abertura de sete segundos com botão Continuar.
+- Resumo em cards, lista e gráficos; regras de visibilidade de perguntas no Histórico e Resumo.
+- Duplicação pelo fluxo existente do Histórico, incluindo respostas personalizadas.
+- Demonstração sem SSO; autenticação real preservada.
+- Homologação pendente; não instalar como versão de produção.
 
 ### Novidades da Alpha 1.06
 
