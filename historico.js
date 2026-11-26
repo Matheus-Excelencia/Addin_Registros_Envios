@@ -256,6 +256,7 @@ function render() {
             '<div><small>Realizado por</small>' + escapar(r.realizadoPor || "—") + '</div>' +
             '<div><small>Supervisor</small>' + escapar(r.supervisor || "—") + '</div>' +
             '<div><small>Qtde</small>' + escapar(r.qtde || "—") + '</div>' +
+            '<div><small>Valor</small>' + escapar(r.camposPersonalizados?.VALOR === "" || r.camposPersonalizados?.VALOR == null ? "—" : typeof r.camposPersonalizados.VALOR === "number" ? r.camposPersonalizados.VALOR.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : String(r.camposPersonalizados.VALOR)) + '</div>' +
             '<div><small>Assunto</small>' + escapar(r.assunto || "—") + '</div>' +
             '<div class="campo-mensagem"><small>Mensagem</small><textarea class="mensagem-historico" readonly>' + escapar(r.mensagem || "—") + '</textarea></div>' +
             '<div><small>Histórico</small>' + escapar(r.historico || "—") + '</div>' +
