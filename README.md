@@ -1,4 +1,15 @@
 <div align="center">
+<img src="assets/brand-registros.svg" width="96" alt="Registros de Envios">
+
+**Menos retrabalho. Mais controle.**
+
+[Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html)
+
+</div>
+
+> Alpha 1.07 em desenvolvimento nesta branch; Alpha 1.06 permanece a versão publicada.
+
+<div align="center">
 <img src="assets/icon-80.png" width="80" alt="Ícone Registros de Envios">
 
 # Registros de Envios
