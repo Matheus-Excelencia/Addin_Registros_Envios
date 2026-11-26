@@ -596,7 +596,7 @@ function preencherDuplicacao() {
             perguntasPersonalizadas.forEach((pergunta, i) => {
                 const campo = document.getElementById("perguntaPersonalizada_" + i);
                 if (campo && (d.camposPersonalizados[normalizar(pergunta.coluna)] !== undefined || d.camposPersonalizados[normalizar(pergunta.nome)] !== undefined)) {
-                    campo.value = formatarDuplicacao(pergunta, d.camposPersonalizados[normalizar(pergunta.coluna)] ?? d.camposPersonalizados[normalizar(pergunta.nome)]);
+                    campo.value = converterDuplicacao(pergunta, d.camposPersonalizados[normalizar(pergunta.coluna)] ?? d.camposPersonalizados[normalizar(pergunta.nome)]);
                 }
             });
         }
