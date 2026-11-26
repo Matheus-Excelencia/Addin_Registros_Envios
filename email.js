@@ -865,6 +865,7 @@ async function salvarEmail(event) {
             document.getElementById(
                 "realizadoPor"
             ).value.trim();
+        if (!realizadoPor) throw new Error("Informe o Realizado por.");
 
 
         const empresa =
