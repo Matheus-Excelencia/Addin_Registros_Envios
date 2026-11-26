@@ -40,14 +40,14 @@
         <div class="campo">
 
             <label for="realizadoPor">
-                Realizado por
+                Realizado por <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <input
                 type="text"
                 id="realizadoPor"
                 list="listaRealizadoPor"
-                placeholder="Realizado por">
+                placeholder="Realizado por" required aria-required="true">
 
             <datalist id="listaRealizadoPor"></datalist>
             <small id="statusUsuario" class="ajuda-usuario">Identificação automática do usuário Microsoft 365.</small>
@@ -57,7 +57,7 @@
         <div class="campo">
 
             <label for="empresa">
-                Empresa *
+                Empresa <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <input
@@ -74,7 +74,7 @@
         <div class="campo">
 
             <label for="qtde">
-                Qtde *
+                Qtde <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <input
@@ -90,7 +90,7 @@
         <div class="campo">
 
             <label for="emailResposta">
-                E-mail Resposta *
+                E-mail Resposta <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <input
@@ -107,7 +107,7 @@
         <div class="campo">
 
             <label for="supervisor">
-                Supervisor *
+                Supervisor <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <input
@@ -137,7 +137,7 @@
         <div class="campo">
 
             <label for="historicoExterno">
-                Histórico Externo *
+                Histórico Externo <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <textarea
@@ -151,7 +151,7 @@
         <div class="campo">
 
             <label for="mensagem">
-                Mensagem *
+                Mensagem <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <select id="mensagem" required>
@@ -183,7 +183,7 @@
         <div class="campo">
 
             <label for="assunto">
-                Assunto *
+                Assunto <span style="color:var(--brand-error,#b00020)" aria-hidden="true">*</span>
             </label>
 
             <input

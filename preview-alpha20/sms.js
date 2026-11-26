@@ -317,6 +317,7 @@ async function salvarSMS(event) {
 
     try {
         const realizadoPor = document.getElementById("realizadoPor").value.trim();
+        if (!realizadoPor) throw new Error("Informe o Realizado por.");
         const empresa = document.getElementById("empresa").value.trim();
         const qtde = document.getElementById("qtde").value.trim();
         const supervisor = document.getElementById("supervisor").value.trim();
