@@ -46,7 +46,14 @@ function renderizarPerguntasPersonalizadas() {
         wrapper.className = "campo";
         const label = document.createElement("label");
         label.htmlFor = "perguntaPersonalizada_" + i;
-        label.textContent = pergunta.nome + (pergunta.obrigatoria ? " *" : " (opcional)");
+        label.textContent = pergunta.nome;
+        if (pergunta.obrigatoria) {
+            const asterisco = document.createElement("span");
+            asterisco.textContent = " *";
+            asterisco.style.color = "var(--brand-error, #b00020)";
+            asterisco.setAttribute("aria-hidden", "true");
+            label.appendChild(asterisco);
+        }
         const input = document.createElement(pergunta.tipo === "text" ? "textarea" : pergunta.tipo === "bool" ? "select" : "input");
         input.id = "perguntaPersonalizada_" + i;
         input.dataset.pergunta = pergunta.nome;
