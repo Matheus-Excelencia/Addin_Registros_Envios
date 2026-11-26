@@ -1548,7 +1548,7 @@ async function atualizarConfig(
 }
 
 function preencherDuplicacao() {
-    const bruto = localStorage.getItem("registroDuplicado");
+    const bruto = (window.REGISTROS_DEMO?sessionStorage:localStorage).getItem("registroDuplicado");
     if (!bruto) return;
     try {
         const d = JSON.parse(bruto);
@@ -1566,9 +1566,9 @@ function preencherDuplicacao() {
         }
                 const opcao = mensagensEmail.find(item => item.texto === d.mensagem);
         if (opcao) { document.getElementById("mensagem").value = opcao.nome; mostrarTextoMensagem(); }
-        localStorage.removeItem("registroDuplicado");
+        (window.REGISTROS_DEMO?sessionStorage:localStorage).removeItem("registroDuplicado");
         mostrarStatus("Registro carregado para duplicação. Revise os dados antes de salvar.", "aviso");
-    } catch(e) { localStorage.removeItem("registroDuplicado"); }
+    } catch(e) { (window.REGISTROS_DEMO?sessionStorage:localStorage).removeItem("registroDuplicado"); }
 }
 
 function converterDuplicacao(p,v){if(v===null||v===undefined||v==="")return "";if(p.tipo==="bool")return v===true||v==="Sim"?"Sim":"Não";if(typeof v==="number"){if(p.formato==="percentual")return String(v*100).replace(".",",");if(p.tipo==="date"||p.tipo==="datetime"){const d=new Date(Date.UTC(1899,11,30)+Math.round(v*86400000));return d.toISOString().slice(0,p.tipo==="date"?10:16);}if(p.tipo==="time"){const m=Math.round(v*1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");}if(p.tipo==="float")return String(v).replace(".",",");}return String(v);}
