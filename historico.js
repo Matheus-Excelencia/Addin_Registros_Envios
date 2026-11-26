@@ -1,4 +1,4 @@
-let todos = [], registros = [], pronto = false;
+let todos = [], registros = [], pronto = false, visPerguntas = [];
 
 function iniciarHistorico() {
     if (pronto) return;
@@ -129,7 +129,7 @@ async function carregar() {
                 }
             }
 
-            if (!configRange.isNullObject) preencherListasConfig(configRange.values || []);
+            if (!configRange.isNullObject) preencherListasConfig(configRange.values || []); visPerguntas=QuestionVisibility.read(configRange.isNullObject?[]:configRange.values);
         });
 
         pesquisar();
@@ -240,7 +240,7 @@ function render() {
     const contador = document.getElementById("contador");
     if (!lista || !contador) return;
 
-    const ordenados = ordenar([...registros]);
+    let options=document.getElementById("historyVisibility");if(!options){options=document.createElement("div");options.id="historyVisibility";options.className="summary-options";lista.before(options)}QuestionVisibility.controls(options,visPerguntas,"historico",render);const ordenados = ordenar([...registros]);
     contador.textContent = ordenados.length + (ordenados.length === 1 ? " registro" : " registros");
     lista.innerHTML = "";
 
@@ -256,7 +256,7 @@ function render() {
             '<div><small>Realizado por</small>' + escapar(r.realizadoPor || "—") + '</div>' +
             '<div><small>Supervisor</small>' + escapar(r.supervisor || "—") + '</div>' +
             '<div><small>Qtde</small>' + escapar(r.qtde || "—") + '</div>' +
-            '<div><small>Valor</small>' + escapar(r.camposPersonalizados?.VALOR === "" || r.camposPersonalizados?.VALOR == null ? "—" : typeof r.camposPersonalizados.VALOR === "number" ? r.camposPersonalizados.VALOR.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : String(r.camposPersonalizados.VALOR)) + '</div>' +
+            visPerguntas.filter(q=>QuestionVisibility.enabled(q,"historico")&&(q.form==="ambos"||q.form===r.tipo.toLowerCase())).map(q=>'<div><small>'+escapar(q.name)+'</small>'+escapar(QuestionVisibility.format(q,r.camposPersonalizados[q.key]))+'</div>').join("") +
             '<div><small>Assunto</small>' + escapar(r.assunto || "—") + '</div>' +
             '<div class="campo-mensagem"><small>Mensagem</small><textarea class="mensagem-historico" readonly>' + escapar(r.mensagem || "—") + '</textarea></div>' +
             '<div><small>Histórico</small>' + escapar(r.historico || "—") + '</div>' +
