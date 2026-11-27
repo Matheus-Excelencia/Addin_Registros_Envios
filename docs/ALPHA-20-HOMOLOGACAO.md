@@ -1,5 +1,5 @@
 # Alpha 2.0 — homologação
-Identidade visual aprovada pelo usuário. Produção permanece Alpha 1.06; não mesclar sem autorização.
+Identidade visual aprovada pelo usuário. Alpha 2.0 publicada em janela controlada; liberação operacional ainda pendente.
 
 ## Desenvolvimento
 - Sincronizar HTML demonstrativo: `node scripts/sync-demo.cjs`. CSS e JS compartilhados. CI verifica divergências; não publica nem escreve na main.
@@ -14,7 +14,7 @@ Identidade visual aprovada pelo usuário. Produção permanece Alpha 1.06; não 
 - Demo: reiniciar, restaurar dados, repetir abertura, não chamar SSO.
 - Ambos os temas: contraste, responsividade e navegação.
 
-## Publicação (bloqueada)
+## Liberação operacional (bloqueada)
 Backup, PR, aprovação, merge, deploy e retorno da demo à main. Não usar manifesto de produção para validar código de branch.
 
 ## Segurança — evidência obrigatória antes de liberar uso operacional
@@ -44,3 +44,22 @@ O usuário informou todos os sete passos iniciais pendentes. Não há evidência
 
 ## Ocorrência de homologação isolada — 26/11/2026
 O usuário informou que o suplemento recusou abrir no Excel Web ao apontar para Vercel Preview. Causa provável: proteção Vercel/iframe; sem captura de erro HTTP do host Office, causa não confirmada. O usuário preferiu não insistir nesse ambiente. Não marcar como aprovado. Manter proteção Vercel e credenciais SSO existentes. Próxima alternativa: janela controlada no domínio oficial, somente com autorização, backup de dados, plano de reversão e suspensão de uso operacional. Ver [plano de publicação](PLANO-PUBLICACAO-ALPHA-20.md).
+
+## Resultado da homologação oficial — 26/11/2026
+Relato do responsável, não execução independente pelo assistente. Produção Vercel READY no SHA `99ae2e9da5b1e1842aa125fd8b4920e2a83868da` na consulta anterior a este registro documental. Checklist: 10 aprovados, 0 reprovados, 1 pendente.
+
+| Item | Resultado informado |
+|---|---|
+| Instalar manifesto 2.0.0.0 | Aprovado |
+| Grupo Excelência e botão Novo registro | Aprovado |
+| Identificação Microsoft SSO | Pendente |
+| Animação de boas-vindas | Aprovado |
+| Registro de E-mail | Aprovado |
+| Registro de SMS | Aprovado |
+| Histórico e duplicação | Aprovado |
+| Resumo e filtros | Aprovado |
+| Configurações | Aprovado |
+| Segurança das gravações | Aprovado |
+| Temas claro e escuro | Aprovado |
+
+A aprovação geral de segurança não fornece evidência individual de cada cenário da matriz (fórmulas, tipos, isolamento entre arquivos, expiração e canal); confirmar cobertura dos casos críticos sem expor dados de clientes. Para SSO, testar no Excel Web autenticado, no domínio oficial, com workbook fictício: abrir E-mail e SMS sem duplicar registro, conferir nome/conta automática e aviso de identificação, e confirmar fallback manual em condição de indisponibilidade quando possível. Não registrar tokens. Saudação personalizada depende do SSO, mas sua ausência isolada não comprova falha do SSO. Não liberar operadores nem executar rollback apenas por teste pendente. Aguardar confirmação de SSO, cobertura crítica e autorização final.
