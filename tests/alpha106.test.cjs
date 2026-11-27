@@ -1,3 +1,4 @@
+process.chdir(require('node:path').join(__dirname,'../public'));
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm');

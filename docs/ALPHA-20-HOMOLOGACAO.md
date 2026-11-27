@@ -29,3 +29,6 @@ Backup, PR, aprovação, merge, deploy e retorno da demo à main. Não usar mani
 | Ícones, manifesto, abertura, temas | Validação Excel Web | Pendente |
 
 Usar dados fictícios, ambiente HTTPS isolado e SSO próprio autorizado. Registrar navegador, commit e evidência. Liberar apenas após casos críticos aprovados e autorização. O manifesto de produção não valida a branch.
+
+## Estrutura e distribuição
+O código web está em `public/`; a Vercel publica seu conteúdo na raiz do domínio, sem alterar URLs existentes. O download oficial aponta para https://addin-registros-envios.vercel.app/manifest.xml, servido sem cache após publicação autorizada. Testes e documentos ficam fora da pasta publicada. Validar preview e produção separadamente; não confundir o XML da branch com o publicado.

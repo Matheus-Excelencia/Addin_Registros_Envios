@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/brand-registros.svg" width="96" alt="Registros de Envios">
+<img src="public/assets/brand-registros.svg" width="96" alt="Registros de Envios">
 
 # Registros de Envios
 
@@ -54,7 +54,7 @@ O Registros de Envios padroniza o registro operacional de campanhas de E-mail e 
 
 **Ambiente oficial:** Excel para a Web, com conta Microsoft 365 e permissão de edição no workbook.
 
-1. [Baixe o manifesto XML](https://raw.githubusercontent.com/Matheus-Excelencia/Addin_Registros_Envios/main/manifest.xml) (salve como `manifest.xml`, não como TXT).
+1. [Baixe o manifesto XML](https://addin-registros-envios.vercel.app/manifest.xml) (salve como `manifest.xml`, não como TXT).
 2. Abra o workbook corporativo no Excel Web.
 3. Acesse **Início → Suplementos → Avançado** ou **Inserir → Suplementos → Mais Suplementos**, conforme a interface disponível.
 4. Escolha **Carregar meu suplemento**, selecione o XML e confirme o carregamento.
@@ -120,30 +120,54 @@ A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores
 | [PR #13](../../pull/13) | 31 testes; homologação 28/30 |
 | [PR #14](../../pull/14) | [33 testes aprovados](../../actions/runs/45456326476); 20 itens manuais não validados |
 
-As suítes são cumulativas. A última homologação visual relatou que as melhorias não funcionaram como esperado; não há diagnóstico conclusivo. O fallback de inicialização Office.js ainda carece de teste específico e a revisão de logs de produção está pendente. A validação funcional anterior não substitui uma nova homologação.
+As suítes são cumulativas. [82 testes aprovados no marco de segurança Alpha 2.0](../../actions/runs/45918207334); a homologação real do Excel Web continua pendente. A validação automatizada não substitui o teste no host Office.
 
-## Desenvolvimento e manutenção
+## Organização do repositório e desenvolvimento
 
-| Arquivo / grupo | Finalidade |
+A raiz contém apenas configuração, documentação e ferramentas de desenvolvimento. A Vercel publica exclusivamente `public/`; os endereços existentes do Excel não mudam.
+
+```text
+.
+├── .github/workflows/    # Validação automatizada
+├── docs/                 # Segurança, homologação e manuais
+├── public/               # Arquivos web publicados
+│   ├── assets/           # Ícones e identidade visual
+│   ├── demo/             # Simulação com dados fictícios
+│   ├── manifest.xml      # Contrato Office
+│   ├── index.html        # Landing page
+│   └── ...               # Páginas e recursos do suplemento
+├── scripts/              # Sincronização da demonstração
+├── tests/                # Testes automatizados
+├── CONTRIBUTING.md
+├── README.md
+└── vercel.json
+```
+
+| Módulo (em public/) | Finalidade |
 |---|---|
-| manifest.xml | Integração, permissões, comandos e identidade |
-| taskpane.* | Menu e boas-vindas |
-| email.* / sms.* | Formulários e gravação |
-| perguntas.js | Regras compartilhadas de perguntas |
+| taskpane.* / novo.* | Menu e abertura |
+| email.* / sms.* / perguntas.js | Formulários e gravação |
 | config.* | Configurações |
-| brand.css / brand.js | Identidade visual e temas |
-| question-visibility.js | Regras de exibição no Histórico e Resumo |
-| demo/ | Ambiente demonstrativo com dados fictícios |
-| commands.* / assets/ | Comandos e ícones |
-| tests/alpha106.test.cjs | Suíte automatizada |
+| historico.* / resumo.* | Consulta e indicadores |
+| registro-security.js | Proteção de gravações e duplicação |
+| brand.* / question-visibility.js | Tema e regras de exibição |
+| commands.* / manifest.xml | Integração Office |
 
-Execute `node --test tests/*.test.cjs` na raiz do projeto com Node.js. Trabalhe em branch separada para alterações funcionais, valide o Excel Web, preserve manifesto e SSO, crie backup antes do merge autorizado e confira o deploy. Atualize parâmetros de cache quando necessário.
+Com Node.js 22, execute na raiz:
+
+```bash
+node scripts/sync-demo.cjs --check
+node --test tests/*.test.cjs
+```
+
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e publicação. O manifesto para usuários é sempre o da produção, não o arquivo bruto da branch.
 
 ## Documentação
 
 - [Manual Alpha 2.0 (rascunho)](docs/MAN-REG-001-ALPHA-20.md)
 - [Revisão de segurança](docs/ALPHA-20-SEGURANCA.md)
 - [Homologação](docs/ALPHA-20-HOMOLOGACAO.md)
+- [Política de atualização](docs/POLITICA-ATUALIZACAO.md)
 
 - [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS) (acesso corporativo).
 - DOC-REG-007 — Alpha 1.06: edição preparada para aprovação documental.

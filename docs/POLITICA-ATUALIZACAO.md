@@ -22,3 +22,6 @@ Incrementar a versão do manifesto e distribuir o XML atualizado quando houver m
 O domínio permanente ainda aponta para a produção atual até publicação autorizada. Um ambiente de teste real exige origem HTTPS e configuração Microsoft próprias; a demo não valida SSO.
 
 Referência: https://learn.microsoft.com/office/dev/add-ins/publish/maintain-breaking-changes
+
+## Estrutura e distribuição
+O código web está em `public/`; a Vercel publica seu conteúdo na raiz do domínio, sem alterar URLs existentes. O download oficial aponta para https://addin-registros-envios.vercel.app/manifest.xml, servido sem cache após publicação autorizada. Testes e documentos ficam fora da pasta publicada. Validar preview e produção separadamente; não confundir o XML da branch com o publicado.

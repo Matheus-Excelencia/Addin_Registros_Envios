@@ -17,3 +17,6 @@ Os ícones PNG de 16, 32 e 80 px foram atualizados na branch, seguindo a geometr
 
 ## Atualizações futuras
 Após a instalação do manifesto 2.0.0.0, melhorias publicadas no mesmo endereço HTTPS (HTML, CSS, JS e dados de configuração) não exigem nova instalação. Reabra o painel ou atualize o Excel Web se necessário. Ícones podem permanecer em cache; reabra o Office ou limpe o cache conforme orientação Microsoft. Alterações no próprio XML exigem incremento da versão e atualização/reimplantação conforme o método de instalação. Preserve o ID do suplemento, domínio, URLs de entrada e configuração SSO.
+
+## Estrutura e distribuição
+O código web está em `public/`; a Vercel publica seu conteúdo na raiz do domínio, sem alterar URLs existentes. O download oficial aponta para https://addin-registros-envios.vercel.app/manifest.xml, servido sem cache após publicação autorizada. Testes e documentos ficam fora da pasta publicada. Validar preview e produção separadamente; não confundir o XML da branch com o publicado.
