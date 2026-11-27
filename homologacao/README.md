@@ -15,3 +15,6 @@
 O WebApplicationInfo de produção não pode ser reutilizado com o domínio de preview. O teste exige app Entra separado, Resource e consentimento configurados pelo responsável autorizado para validar SSO real em outra origem. Nesta fase não há credenciais fictícias nem alteração no app de produção. Não desativar Deployment Protection globalmente. Se o Office não carregar o preview protegido, avaliar acesso restrito específico com administrador; não promover o preview para produção.
 
 O manifesto de homologação fica fora de public/ para não ser publicado no site oficial. O alias acompanha a branch; para evidência de teste use o SHA do deploy registrado. A URL de produção e o manifesto oficial permanecem os mesmos.
+
+## Resultado relatado
+26/11/2026: Excel recusou carregar o suplemento apontado ao preview. Homologação isolada suspensa por decisão do usuário; causa provável proteção/iframe, não comprovada. Não remover proteção nem reutilizar SSO de produção. Alternativa condicionada: [publicação controlada](../docs/PLANO-PUBLICACAO-ALPHA-20.md).

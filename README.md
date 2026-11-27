@@ -189,3 +189,6 @@ Uso corporativo · Alpha 2.0 em desenvolvimento
 
 ## Homologação isolada
 [Instruções e manifesto exclusivo de teste](homologacao/README.md). Use apenas dados fictícios. O preview é protegido; SSO de produção não é reutilizado.
+
+## Preparação para lançamento
+[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação oficial e uso operacional ainda não autorizados.

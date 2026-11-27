@@ -17,5 +17,17 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/preview-alpha20",
+      "destination": "/demo/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/preview-alpha20/:path*",
+      "destination": "/:path*",
+      "permanent": false
+    }
   ]
 }
