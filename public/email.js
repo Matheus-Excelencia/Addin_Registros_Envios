@@ -1358,7 +1358,7 @@ async function atualizarConfig(
 
 
     const usado =
-        folha.getUsedRangeOrNullObject();
+        folha.getUsedRangeOrNullObject(true);
 
 
     usado.load([
@@ -1421,87 +1421,12 @@ async function atualizarConfig(
 
 
     for (const campo of campos) {
-
-        if (!campo.valor)
-            continue;
-
-
-        const coluna =
-            obterIndice(
-                info.mapa,
-                campo.nomes
-            );
-
-
-        if (coluna === -1)
-            continue;
-
-
-        let linhaDestino =
-            info.linha + 1;
-
-
-        while (
-            linhaDestino <
-                usado.values.length &&
-            String(
-                usado.values[
-                    linhaDestino
-                ][coluna] || ""
-            ).trim() !== ""
-        ) {
-
-            linhaDestino++;
-        }
-
-
-        const existentes = [];
-
-
-        for (
-            let linha =
-                info.linha + 1;
-            linha < usado.values.length;
-            linha++
-        ) {
-
-            existentes.push(
-                String(
-                    usado.values[
-                        linha
-                    ][coluna] || ""
-                ).trim()
-            );
-        }
-
-
-        const existe =
-            existentes.some(
-                function (valor) {
-                    return (
-                        normalizar(valor) ===
-                        normalizar(
-                            campo.valor
-                        )
-                    );
-                }
-            );
-
-
-        if (existe)
-            continue;
-
-
-        folha
-            .getRangeByIndexes(
-                usado.rowIndex + linhaDestino,
-                usado.columnIndex + coluna,
-                1,
-                1
-            )
-            .values = [
-                [RegistroSecurity.cell(campo.valor)]
-            ];
+        if (!campo.valor) continue;
+        const coluna = obterIndice(info.mapa, campo.nomes);
+        if (coluna === -1) continue;
+        const existe = usado.values.slice(info.linha + 1).some(linha => normalizar(linha[coluna]) === normalizar(campo.valor));
+        if (existe) continue;
+        gravarCadastroOrdenado(folha, usado, info, [coluna], [campo.valor]);
     }
 }
 

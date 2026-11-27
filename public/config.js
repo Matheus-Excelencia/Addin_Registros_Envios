@@ -132,35 +132,6 @@ async function adicionarPergunta(){
  } finally {cadastrandoPergunta=false;botao.disabled=false;}
 }
 // Cada lista de Config é independente; mensagens são ordenadas pelo nome, junto do texto.
-function ordenarCadastroConfig(valores, primeiraLinha, colunas, novo){
- const linhas=[];
- for(let i=primeiraLinha;i<valores.length;i++){
-  const dados=colunas.map(c=>valores[i]?.[c]??"");
-  if(dados.some(v=>String(v).trim()!==""))linhas.push(dados);
- }
- linhas.push(novo);
- const collator=new Intl.Collator("pt-BR",{sensitivity:"base",numeric:true});
- linhas.sort((a,b)=>{
-  const x=String(a[0]).trim(),y=String(b[0]).trim();
-  if(!x||!y)return x? -1:y?1:0;
-  return collator.compare(x,y);
- });
- return linhas;
-}
-function gravarCadastroOrdenado(sh,u,h,colunas,novo){
- const primeira=h.linha+1;
- const linhas=ordenarCadastroConfig(u.values,primeira,colunas,novo);
- let ultima=primeira-1;
- for(let i=primeira;i<u.values.length;i++){
-  if(colunas.some(c=>String(u.values[i]?.[c]??"").trim()!==""))ultima=i;
- }
- const quantidade=Math.max(linhas.length,ultima-primeira+1);
- for(const [j,col] of colunas.entries()){
-  const range=sh.getRangeByIndexes(u.rowIndex+primeira,u.columnIndex+col,quantidade,1);
-  range.values=Array.from({length:quantidade},(_,i)=>[RegistroSecurity.cell(linhas[i]?.[j]??"")]);
-  range.format.wrapText=false;
- }
-}
 async function adicionarCadastro(){
  const valor=document.getElementById("valorCadastro").value.trim(),tipo=document.getElementById("tipoCadastro").value;
  if(!valor)return status("Informe o valor.",false,"valorCadastro");

@@ -544,7 +544,7 @@ function obterProximaLinhaDados(usado, quantidadeColunasEsperadas) {
 
 async function atualizarConfigSMS(context, dados) {
     const folha = context.workbook.worksheets.getItem("Config");
-    const usado = folha.getUsedRangeOrNullObject();
+    const usado = folha.getUsedRangeOrNullObject(true);
     usado.load(["values", "isNullObject", "rowIndex", "columnIndex"]);
     await context.sync();
     if (usado.isNullObject) return;
@@ -562,22 +562,9 @@ async function atualizarConfigSMS(context, dados) {
         if (!campo.valor) continue;
         const coluna = obterIndice(info.mapa, campo.nomes);
         if (coluna === -1) continue;
-
-        let existe = false;
-        for (let linha = info.linha + 1; linha < usado.values.length; linha++) {
-            if (normalizar(usado.values[linha][coluna]) === normalizar(campo.valor)) {
-                existe = true;
-                break;
-            }
-        }
+        const existe = usado.values.slice(info.linha + 1).some(linha => normalizar(linha[coluna]) === normalizar(campo.valor));
         if (existe) continue;
-
-        let linhaDestino = info.linha + 1;
-        while (linhaDestino < usado.values.length && String(usado.values[linhaDestino][coluna] || "").trim() !== "") {
-            linhaDestino++;
-        }
-
-        folha.getRangeByIndexes(usado.rowIndex + linhaDestino, usado.columnIndex + coluna, 1, 1).values = [[RegistroSecurity.cell(campo.valor)]];
+        gravarCadastroOrdenado(folha, usado, info, [coluna], [campo.valor]);
     }
 }
 

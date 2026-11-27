@@ -15,3 +15,32 @@ const RegistroSecurity=(()=>{
  async function take(type){let raw;try{raw=sessionStorage.getItem(KEY);sessionStorage.removeItem(KEY)}catch{return null}if(!raw)return null;try{const e=JSON.parse(raw);if(e.version!==1||!Number.isFinite(e.expires)||e.expires<=Date.now()||e.expires>Date.now()+TTL||e.payload?.tipo!==type)return null;const workbook=await scope();return workbook&&workbook===e.workbook&&e.expires>Date.now()?e.payload:null}catch{return null}}
  return Object.freeze({cell,scope,store,take,clear});
 })();
+function ordenarCadastroConfig(valores, primeiraLinha, colunas, novo){
+ const linhas=[];
+ for(let i=primeiraLinha;i<valores.length;i++){
+  const dados=colunas.map(c=>valores[i]?.[c]??"");
+  if(dados.some(v=>String(v).trim()!==""))linhas.push(dados);
+ }
+ linhas.push(novo);
+ const collator=new Intl.Collator("pt-BR",{sensitivity:"base",numeric:true});
+ linhas.sort((a,b)=>{
+  const x=String(a[0]).trim(),y=String(b[0]).trim();
+  if(!x||!y)return x? -1:y?1:0;
+  return collator.compare(x,y);
+ });
+ return linhas;
+}
+function gravarCadastroOrdenado(sh,u,h,colunas,novo){
+ const primeira=h.linha+1;
+ const linhas=ordenarCadastroConfig(u.values,primeira,colunas,novo);
+ let ultima=primeira-1;
+ for(let i=primeira;i<u.values.length;i++){
+  if(colunas.some(c=>String(u.values[i]?.[c]??"").trim()!==""))ultima=i;
+ }
+ const quantidade=Math.max(linhas.length,ultima-primeira+1);
+ for(const [j,col] of colunas.entries()){
+  const range=sh.getRangeByIndexes(u.rowIndex+primeira,u.columnIndex+col,quantidade,1);
+  range.values=Array.from({length:quantidade},(_,i)=>[RegistroSecurity.cell(linhas[i]?.[j]??"")]);
+  range.format.wrapText=false;
+ }
+}

@@ -13,7 +13,7 @@ test('Canal diferente',async()=>{const e=env();await e.store('sms');assert.equal
 test('Legado descartado',async()=>{const e=env();e.map.set('registroDuplicado',JSON.stringify({tipo:'email'}));assert.equal(await e.api.take('email'),null);assert.equal(e.map.size,0)});
 test('Demo e Office separados',async()=>{const e=env('',true);await e.store('email');e.c.window.REGISTROS_DEMO=false;e.change('https://tenant.sharepoint.com/workbook.xlsx');assert.equal(await e.api.take('email'),null)});
 test('URL não gravada',async()=>{const e=env();await e.store('email');assert.doesNotMatch(e.map.get('registroDuplicado'),/sharepoint\.com/)});
-for(const p of ['email','sms'])test('Gravação protegida '+p,()=>{const s=fs.readFileSync(p+'.js','utf8');assert.match(s,/intervaloRegistro\.values = \[valores\.map\(RegistroSecurity\.cell\)\]/);assert.match(s,/RegistroSecurity\.cell\(campo\.valor\)/);assert.match(s,/await RegistroSecurity\.take/);assert.doesNotMatch(s,/console\.error\(erro\)/)});
+for(const p of ['email','sms'])test('Gravação protegida '+p,()=>{const s=fs.readFileSync(p+'.js','utf8');assert.match(s,/intervaloRegistro\.values = \[valores\.map\(RegistroSecurity\.cell\)\]/);assert.match(s,/gravarCadastroOrdenado\(folha, usado, info, \[coluna\], \[campo\.valor\]\)/);assert.match(s,/await RegistroSecurity\.take/);assert.doesNotMatch(s,/console\.error\(erro\)/)});
 test('Config protege gravações',()=>{
  const s=fs.readFileSync('config.js','utf8'),e=env();
  e.c.Office.onReady=()=>{};e.c.document={};
@@ -39,3 +39,26 @@ test('Config protege gravações',()=>{
 });
 test('Cabeçalho protegido',()=>assert.match(fs.readFileSync('perguntas.js','utf8'),/\[\[RegistroSecurity\.cell\(resposta\.nome\)\]\]/));
 for(const p of ['email','sms','config','historico'])test('Helper carregado '+p,()=>{const s=fs.readFileSync(p+'.html','utf8');assert.ok(s.indexOf('registro-security.js')>=0&&s.indexOf('registro-security.js')<s.indexOf(p+'.js?'))});
+
+for(const canal of ['email','sms'])test('Config ordenada pelo formulário '+canal,async()=>{
+ const e=env(),writes=[];
+ const s=fs.readFileSync(canal+'.js','utf8');
+ const nome=canal==='email'?'atualizarConfig':'atualizarConfigSMS';
+ const trecho=s.slice(s.indexOf('async function '+nome+'('),s.indexOf('async function preencherDuplicacao'));
+ const usado={values:[['EMPRESAS','EMAIL RESPOSTA','SUPERVISORES','REALIZADO POR','OUTRA'],['Zeta','z@exemplo.com','Zoe','Zoe','intacto'],['Água','a@exemplo.com','Ana','Ana','intacto']],rowIndex:2,columnIndex:1,isNullObject:false,load(){}};
+ const folha={getUsedRangeOrNullObject(){return usado},getRangeByIndexes(row,col,height,width){const r={row,col,height,width,format:{}};writes.push(r);return r}};
+ e.c.context={workbook:{worksheets:{getItem(){return folha}}},sync:async()=>{}};
+ e.c.dados={empresa:'Beta',emailResposta:'b@exemplo.com',supervisor:'Bruno',realizadoPor:'Bruno'};
+ e.c.encontrarCabecalho=()=>({linha:0,mapa:Object.fromEntries(usado.values[0].map((v,i)=>[v,i]))});
+ e.c.obterIndice=(mapa,nomes)=>nomes.map(n=>mapa[n]).find(v=>v!==undefined)??-1;
+ e.c.normalizar=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();
+ vm.runInContext(trecho,e.c);
+ await vm.runInContext(nome+'(context,dados)',e.c);
+ assert.deepEqual(writes.map(r=>r.col),canal==='email'?[1,2,3,4]:[1,3,4]);
+ assert.equal(JSON.stringify(writes[0].values),JSON.stringify([['Água'],['Beta'],['Zeta']]));
+ for(const r of writes){assert.equal(r.row,3);assert.equal(r.height,3);assert.equal(r.width,1);assert.equal(r.format.wrapText,false)}
+ if(canal==='email')assert.equal(JSON.stringify(writes[1].values),JSON.stringify([['a@exemplo.com'],['b@exemplo.com'],['z@exemplo.com']]));
+ assert.equal(JSON.stringify(writes.at(-1).values),JSON.stringify([['Ana'],['Bruno'],['Zoe']]));
+ writes.length=0;e.c.dados={empresa:'agua',supervisor:'Ana',realizadoPor:'Ana',emailResposta:'a@exemplo.com'};
+ await vm.runInContext(nome+'(context,dados)',e.c);assert.equal(writes.length,0);
+});
