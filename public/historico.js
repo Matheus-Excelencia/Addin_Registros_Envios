@@ -78,6 +78,7 @@ function dataNumero(v) {
 }
 
 async function carregar() {
+    await PersonalPrefs.init();
     const carregando = document.getElementById("status");
     if (carregando) {
         carregando.textContent = "● Carregando histórico...";

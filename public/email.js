@@ -31,6 +31,7 @@ Office.onReady(async function () {
         .getElementById("mensagem")
         .addEventListener("change", mostrarTextoMensagem);
 
+    await PersonalPrefs.init();
     prepararLog();
 
     await carregarDados();
@@ -58,14 +59,13 @@ function prepararLog() {
 }
 
 
-function atualizarLog() {
+function atualizarLog(){
  const texto=statusLog[statusLog.length-1]||"";
  if(/SSO/.test(texto))return;
- const el=document.getElementById("mensagemStatus");
+ const box=document.getElementById("configLog");
+ if(box){box.hidden=false;box.textContent=statusLog.filter(x=>!/SSO/.test(x)).join("\n");}
  const campo=/Empresas/.test(texto)?"empresa":/E-mails/.test(texto)?"emailResposta":/Supervisores/.test(texto)?"supervisor":/Realizado por/.test(texto)?"realizadoPor":/Mensagens/.test(texto)?"mensagem":null;
- if(texto.startsWith("⚠")&&campo){Feedback.field(campo,"Nenhuma opção cadastrada. Confira Configurações.");return;}
- if(texto.startsWith("⚠"))Feedback.notice(el,texto,"erro");
- else if(!el?.classList.contains("erro"))Feedback.notice(el,texto,"aviso");
+ if(texto.startsWith("⚠")&&campo)Feedback.field(campo,"Nenhuma opção cadastrada. Confira Configurações.");
 }
 
 function adicionarLog(texto) {
@@ -77,7 +77,7 @@ function adicionarLog(texto) {
 
 
 function limparStatus() {
- statusLog=[];Feedback.clear(document.getElementById("mensagemStatus"));Feedback.clearFields();
+ Feedback.clear(document.getElementById("mensagemStatus"));Feedback.clearFields();
 }
 
 function mostrarStatus(texto,tipo) {

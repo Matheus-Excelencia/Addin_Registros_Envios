@@ -2,7 +2,7 @@
 let perguntasPersonalizadas = [{nome:"Qual valor total dos processos?", coluna:"Valor", formato:"contabil", tipo:"float", obrigatoria:false}];
 let ordemFormularioSalva = {};
 function carregarPerguntasPersonalizadas(valores, info) {
-    if(typeof FormLayout!=="undefined") ordemFormularioSalva=FormLayout.read(valores,info);
+    if(typeof PersonalPrefs!=="undefined") ordemFormularioSalva={email:PersonalPrefs.getOrder("email"),sms:PersonalPrefs.getOrder("sms")};
     const iPergunta = obterIndice(info.mapa, ["PERGUNTA PERSONALIZADA"]);
     const iFormulario = obterIndice(info.mapa, ["FORMULARIO"]);
     const iTipo = obterIndice(info.mapa, ["TIPO RESPOSTA"]);
