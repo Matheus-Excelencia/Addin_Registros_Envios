@@ -177,7 +177,7 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 - [Política de atualização](docs/POLITICA-ATUALIZACAO.md)
 
 - [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS) (acesso corporativo).
-- DOC-REG-007 — revisão Alpha 2.1.5 autorizada pelo responsável; envio ao SharePoint pendente.
+- DOC-REG-008 — emissão Alpha 2.1.5 autorizada pelo responsável; envio ao SharePoint pendente.
 - [Aplicação hospedada](https://addin-registros-envios.vercel.app/).
 - [Histórico de commits](../../commits/main).
 
@@ -220,4 +220,11 @@ Uso corporativo · Alpha 2.1.5 — aceite funcional registrado
 
 ## Autorização do responsável — 27/11/2026
 
-O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-007 e MAN-REG-001 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.
+O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-008 e MAN-REG-002 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.
+
+## Numeração das emissões corporativas — Alpha 2.1.5
+
+- DOC-REG-008 — Documentação Técnica Profissional, sucessora da DOC-REG-007 (Alpha 1.06).
+- MAN-REG-002 — Manual de Instalação, sucessor do MAN-REG-001 (Alpha 1.06).
+- Ambas as novas emissões estão preparadas em DOCX e PDF. As anteriores permanecem preservadas. Publicação no SharePoint ainda não confirmada.
+- O caminho histórico deste manual Markdown no GitHub permanece estável para preservar links existentes; a numeração corporativa vigente é MAN-REG-002.
