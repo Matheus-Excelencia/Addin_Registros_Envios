@@ -186,3 +186,6 @@ Responsabilidade técnica: Matheus Passos
 Uso corporativo · Alpha 2.0 em desenvolvimento
 
 </div>
+
+## Homologação isolada
+[Instruções e manifesto exclusivo de teste](homologacao/README.md). Use apenas dados fictícios. O preview é protegido; SSO de produção não é reutilizado.

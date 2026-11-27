@@ -35,3 +35,6 @@ O código web está em `public/`; a Vercel publica seu conteúdo na raiz do dom�
 
 ## Nomenclatura aprovada
 Suplemento: Registra. Guia Início, grupo Excelência, botão Novo registro. O workbook `Registros de Envios.xlsx`, os identificadores do Office, as URLs públicas e a configuração SSO permanecem inalterados. A versão 2.0.0.0 do XML continua reservada para a primeira publicação da Alpha 2.0.
+
+## Ambiente de homologação preparado
+Alias: https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/. Preview anterior 0478910 READY, verificado por HTTP autenticado: landing, taskpane, demo, manifesto, módulo de segurança e PNG disponíveis (200); documento fora de public/ retorna 404. Manifesto separado em [homologacao/manifest-homologacao.xml](../homologacao/manifest-homologacao.xml), ID distinto, SSO desativado, identificação manual. Proteção Vercel preservada. Acesso no iframe Office, visual renderizado, validação funcional real e SSO de teste continuam pendentes. Nenhuma publicação oficial.

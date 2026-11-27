@@ -43,6 +43,7 @@ async function iniciarBoasVindas(){
  greeting.textContent=demo?"Bem-vindo,":"Bem-vindo!";name.textContent=demo?"Demo!":"";message.textContent="Estávamos esperando por você.";
  if(demo)document.querySelector(".welcome-version").textContent="ALPHA 2.0 · AMBIENTE DEMONSTRATIVO";
  tela.style.setProperty("--duracao","7000ms");tela.hidden=false;timer=setTimeout(close,7000);
+ if(window.REGISTROS_HOMOLOGACAO===true){document.querySelector(".welcome-version").textContent="ALPHA 2.0 · HOMOLOGAÇÃO SEM SSO";return;}
  if(demo)return;
  try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800)})]);if(closed)return;const t=textoBoasVindas(dadosBoasVindas(token));greeting.textContent=t.saudacao+(t.nome?",":"!");name.textContent=t.nome;message.textContent=t.mensagem||"Estávamos esperando por você.";if(t.mensagem){tela.style.setProperty("--duracao","9500ms");clearTimeout(timer);timer=setTimeout(close,9500);}}catch{}finally{clearTimeout(timeout);}
 }
