@@ -65,6 +65,11 @@
 
 Não há pendência funcional conhecida no escopo homologado. A aprovação de DEV-002 não transforma gravações do Excel em transações atômicas; mantém-se o risco residual de concorrência e a necessidade de backup e recuperação. A aprovação de SSO não substitui permissões do Microsoft 365. A matriz anterior da Alpha 2.0 permanece como histórico; não se presumem evidências individuais adicionais além dos itens declarados acima.
 
-A documentação técnica no GitHub está consolidada. A aprovação formal do DOC-REG-007, a revisão documental corporativa, a publicação dos documentos na pasta oficial SharePoint e a autorização explícita de distribuição/reabertura operacional (caso ainda não registrada externamente) dependem do responsável autorizado. Não houve acesso ou alteração ao SharePoint neste encerramento.
+A documentação técnica no GitHub está consolidada. A aprovação documental e a autorização explícita de distribuição/reabertura foram concedidas pelo responsável em 27/11/2026. Publicação dos Word na pasta SharePoint pendente de acesso e confirmação; não houve alteração no SharePoint.
 
 Preenchimento automático de perguntas personalizadas pertence à Alpha 3.0 e está fora desta entrega. A proposta de carro de F1/som foi descartada. Não implementar nem alterar o roadmap nesta atualização.
+
+
+## Autorização do responsável — 27/11/2026
+
+O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-007 e MAN-REG-001 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.

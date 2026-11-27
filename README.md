@@ -20,7 +20,7 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 
 </div>
 
-> **Alpha 2.1.5 — homologação funcional aprovada pelo responsável em 27/11/2026.** 31/31 validações manuais declaradas e 132/132 testes automatizados aprovados. Documentação corporativa e autorização de distribuição/reabertura, se ainda não registrada, permanecem sob responsabilidade do gestor. Backup Alpha 1.06 preservado.
+> **Alpha 2.1.5 — homologação funcional aprovada pelo responsável em 27/11/2026.** 31/31 validações manuais declaradas e 132/132 testes automatizados aprovados. Aprovação documental e distribuição autorizadas pelo responsável; envio ao SharePoint pendente. Backup Alpha 1.06 preservado.
 
 ## Visão geral
 
@@ -169,7 +169,7 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 
 ## Documentação
 
-- [Manual Alpha 2.1.5 (revisão corporativa pendente)](docs/MAN-REG-001-ALPHA-20.md)
+- [Manual Alpha 2.1.5 (autorizado; envio ao SharePoint pendente)](docs/MAN-REG-001-ALPHA-20.md)
 - [Revisão de segurança](docs/ALPHA-20-SEGURANCA.md)
 - [Homologação histórica Alpha 2.0](docs/ALPHA-20-HOMOLOGACAO.md)
 - [Homologação final Alpha 2.1.5](docs/ALPHA-215-HOMOLOGACAO-FINAL.md)
@@ -177,7 +177,7 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 - [Política de atualização](docs/POLITICA-ATUALIZACAO.md)
 
 - [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS) (acesso corporativo).
-- DOC-REG-007 — Alpha 1.06: edição preparada para aprovação documental.
+- DOC-REG-007 — revisão Alpha 2.1.5 autorizada pelo responsável; envio ao SharePoint pendente.
 - [Aplicação hospedada](https://addin-registros-envios.vercel.app/).
 - [Histórico de commits](../../commits/main).
 
@@ -195,7 +195,7 @@ Uso corporativo · Alpha 2.1.5 — aceite funcional registrado
 [Instruções e manifesto exclusivo de teste](homologacao/README.md). Use apenas dados fictícios. O preview é protegido; SSO de produção não é reutilizado.
 
 ## Preparação para lançamento
-[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação controlada autorizada. Aceite funcional registrado; autorização de distribuição/reabertura permanece separada.
+[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação controlada autorizada. Aceite funcional e autorização de distribuição/reabertura registrados.
 
 ## Licença
 
@@ -216,3 +216,8 @@ Uso corporativo · Alpha 2.1.5 — aceite funcional registrado
 - Cadastros realizados em Configurações ou nos formulários E-mail/SMS são ordenados por lista, em português brasileiro, a cada inclusão de valor novo. Campos existentes não são duplicados.
 - Mensagens são ordenadas pelo nome, mantendo o texto correspondente; `wrapText` é desativado nos intervalos atualizados, sem remover quebras de linha inseridas no texto. Edições manuais diretamente na planilha não disparam a ordenação.
 - A página inicial e o artigo possuem botão de retorno ao topo; layout e temas restaurados e aprovados.
+
+
+## Autorização do responsável — 27/11/2026
+
+O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-007 e MAN-REG-001 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.

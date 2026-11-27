@@ -14,3 +14,8 @@ Referências: https://learn.microsoft.com/javascript/api/excel/excel.range ; htt
 
 ## Revisão pré-release
 O manifesto mantém ID, Resource, escopos e URLs da produção. O código novo será carregado também por instalações antigas; mudança de rótulos exige atualizar XML, mas não é barreira de acesso à nova versão. Riscos não resolvidos: sem validação real de Range.values/formulas, sem prova de isolamento no host e de SSO, concorrência sem transação e backup de dados operacional não confirmado. Exigir suspensão da operação e aceite do responsável antes de testar no domínio oficial. Rollback de código não reverte dados. Não tratar a revisão como certificação.
+
+
+## Autorização do responsável — 27/11/2026
+
+O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-007 e MAN-REG-001 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.

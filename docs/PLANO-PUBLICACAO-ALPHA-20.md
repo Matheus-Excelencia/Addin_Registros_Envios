@@ -41,3 +41,8 @@ Referências: https://vercel.com/docs/deployments/instant-rollback ; https://lea
 
 ## Registro da janela controlada — 26/11/2026
 O usuário confirmou backup da planilha operacional, suspensão do uso e autorização de publicação controlada e rollback. O estado do GitHub/Vercel já mostrava o merge 02097fee6cf4ccc8a7a69908fc01772306fc8232 e deploy dpl_PtWbm6zpff9wxSfrHRMTNQmZDgbR READY. Não repetir merge; revisar o candidato atualizado antes de disponibilizar aos operadores. A confirmação de backup é declarada pelo responsável, não verificada por acesso ao SharePoint.
+
+
+## Autorização do responsável — 27/11/2026
+
+O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-007 e MAN-REG-001 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.

@@ -17,3 +17,8 @@ A rotina lê e regrava a lista afetada; não oferece transação atômica entre 
 - Manifesto 2.0.0.0, produto Alpha 2.1.5, identidade Office, SSO e código funcional preservados.
 
 Consulte [matriz final](ALPHA-215-HOMOLOGACAO-FINAL.md). Pendências externas: aprovação e publicação documental no SharePoint, DOC-REG-007 e eventual autorização de distribuição/reabertura. Preenchimento automático de perguntas personalizadas pertence à Alpha 3.0 e não integra esta entrega.
+
+
+## Autorização do responsável — 27/11/2026
+
+O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-007 e MAN-REG-001 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.
