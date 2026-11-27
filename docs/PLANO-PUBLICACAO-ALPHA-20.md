@@ -1,6 +1,6 @@
 # Registra Alpha 2.0 — Plano de publicação e rollback
 
-**Status: NÃO AUTORIZADO PARA PUBLICAÇÃO.** Preparação técnica; homologação Excel Web real bloqueada no preview. Nenhum merge, promoção ou rollback executado em produção.
+**Status: publicação controlada autorizada; uso operacional ainda bloqueado.** Marco original de preparação: NÃO AUTORIZADO PARA PUBLICAÇÃO. O usuário confirmou backup de dados e suspensão de uso. Deploy de lançamento 02097fe confirmado READY. Homologação real permanece pendente; nenhum rollback executado.
 
 ## Evidências e baseline
 - Produção Alpha 1.06: commit `aa438e4dafdc6d02cd3abe9c39aaa474cf12d91c`.
@@ -35,3 +35,6 @@ Falha de carregamento, SSO incompatível sem contingência, perda/corrupção de
 5. Reabrir operação somente após responsável aprovar a verificação; registrar incidente, preservar logs e replanejar nova release.
 
 Referências: https://vercel.com/docs/deployments/instant-rollback ; https://learn.microsoft.com/office/dev/add-ins/publish/maintain-breaking-changes
+
+## Registro da janela controlada — 26/11/2026
+O usuário confirmou backup da planilha operacional, suspensão do uso e autorização de publicação controlada e rollback. O estado do GitHub/Vercel já mostrava o merge 02097fee6cf4ccc8a7a69908fc01772306fc8232 e deploy dpl_PtWbm6zpff9wxSfrHRMTNQmZDgbR READY. Não repetir merge; revisar o candidato atualizado antes de disponibilizar aos operadores. A confirmação de backup é declarada pelo responsável, não verificada por acesso ao SharePoint.
