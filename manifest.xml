@@ -8,12 +8,12 @@
   xsi:type="TaskPaneApp">
 
   <Id>8f4a2e7d-5c71-4b1a-9f36-3b8f0c7d2146</Id>
-  <Version>1.0.0.0</Version>
+  <Version>2.0.0.0</Version>
   <ProviderName>Excelência Cobrança</ProviderName>
   <DefaultLocale>pt-BR</DefaultLocale>
 
   <DisplayName DefaultValue="Registros de Envios"/>
-  <Description DefaultValue="Painel para registrar envios de E-mail e SMS."/>
+  <Description DefaultValue="Painel corporativo para registro, consulta e acompanhamento de envios de E-mail e SMS."/>
 
   <IconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-80.png"/>
