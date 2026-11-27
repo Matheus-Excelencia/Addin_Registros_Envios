@@ -1,6 +1,8 @@
 /* PERGUNTAS PERSONALIZADAS CONFIGURADAS NA ABA CONFIG */
 let perguntasPersonalizadas = [{nome:"Qual valor total dos processos?", coluna:"Valor", formato:"contabil", tipo:"float", obrigatoria:false}];
+let ordemFormularioSalva = {};
 function carregarPerguntasPersonalizadas(valores, info) {
+    if(typeof FormLayout!=="undefined") ordemFormularioSalva=FormLayout.read(valores,info);
     const iPergunta = obterIndice(info.mapa, ["PERGUNTA PERSONALIZADA"]);
     const iFormulario = obterIndice(info.mapa, ["FORMULARIO"]);
     const iTipo = obterIndice(info.mapa, ["TIPO RESPOSTA"]);
@@ -40,10 +42,11 @@ function carregarPerguntasPersonalizadas(valores, info) {
 function renderizarPerguntasPersonalizadas() {
     const area = document.getElementById("perguntasPersonalizadas");
     if (!area) return;
-    area.innerHTML = "";
+    if(typeof FormLayout!=="undefined") area.querySelectorAll("[data-dynamic-field]").forEach(el=>el.remove()); else area.innerHTML = "";
     perguntasPersonalizadas.forEach((pergunta, i) => {
         const wrapper = document.createElement("div");
         wrapper.className = "campo";
+        if(typeof FormLayout!=="undefined"){wrapper.dataset.dynamicField="true";wrapper.dataset.layoutKey=FormLayout.customKey(pergunta.coluna);}
         const label = document.createElement("label");
         label.htmlFor = "perguntaPersonalizada_" + i;
         label.textContent = pergunta.nome;
@@ -80,6 +83,7 @@ function renderizarPerguntasPersonalizadas() {
         wrapper.appendChild(input);
         area.appendChild(wrapper);
     });
+    if(typeof FormLayout!=="undefined") FormLayout.apply(area.closest("form"),area,perguntasPersonalizadas,TIPO_FORMULARIO,ordemFormularioSalva);
 }
 function coletarRespostasPersonalizadas() {
     const respostas = [];

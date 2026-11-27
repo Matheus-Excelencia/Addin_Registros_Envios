@@ -18,7 +18,7 @@ Office.onReady(async function () {
 
     prepararLog();
     await carregarDados();
-    if (!document.getElementById("perguntasPersonalizadas").children.length) renderizarPerguntasPersonalizadas();
+    if (!document.querySelector("#perguntasPersonalizadas [data-dynamic-field]")) renderizarPerguntasPersonalizadas();
     await preencherDuplicacao();
 });
 
@@ -357,7 +357,7 @@ async function salvarSMS(event) {
         document.getElementById("formSms").reset();
         document.getElementById("mensagem").selectedIndex = 0;
         document.getElementById("textoMensagem").value = "";
-        document.querySelectorAll("#perguntasPersonalizadas input, #perguntasPersonalizadas textarea, #perguntasPersonalizadas select").forEach(c => c.value = "");
+        document.querySelectorAll("#perguntasPersonalizadas [data-dynamic-field] input, #perguntasPersonalizadas [data-dynamic-field] textarea, #perguntasPersonalizadas [data-dynamic-field] select").forEach(c => c.value = "");
         atualizarContador();
         mostrarStatus(
             "✓ Registro salvo com sucesso.\nID: " + idRegistro,

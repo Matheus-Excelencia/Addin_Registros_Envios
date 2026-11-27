@@ -19,7 +19,7 @@ Office.onReady(async function(){
 function n(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase()}
 function idx(m,a){for(const x of a){const k=n(x);if(m[k]!==undefined)return m[k]}return -1}
 function head(v){for(let i=0;i<Math.min(v.length,30);i++){const m={};(v[i]||[]).forEach((x,j)=>{if(String(x??"").trim())m[n(x)]=j});if(idx(m,["EMPRESAS","EMPRESA"])!==-1&&idx(m,["SUPERVISORES","SUPERVISOR"])!==-1)return{linha:i,mapa:m}}return null}
-function status(t,ok=true){const e=document.getElementById("status");e.textContent=t;e.className="status "+(ok?"sucesso":"erro");const local=document.getElementById("statusPergunta");if(local&& !ok){local.textContent=t;local.className="status erro"}}
+function status(t,ok=true,fieldId=null,anchor=null){if(typeof Feedback!=="undefined"){if(!ok&&fieldId&&Feedback.field(fieldId,t,true))return;const el=anchor?document.getElementById(anchor):document.getElementById("status");Feedback.notice(el,t,ok?"sucesso":"erro");return;}const e=document.getElementById("status");e.textContent=t;e.className="status "+(ok?"sucesso":"erro");const local=document.getElementById("statusPergunta");if(local&& !ok){local.textContent=t;local.className="status erro"}}
 function emailValido(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim())}
 async function carregar(){
  status("● Carregando configurações...",true);
@@ -34,6 +34,7 @@ async function carregar(){
    document.getElementById("limite").value=lim;limiteMensagemSMS=lim;atualizarContadorSMS();
    const perguntas=lerPerguntas(u.values, u.rowIndex||0, info);
    renderizarPerguntas(perguntas);
+   if(typeof FormLayout!=="undefined"){layoutQuestions=perguntas;layoutSaved=FormLayout.read(u.values,info);layoutReady=true;renderLayout();}
   });
   status("✓ Configurações carregadas.",true);
  }catch(e){status(e.message||"Erro ao carregar.",false)}
@@ -100,16 +101,16 @@ async function adicionarPergunta(){
  const obrigatoria=document.getElementById("perguntaObrigatoria").value;
  const formato=document.getElementById("perguntaFormato").value;
  const coluna=document.getElementById("perguntaColuna").value.trim() || (n(nome)==="QUAL VALOR TOTAL DOS PROCESSOS"?"Valor":nome);
- if(!nome)return status("Digite o texto da pergunta.",false);
- if(/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))return status("A pergunta Valor já existe.",false);
- if(!FORMATOS_COMPATIVEIS[tipo]?.includes(formato))return status("Formato incompatível com o tipo.",false);
- if(!["email","sms","ambos"].includes(formulario))return status("Formulário inválido.",false);
+ if(!nome)return status("Digite o texto da pergunta.",false,"perguntaNome");
+ if(/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))return status("A pergunta Valor já existe.",false,"perguntaNome");
+ if(!FORMATOS_COMPATIVEIS[tipo]?.includes(formato))return status("Formato incompatível com o tipo.",false,"perguntaFormato");
+ if(!["email","sms","ambos"].includes(formulario))return status("Formulário inválido.",false,"perguntaFormulario");
  if(n(coluna)==="VALOR"&&n(nome)!=="QUAL VALOR TOTAL DOS PROCESSOS")return status('A coluna "Valor" já existe e é reservada para a pergunta sobre o total dos processos.',false);
  const reservados=["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTÓRICO EXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"];
- if(reservados.includes(n(coluna)))return status(`A coluna "${coluna}" já é reservada por um campo do registro. Escolha outro nome.`,false);
- if(reservados.includes(n(nome)) || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(coluna))return status("Esse nome é reservado por um campo existente do registro. Escolha outro texto.",false);
+ if(reservados.includes(n(coluna)))return status(`A coluna "${coluna}" já é reservada por um campo do registro. Escolha outro nome.`,false,"perguntaColuna");
+ if(reservados.includes(n(nome)) || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(coluna))return status("Esse nome é reservado por um campo existente do registro. Escolha outro texto.",false,"perguntaNome");
  const permitidos={text:["geral","texto"],int:["geral","inteiro","decimal","decimal4","contabil","moeda","percentual"],float:["geral","decimal","decimal4","contabil","moeda","percentual"],date:["geral","data"],time:["geral","hora"],datetime:["geral","datahora"],bool:["geral"]};
- if(!permitidos[tipo]?.includes(formato))return status("Formato incompatível com o tipo de resposta.",false);
+ if(!permitidos[tipo]?.includes(formato))return status("Formato incompatível com o tipo de resposta.",false,"perguntaFormato");
  try{
   await Excel.run(async context=>{
    const {sh,u,h,cols}=await obterEstruturaConfig(context);
@@ -126,13 +127,13 @@ async function adicionarPergunta(){
   document.getElementById("perguntaNome").value="";
   status("✓ Pergunta adicionada. Ela aparecerá no(s) formulário(s) selecionado(s).");
   await carregar();
- }catch(e){status(e.message||"Erro ao adicionar pergunta.",false)}
+ }catch(e){status(e.message||"Erro ao adicionar pergunta.",false,null,"statusPergunta")}
  } finally {cadastrandoPergunta=false;botao.disabled=false;}
 }
 async function adicionarCadastro(){
  const valor=document.getElementById("valorCadastro").value.trim(),tipo=document.getElementById("tipoCadastro").value;
- if(!valor)return status("Informe o valor.",false);
- if(tipo==="EMAIL RESPOSTA"&&!emailValido(valor))return status("⚠ Informe um e-mail válido. Exemplo: nome@empresa.com",false);
+ if(!valor)return status("Informe o valor.",false,"valorCadastro");
+ if(tipo==="EMAIL RESPOSTA"&&!emailValido(valor))return status("⚠ Informe um e-mail válido. Exemplo: nome@empresa.com",false,"valorCadastro");
  try{await Excel.run(async context=>{
   const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);
   u.load(["values","isNullObject","rowIndex","columnIndex"]);await context.sync();
@@ -141,11 +142,11 @@ async function adicionarCadastro(){
   for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][col])===n(valor))throw new Error("Esse valor já está cadastrado.");
   let r=h.linha+1;while(r<u.values.length&&String(u.values[r][col]??"").trim())r++;
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[RegistroSecurity.cell(valor)]];await context.sync();
- });document.getElementById("valorCadastro").value="";status("✓ Cadastro adicionado.")}catch(e){status(e.message||"Erro ao adicionar.",false)}
+ });document.getElementById("valorCadastro").value="";status("✓ Cadastro adicionado.",true,null,"statusCadastro")}catch(e){status(e.message||"Erro ao adicionar.",false,null,"statusCadastro")}
 }
 async function adicionarMensagem(){
  const tipo=document.getElementById("tipoMensagem").value,nome=document.getElementById("nomeMensagem").value.trim(),texto=document.getElementById("textoMensagem").value;
- if(!nome||!texto)return status("Informe o nome e o texto da mensagem.",false);
+ if(!nome)return status("Informe o nome da mensagem.",false,"nomeMensagem");if(!texto.trim())return status("Informe o texto da mensagem.",false,"textoMensagem");
  if(tipo==="sms"&&texto.length>limiteMensagemSMS)return atualizarContadorSMS();
  try{await Excel.run(async context=>{
   const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);
@@ -157,18 +158,18 @@ async function adicionarMensagem(){
   let r=h.linha+1;while(r<u.values.length&&(String(u.values[r][nc]??"").trim()||String(u.values[r][tc]??"").trim()))r++;
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+nc,1,1).values=[[RegistroSecurity.cell(nome)]];
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+tc,1,1).values=[[RegistroSecurity.cell(texto)]];await context.sync();
- });document.getElementById("nomeMensagem").value="";document.getElementById("textoMensagem").value="";atualizarContadorSMS();status("✓ Mensagem adicionada.")}catch(e){status(e.message||"Erro ao adicionar.",false)}
+ });document.getElementById("nomeMensagem").value="";document.getElementById("textoMensagem").value="";atualizarContadorSMS();status("✓ Mensagem adicionada.",true,null,"statusMensagem")}catch(e){status(e.message||"Erro ao adicionar.",false,null,"statusMensagem")}
 }
 async function salvarLimite(){
  const limite=Number(document.getElementById("limite").value);
- if(!Number.isInteger(limite)||limite<=0)return status("O limite deve ser um inteiro maior que zero.",false);
+ if(!Number.isInteger(limite)||limite<=0)return status("O limite deve ser um inteiro maior que zero.",false,"limite");
  try{await Excel.run(async context=>{
   const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);
   u.load(["values","isNullObject","rowIndex","columnIndex"]);await context.sync();
   const h=head(u.values),col=idx(h.mapa,["LIMITE SMS","LIMITE_SMS"]);if(col===-1)throw new Error("Coluna LIMITE SMS não encontrada.");
   let r=h.linha+1;while(r<u.values.length&&!Number.isInteger(Number(u.values[r][col])))r++;
   sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[limite]];await context.sync();
- });limiteMensagemSMS=limite;atualizarContadorSMS();status("✓ Limite SMS atualizado.")}catch(e){status(e.message||"Erro ao salvar.",false)}
+ });limiteMensagemSMS=limite;atualizarContadorSMS();status("✓ Limite SMS atualizado.",true,null,"statusLimite")}catch(e){status(e.message||"Erro ao salvar.",false,null,"statusLimite")}
 }
 
 async function alterarAtividade(q){try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const matches=[];for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][cols.pergunta])===n(q.nome))matches.push(i);if(matches.length!==1)throw new Error("Pergunta não identificada de forma única.");sh.getRangeByIndexes(u.rowIndex+matches[0],u.columnIndex+cols.ativo,1,1).values=[[q.ativo?"NAO":"SIM"]];await context.sync();});await carregar();}catch(e){status(e.message,false);}}
@@ -186,10 +187,15 @@ function iniciarEdicao(q){
 function encerrarEdicao(){document.getElementById("editorPergunta")?.classList?.remove("editando");perguntaEmEdicao=null;for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=false;document.getElementById("btnPergunta").textContent="Adicionar pergunta";document.getElementById("cancelarEdicao")?.remove();document.getElementById("perguntaNome").value="";document.getElementById("perguntaColuna").value="";}
 async function salvarEdicao(){
  const q=perguntaEmEdicao,nome=document.getElementById("perguntaNome").value.trim(),formato=document.getElementById("perguntaFormato").value,obrigatoria=document.getElementById("perguntaObrigatoria").value;
- if(!nome||/^[=+\-@]/.test(nome)||(!q.padrao&&/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false);
- if(q.padrao&&!["geral","decimal","decimal4","contabil","moeda"].includes(formato))return status("Formato inválido para Valor.",false);
- if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false);
- try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[RegistroSecurity.cell(v)]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
+ if(!nome||/^[=+\-@]/.test(nome)||(!q.padrao&&/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false,"perguntaNome");
+ if(q.padrao&&!["geral","decimal","decimal4","contabil","moeda"].includes(formato))return status("Formato inválido para Valor.",false,"perguntaFormato");
+ if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false,"perguntaFormato");
+ try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[RegistroSecurity.cell(v)]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.",true,null,"statusPergunta");}catch(e){status(e.message,false);}
 }
 
 function atualizarContadorSMS(){const tipo=document.getElementById("tipoMensagem"),campo=document.getElementById("textoMensagem"),contador=document.getElementById("contadorMensagemSMS"),botao=document.getElementById("btnMensagem");if(!tipo||!campo||!contador||!botao)return;const sms=tipo.value==="sms",n=campo.value.length,excesso=sms&&n>limiteMensagemSMS;contador.hidden=!sms;contador.textContent=n+" / "+limiteMensagemSMS+" caracteres"+(excesso?" — limite excedido":"");contador.className=excesso?"contador-sms excesso":"contador-sms";botao.disabled=excesso;}
+
+let layoutQuestions=[],layoutSaved={},layoutDraft={},layoutBusy=false,layoutReady=false;
+function renderLayout(){const ch=document.getElementById("layoutChannel"),list=document.getElementById("layoutList");if(!ch||!list)return;const channel=ch.value,rows=FormLayout.order(FormLayout.items(channel,layoutQuestions),layoutDraft[channel]||layoutSaved[channel]);list.replaceChildren();rows.forEach((r,i)=>{const line=document.createElement("div");line.className="layout-row";const name=document.createElement("span");name.textContent=(i+1)+". "+r.label;line.append(name);for(const [delta,label] of [[-1,"↑"],[1,"↓"]]){const b=document.createElement("button");b.type="button";b.textContent=label;b.setAttribute("aria-label",(delta<0?"Subir ":"Descer ")+r.label);b.disabled=!layoutReady||layoutBusy||i+delta<0||i+delta>=rows.length;b.onclick=()=>{const keys=rows.map(x=>x.key);[keys[i],keys[i+delta]]=[keys[i+delta],keys[i]];layoutDraft[channel]=keys;renderLayout()};line.append(b)}list.append(line)});document.getElementById("layoutSave").disabled=!layoutReady||layoutBusy;document.getElementById("layoutReset").disabled=!layoutReady||layoutBusy;}
+async function saveLayout(reset=false){if(!layoutReady||layoutBusy)return;const channel=document.getElementById("layoutChannel").value;if(!["email","sms"].includes(channel))return;const keys=reset?[]:FormLayout.order(FormLayout.items(channel,layoutQuestions),layoutDraft[channel]||layoutSaved[channel]).map(r=>r.key);layoutBusy=true;renderLayout();try{await Excel.run(async context=>{const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);u.load(["values","isNullObject","rowIndex","columnIndex"]);await context.sync();const h=!u.isNullObject&&head(u.values);if(!h)throw Error("Cabeçalho Config não encontrado.");const matches=(u.values[h.linha]||[]).map((v,i)=>n(v)===FormLayout.HEADER?i:-1).filter(i=>i>=0);if(matches.length>1)throw Error("Coluna de ordem duplicada. Nenhum dado alterado.");let j=matches[0];const current=FormLayout.read(u.values,h);current[channel]=keys;const value=JSON.stringify(current);if(value.length>30000||keys.length>300)throw Error("Ordem muito extensa.");if(j===undefined){j=Math.max(0,...u.values.map(r=>r.length));sh.getRangeByIndexes(u.rowIndex+h.linha,u.columnIndex+j,1,1).values=[[FormLayout.HEADER]];}sh.getRangeByIndexes(u.rowIndex+h.linha+1,u.columnIndex+j,1,1).values=[[value]];await context.sync();layoutSaved=current;});delete layoutDraft[channel];status(reset?"Ordem padrão restaurada.":"Ordem do formulário salva.",true,null,"statusLayout");}catch(e){status(e.message||"Erro ao salvar ordem.",false,null,"statusLayout");}finally{layoutBusy=false;renderLayout();}}
+if(typeof document.addEventListener==="function")document.addEventListener("DOMContentLoaded",()=>{const ch=document.getElementById("layoutChannel");if(!ch)return;ch.onchange=renderLayout;document.getElementById("layoutSave").onclick=()=>saveLayout();document.getElementById("layoutReset").onclick=()=>saveLayout(true);renderLayout();});

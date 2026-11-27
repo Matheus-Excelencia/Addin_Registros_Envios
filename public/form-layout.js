@@ -1,0 +1,12 @@
+const FormLayout=(()=>{
+const HEADER="ORDEM FORMULARIOS";
+const norm=v=>String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
+const labels={realizadoPor:"Realizado por",empresa:"Empresa",qtde:"Quantidade",emailResposta:"E-mail resposta",supervisor:"Supervisor",obs:"Observação",historicoExterno:"Histórico externo",mensagem:"Mensagem",textoMensagem:"Texto da mensagem",assunto:"Assunto"};
+function standard(channel){return Object.keys(labels).filter(k=>channel==="email"||!["emailResposta","assunto"].includes(k)).map(k=>({key:"base:"+k,label:labels[k]}));}
+function customKey(column){return "custom:"+norm(column);}
+function items(channel,questions){const rows=standard(channel),seen=new Set();const qs=questions||[];const value=qs.find(q=>norm(q.coluna)==="VALOR");rows.push({key:customKey("Valor"),label:value?.nome||"Qual valor total dos processos?"});seen.add(customKey("Valor"));for(const q of qs){if(q.ativo===false||q.formulario&&q.formulario!=="ambos"&&q.formulario!==channel)continue;const key=customKey(q.coluna);if(!seen.has(key)){seen.add(key);rows.push({key,label:q.nome});}}return rows;}
+function order(rows,saved){const map=new Map(rows.map(r=>[r.key,r])),out=[];for(const key of Array.isArray(saved)?saved:[]){if(map.has(key)){out.push(map.get(key));map.delete(key);}}return out.concat([...map.values()]);}
+function read(values,info){const j=info?.mapa?.[HEADER];if(!Number.isInteger(j))return {};try{const o=JSON.parse(String(values[info.linha+1]?.[j]||"{}"));const safe={};for(const ch of ["email","sms"])if(Array.isArray(o?.[ch]))safe[ch]=o[ch].filter(x=>typeof x==="string").slice(0,300);return safe;}catch{return {};}}
+function apply(form,area,questions,channel,saved){if(!form||!area)return;for(const row of Array.from(form.children)){if(row===area||!row.classList.contains("campo"))continue;const el=row.querySelector("input,select,textarea");if(el?.id){row.dataset.layoutKey="base:"+el.id;area.append(row);}}const nodes=new Map(Array.from(area.children).filter(r=>r.dataset.layoutKey).map(r=>[r.dataset.layoutKey,r]));const desired=items(channel,questions).map(r=>({key:r.key,node:nodes.get(r.key)})).filter(r=>r.node);for(const [key,node] of nodes)if(!desired.some(r=>r.key===key))desired.push({key,node});for(const r of order(desired,saved?.[channel]))area.append(r.node);}
+return Object.freeze({HEADER,standard,customKey,items,order,read,apply});
+})();
