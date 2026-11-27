@@ -14,6 +14,28 @@ test('Legado descartado',async()=>{const e=env();e.map.set('registroDuplicado',J
 test('Demo e Office separados',async()=>{const e=env('',true);await e.store('email');e.c.window.REGISTROS_DEMO=false;e.change('https://tenant.sharepoint.com/workbook.xlsx');assert.equal(await e.api.take('email'),null)});
 test('URL não gravada',async()=>{const e=env();await e.store('email');assert.doesNotMatch(e.map.get('registroDuplicado'),/sharepoint\.com/)});
 for(const p of ['email','sms'])test('Gravação protegida '+p,()=>{const s=fs.readFileSync(p+'.js','utf8');assert.match(s,/intervaloRegistro\.values = \[valores\.map\(RegistroSecurity\.cell\)\]/);assert.match(s,/RegistroSecurity\.cell\(campo\.valor\)/);assert.match(s,/await RegistroSecurity\.take/);assert.doesNotMatch(s,/console\.error\(erro\)/)});
-test('Config protege gravações',()=>{const s=fs.readFileSync('config.js','utf8');for(const v of ['nome','texto','valor','v'])assert.ok(s.includes('[[RegistroSecurity.cell('+v+')]]'))});
+test('Config protege gravações',()=>{
+ const s=fs.readFileSync('config.js','utf8'),e=env();
+ e.c.Office.onReady=()=>{};e.c.document={};
+ vm.runInContext(s,e.c);
+ const write=vm.runInContext('gravarCadastroOrdenado',e.c),writes=[];
+ const sh={getRangeByIndexes(row,col,height,width){const range={row,col,height,width,format:{}};writes.push(range);return range}};
+ const u={rowIndex:2,columnIndex:3,values:[['NOME','TEXTO','OUTRA'],['Zeta','=1+1','preservar'],['','','preservar'],['Água','Olá\nMundo','preservar']]};
+ write(sh,u,{linha:0},[0,1],['Beta','@texto']);
+ assert.equal(writes.length,2);
+ assert.deepEqual(writes.map(r=>r.col),[3,4]);
+ assert.equal(JSON.stringify(writes.map(r=>r.values)),JSON.stringify([[['Água'],['Beta'],['Zeta']],[['Olá\nMundo'],["'@texto"],["'=1+1"]]]));
+ for(const r of writes){assert.equal(r.row,3);assert.equal(r.height,3);assert.equal(r.width,1);assert.equal(r.format.wrapText,false)}
+ writes.length=0;
+ write(sh,{rowIndex:0,columnIndex:0,values:[['EMPRESA'],['Zeta'],['Água']]},{linha:0},[0],['Beta']);
+ assert.equal(JSON.stringify(writes[0].values),JSON.stringify([['Água'],['Beta'],['Zeta']]));
+ assert.equal(writes[0].format.wrapText,false);
+ writes.length=0;
+ write(sh,{rowIndex:0,columnIndex:0,values:[['EMPRESA']]},{linha:0},[0],['+Beta']);
+ assert.equal(JSON.stringify(writes[0].values),JSON.stringify([["'+Beta"]]));
+ assert.ok(s.includes('gravarCadastroOrdenado(sh,u,h,[col],[valor])'));
+ assert.ok(s.includes('gravarCadastroOrdenado(sh,u,h,[nc,tc],[nome,texto])'));
+ for(const v of ['valor','v'])assert.ok(s.includes('[[RegistroSecurity.cell('+v+')]]'));
+});
 test('Cabeçalho protegido',()=>assert.match(fs.readFileSync('perguntas.js','utf8'),/\[\[RegistroSecurity\.cell\(resposta\.nome\)\]\]/));
 for(const p of ['email','sms','config','historico'])test('Helper carregado '+p,()=>{const s=fs.readFileSync(p+'.html','utf8');assert.ok(s.indexOf('registro-security.js')>=0&&s.indexOf('registro-security.js')<s.indexOf(p+'.js?'))});
