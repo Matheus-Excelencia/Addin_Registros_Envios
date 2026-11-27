@@ -11,3 +11,6 @@
 
 ## Desenvolvimento
 Node.js 22: execute node scripts/sync-demo.cjs e node --test tests/*.test.cjs na raiz. A demo usa dados fictícios e não chama SSO. A instalação de homologação exige endpoint e configuração SSO próprios aprovados; ainda não disponibilizados.
+
+## Identidade visual
+Os ícones PNG de 16, 32 e 80 px foram atualizados na branch, seguindo a geometria e paleta do SVG da marca. Validar nitidez na faixa de opções após disponibilização de ambiente de homologação. A main permanece sem alteração nesta etapa.
