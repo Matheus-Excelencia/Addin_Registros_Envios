@@ -4,7 +4,7 @@ const fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('perguntas.js','utf8');
 function env(value){
  const c=vm.createContext({document:{getElementById:()=>({value})},normalizar:v=>String(v??'').toUpperCase(),obterIndice:(m,a)=>m[a[0].toUpperCase()]??-1});
- vm.runInContext(source,c);return c;
+ vm.runInContext(fs.readFileSync('registro-security.js','utf8'),c);vm.runInContext(source,c);return c;
 }
 for(const [input,expected] of [['', ''],['0',0],['R$ 1.234,56',1234.56],['1234.56',1234.56],['1.234',1234]])test('Valor '+JSON.stringify(input),()=>assert.equal(vm.runInContext('coletarRespostasPersonalizadas()[0].valor',env(input)),expected));
 for(const input of ['1.2,34','12 34,56','abc','1,2,3'])test('Rejeita '+input,()=>assert.throws(()=>vm.runInContext('coletarRespostasPersonalizadas()',env(input))));

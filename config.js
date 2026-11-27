@@ -120,7 +120,7 @@ async function adicionarPergunta(){
    }
    let linha=h.linha+1;
    while(linha<u.values.length&&String(u.values[linha][cols.pergunta]??"").trim())linha++;
-   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[valor]];
+   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[RegistroSecurity.cell(valor)]];
    await context.sync();
   });
   document.getElementById("perguntaNome").value="";
@@ -140,7 +140,7 @@ async function adicionarCadastro(){
   const h=head(u.values),col=idx(h.mapa,[tipo]);if(col===-1)throw new Error("Coluna não encontrada.");
   for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][col])===n(valor))throw new Error("Esse valor já está cadastrado.");
   let r=h.linha+1;while(r<u.values.length&&String(u.values[r][col]??"").trim())r++;
-  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[valor]];await context.sync();
+  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[RegistroSecurity.cell(valor)]];await context.sync();
  });document.getElementById("valorCadastro").value="";status("✓ Cadastro adicionado.")}catch(e){status(e.message||"Erro ao adicionar.",false)}
 }
 async function adicionarMensagem(){
@@ -155,8 +155,8 @@ async function adicionarMensagem(){
   if(nc===-1||tc===-1)throw new Error("Colunas de mensagem não encontradas.");
   for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][nc])===n(nome))throw new Error("Esse nome de mensagem já existe.");
   let r=h.linha+1;while(r<u.values.length&&(String(u.values[r][nc]??"").trim()||String(u.values[r][tc]??"").trim()))r++;
-  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+nc,1,1).values=[[nome]];
-  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+tc,1,1).values=[[texto]];await context.sync();
+  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+nc,1,1).values=[[RegistroSecurity.cell(nome)]];
+  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+tc,1,1).values=[[RegistroSecurity.cell(texto)]];await context.sync();
  });document.getElementById("nomeMensagem").value="";document.getElementById("textoMensagem").value="";atualizarContadorSMS();status("✓ Mensagem adicionada.")}catch(e){status(e.message||"Erro ao adicionar.",false)}
 }
 async function salvarLimite(){
@@ -189,7 +189,7 @@ async function salvarEdicao(){
  if(!nome||/^[=+\-@]/.test(nome)||(!q.padrao&&/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false);
  if(q.padrao&&!["geral","decimal","decimal4","contabil","moeda"].includes(formato))return status("Formato inválido para Valor.",false);
  if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false);
- try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[v]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
+ try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[RegistroSecurity.cell(v)]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.");}catch(e){status(e.message,false);}
 }
 
 function atualizarContadorSMS(){const tipo=document.getElementById("tipoMensagem"),campo=document.getElementById("textoMensagem"),contador=document.getElementById("contadorMensagemSMS"),botao=document.getElementById("btnMensagem");if(!tipo||!campo||!contador||!botao)return;const sms=tipo.value==="sms",n=campo.value.length,excesso=sms&&n>limiteMensagemSMS;contador.hidden=!sms;contador.textContent=n+" / "+limiteMensagemSMS+" caracteres"+(excesso?" — limite excedido":"");contador.className=excesso?"contador-sms excesso":"contador-sms";botao.disabled=excesso;}

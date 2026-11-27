@@ -1,3 +1,4 @@
+let escopoHistorico = null;
 let todos = [], registros = [], pronto = false, visPerguntas = [];
 
 function iniciarHistorico() {
@@ -85,7 +86,8 @@ async function carregar() {
     }
     try {
         todos = [];
-
+        escopoHistorico = null;
+        const origem = await RegistroSecurity.scope();
         await Excel.run(async context => {
             const nomes = ["Email", "SMS"];
             const ranges = nomes.map(nome => {
@@ -132,6 +134,7 @@ async function carregar() {
             if (!configRange.isNullObject) preencherListasConfig(configRange.values || []); visPerguntas=QuestionVisibility.read(configRange.isNullObject?[]:configRange.values);
         });
 
+        escopoHistorico = origem && origem === await RegistroSecurity.scope() ? origem : null;
         pesquisar();
         const status = document.getElementById("status");
         if (status) {
@@ -294,8 +297,9 @@ async function irParaRegistro(r) {
     }
 }
 
-function duplicar(r) {
-    sessionStorage.setItem("registroDuplicado", JSON.stringify({
+async function duplicar(r) {
+    if (!r) return;
+    const ok = await RegistroSecurity.store({
         tipo: r.tipo === "Email" ? "email" : "sms",
         realizadoPor: r.realizadoPor,
         empresa: r.empresa,
@@ -306,7 +310,8 @@ function duplicar(r) {
         assunto: r.assunto,
         mensagem: r.mensagem,
         camposPersonalizados: r.camposPersonalizados
-    }));
+    }, escopoHistorico);
+    if (!ok) { erro("Duplicação indisponível: não foi possível identificar com segurança a pasta de trabalho. Salve e reabra o arquivo."); return; }
     window.location.href = r.tipo === "Email" ? "email.html" : "sms.html";
 }
 

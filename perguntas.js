@@ -117,7 +117,7 @@ function coletarRespostasPersonalizadas() {
                 const [h,m]=bruto.split(":").map(Number);
                 if(h>23||m>59)throw new Error('Hora inválida em "' + pergunta.nome + '".');
                 respostas.push({nome: pergunta.coluna, valor: (h*60+m)/1440, formato: pergunta.formato === "geral" ? "hora" : pergunta.formato, tipo: pergunta.tipo});
-            } else respostas.push({nome: pergunta.coluna, valor: pergunta.tipo === "bool" ? bruto === "Sim" : (/^[=+\-@]/.test(bruto) ? "'" + bruto : bruto), formato: pergunta.formato, tipo: pergunta.tipo});
+            } else respostas.push({nome: pergunta.coluna, valor: pergunta.tipo === "bool" ? bruto === "Sim" : bruto, formato: pergunta.formato, tipo: pergunta.tipo});
         }
     });
     return respostas;
@@ -134,7 +134,7 @@ function prepararColunasPersonalizadas(folha, usado, linhaCabecalho, mapa, respo
                 (usado.isNullObject ? 0 : usado.rowIndex) + linhaCabecalho,
                 (usado.isNullObject ? 0 : usado.columnIndex) + indice,
                 1, 1
-            ).values = [[resposta.nome]];
+            ).values = [[RegistroSecurity.cell(resposta.nome)]];
         }
     });
 }
