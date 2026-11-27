@@ -13,7 +13,15 @@ function iniciarMenu(){
 }
 if(typeof document!=="undefined"){if(typeof Office!=="undefined"&&Office.onReady){let iniciado=false;const iniciar=()=>{if(iniciado)return;iniciado=true;iniciarMenu();};const espera=setTimeout(iniciar,3000);Office.onReady(()=>{clearTimeout(espera);iniciar();});}else iniciarMenu();}
 function dadosBoasVindas(token){const partes=String(token).split(".");if(partes.length!==3)throw new Error("Token inválido");const payload=partes[1].replace(/-/g,"+").replace(/_/g,"/");return JSON.parse(decodeURIComponent(Array.from(atob(payload.padEnd(Math.ceil(payload.length/4)*4,"=")),c=>"%"+c.charCodeAt(0).toString(16).padStart(2,"0")).join("")));}
-function textoBoasVindas(dados={}){const nome=String(dados.name||dados.preferred_username||dados.email||dados.upn||"").trim();const especial=nome.normalize("NFC").toLocaleLowerCase("pt-BR").replace(/\s+/g," ")==="kamylli hemer";return {nome,saudacao:especial?"Bem-vinda":"Bem-vindo",mensagem:especial?"Ou melhor, Kamylli Maionese 😂\nO Matheus Passos é mais belo, e você que teria sorte se fôssemos parentes kkk":"",duracao:especial?6500:2600};}
+// Temporary article shortcut: disable this flag to retain only the mention.
+const ARTIGO_BOAS_VINDAS_ATIVO = true;
+function abrirArtigoBoasVindas(evento){
+ const url="https://addin-registros-envios.vercel.app/artigo.html";
+ if(typeof Office!=="undefined"&&typeof Office.context?.ui?.openBrowserWindow==="function"){
+  try{Office.context.ui.openBrowserWindow(url);evento.preventDefault();}catch{/* normal link remains available */}
+ }
+}
+function textoBoasVindas(dados={}){const nome=String(dados.name||dados.preferred_username||dados.email||dados.upn||"").trim();const especial=nome.normalize("NFC").toLocaleLowerCase("pt-BR").replace(/\s+/g," ")==="kamylli hemer";return {nome,saudacao:especial?"Bem-vinda":"Bem-vindo",mensagem:especial?"Ou melhor, Kamylli Maionese 😂\nO Matheus Passos é mais belo, e você que teria sorte se fôssemos parentes kkk.\nAté ganhou um artigo especial sobre a supremacia estética do Matheus — uma brincadeira em formato científico! 😂":"",artigo:especial&&ARTIGO_BOAS_VINDAS_ATIVO,duracao:especial?6500:2600};}
 function digitarBoasVindas(campos, duracao, reduzido){
     const partes=campos.map(([el,texto])=>({el,texto,letras:typeof Intl!=="undefined"&&Intl.Segmenter?Array.from(new Intl.Segmenter("pt-BR",{granularity:"grapheme"}).segment(texto),x=>x.segment):Array.from(texto)}));
     const total=partes.reduce((n,p)=>n+p.letras.length,0);
@@ -38,6 +46,8 @@ async function iniciarBoasVindas(){
  try{if(sessionStorage.getItem(splashKey)){menu.hidden=false;menu.inert=false;return;}sessionStorage.setItem(splashKey,"1");}catch{}
  const reduced=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
  const greeting=document.getElementById("saudacao"),name=document.getElementById("nomeBoasVindas"),message=document.getElementById("mensagemBoasVindas"),skip=document.getElementById("pularBoasVindas");
+ const artigo=document.getElementById("artigoBoasVindas");
+ if(artigo){artigo.hidden=true;artigo.onclick=abrirArtigoBoasVindas;}
  let closed=false,timer,timeout;
  const close=()=>{if(closed)return;closed=true;clearTimeout(timer);menu.hidden=false;menu.inert=false;tela.classList.add("saindo");tela.style.pointerEvents="none";if(reduced)tela.hidden=true;else setTimeout(()=>{tela.hidden=true},1100);};
  skip.onclick=close;menu.hidden=true;menu.inert=true;
@@ -46,5 +56,5 @@ async function iniciarBoasVindas(){
  tela.style.setProperty("--duracao","7000ms");tela.hidden=false;timer=setTimeout(close,7000);
  if(window.REGISTROS_HOMOLOGACAO===true){document.querySelector(".welcome-version").textContent="ALPHA 2.0 · HOMOLOGAÇÃO SEM SSO";return;}
  if(demo)return;
- try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800)})]);if(closed)return;const t=textoBoasVindas(dadosBoasVindas(token));greeting.textContent=t.saudacao+(t.nome?",":"!");name.textContent=t.nome;message.textContent=t.mensagem||"Estávamos esperando por você.";if(t.mensagem){tela.style.setProperty("--duracao","9500ms");clearTimeout(timer);timer=setTimeout(close,9500);}}catch{}finally{clearTimeout(timeout);}
+ try{const token=await Promise.race([Office.auth.getAccessToken({allowSignInPrompt:false,allowConsentPrompt:false}),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error("SSO indisponível")),1800)})]);if(closed)return;const t=textoBoasVindas(dadosBoasVindas(token));greeting.textContent=t.saudacao+(t.nome?",":"!");name.textContent=t.nome;message.textContent=t.mensagem||"Estávamos esperando por você.";if(t.mensagem){if(artigo)artigo.hidden=!t.artigo;tela.style.setProperty("--duracao","15000ms");clearTimeout(timer);timer=setTimeout(close,15000);}}catch{}finally{clearTimeout(timeout);}
 }

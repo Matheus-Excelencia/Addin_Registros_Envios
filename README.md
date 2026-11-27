@@ -9,17 +9,18 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 
 *Menos retrabalho. Mais controle.*
 
-![Desenvolvimento](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
+![Versão](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
 [![Validação Alpha 2.0](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=feat%2Falpha-2.0)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
+[![License: uso corporativo](https://img.shields.io/badge/license-uso%20corporativo%20restrito-555)](LICENSE)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
-![Vercel](https://img.shields.io/badge/Vercel-Produção%20Alpha%201.06-black)
+![Vercel](https://img.shields.io/badge/Vercel-Alpha%202.0%20controlada-black)
 
-[Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação)
+[Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação) · [Licença](#licença)
 
 </div>
 
-> Alpha 2.0 em desenvolvimento; Alpha 1.06 permanece a versão publicada. Os links públicos apontam para a produção.
+> **Alpha 2.0 publicada em janela controlada de homologação.** Uso operacional suspenso até aceite funcional e SSO; os links públicos apontam para a produção. Backup Alpha 1.06 preservado.
 
 ## Visão geral
 
@@ -37,13 +38,13 @@ O Registra padroniza o registro operacional de campanhas de E-mail e SMS/URA rea
 | Configurações | Listas, mensagens, perguntas dinâmicas e formatos Excel |
 | Identidade | Microsoft SSO, com contingência manual nos formulários |
 
-### Alpha 2.0 — em desenvolvimento
+### Alpha 2.0 — homologação controlada
 
 - Identidade visual compartilhada, temas persistentes e abertura de sete segundos com botão Continuar.
 - Resumo em cards, lista e gráficos; regras de visibilidade de perguntas no Histórico e Resumo.
 - Duplicação pelo fluxo existente do Histórico, incluindo respostas personalizadas.
 - Demonstração sem SSO, com reinício dos dados fictícios e da abertura; autenticação real preservada.
-- Homologação pendente; não instalar como versão de produção.
+- Homologação funcional e SSO pendentes; instalar somente para testes autorizados com dados fictícios até o aceite.
 
 ### Novidades da Alpha 1.06
 
@@ -58,7 +59,7 @@ O Registra padroniza o registro operacional de campanhas de E-mail e SMS/URA rea
 **Ambiente oficial:** Excel para a Web, com conta Microsoft 365 e permissão de edição no workbook.
 
 1. [Baixe o manifesto XML](https://addin-registros-envios.vercel.app/manifest.xml) (salve como `manifest.xml`, não como TXT).
-2. Abra o workbook corporativo no Excel Web.
+2. Durante a homologação, abra somente o workbook fictício no Excel Web. Após aceite, use o workbook corporativo autorizado.
 3. Acesse **Início → Suplementos → Avançado** ou **Inserir → Suplementos → Mais Suplementos**, conforme a interface disponível.
 4. Escolha **Carregar meu suplemento**, selecione o XML e confirme o carregamento.
 5. Na guia Início, procure o grupo **Excelência** e o botão **Novo registro**.
@@ -123,7 +124,7 @@ A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores
 | [PR #13](../../pull/13) | 31 testes; homologação 28/30 |
 | [PR #14](../../pull/14) | [33 testes aprovados](../../actions/runs/45456326476); 20 itens manuais não validados |
 
-As suítes são cumulativas. [82 testes aprovados no marco de segurança Alpha 2.0](../../actions/runs/45918207334); a homologação real do Excel Web continua pendente. A validação automatizada não substitui o teste no host Office.
+As suítes são cumulativas. [108 testes aprovados no candidato de lançamento](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/runs/45922397612); a homologação real do Excel Web continua pendente. A validação automatizada não substitui o teste no host Office.
 
 ## Organização do repositório e desenvolvimento
 
@@ -142,6 +143,7 @@ A raiz contém apenas configuração, documentação e ferramentas de desenvolvi
 ├── scripts/              # Sincronização da demonstração
 ├── tests/                # Testes automatizados
 ├── CONTRIBUTING.md
+├── LICENSE
 ├── README.md
 └── vercel.json
 ```
@@ -183,7 +185,7 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 
 **Grupo Excelência · Registra**  
 Responsabilidade técnica: Matheus Passos  
-Uso corporativo · Alpha 2.0 em desenvolvimento
+Uso corporativo · Alpha 2.0 em homologação controlada
 
 </div>
 
@@ -191,4 +193,8 @@ Uso corporativo · Alpha 2.0 em desenvolvimento
 [Instruções e manifesto exclusivo de teste](homologacao/README.md). Use apenas dados fictícios. O preview é protegido; SSO de produção não é reutilizado.
 
 ## Preparação para lançamento
-[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação oficial e uso operacional ainda não autorizados.
+[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação controlada autorizada. Liberação operacional ainda pendente.
+
+## Licença
+
+[Uso corporativo restrito — LICENSE](LICENSE). Não é um projeto de código aberto; não há concessão de licença pública de reutilização. Direitos de terceiros são preservados. A titularidade e eventuais permissões adicionais dependem dos respectivos titulares.

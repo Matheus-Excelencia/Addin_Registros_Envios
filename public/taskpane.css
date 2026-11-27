@@ -14,3 +14,6 @@
 .welcome-preview .boas-linha::after{position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(100deg,transparent 15%,#ffffffb0 50%,transparent 85%);animation:welcomeShimmer 1.15s linear infinite;transform:translateX(-100%)}
 @keyframes welcomeShimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 @media(prefers-reduced-motion:reduce){.welcome-preview .boas-linha{width:100%;animation:none!important}.welcome-preview .boas-linha::after{display:none;animation:none!important}}
+
+/* Optional special article link; normal welcome remains unchanged. */
+#artigoBoasVindas[hidden]{display:none!important}#artigoBoasVindas:not([hidden]){display:inline-block;color:var(--brand-accent,#087f72);font-size:13px;font-weight:700;text-decoration:underline;margin:8px auto;overflow-wrap:anywhere}#artigoBoasVindas:focus-visible{outline:2px solid currentColor;outline-offset:4px}.welcome-preview #mensagemBoasVindas{white-space:pre-line}.welcome-preview{overflow-y:auto}
