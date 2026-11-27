@@ -1,0 +1,5 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const read=p=>fs.readFileSync(path.join(__dirname,'../public',p),'utf8');
+test('Nomenclatura aprovada do manifesto',()=>{const s=read('manifest.xml');assert.match(s,/<DisplayName DefaultValue="Registra"\/>/);assert.match(s,/id="GetStarted.Title" DefaultValue="Registra"/);assert.match(s,/id="CommandsGroup.Label" DefaultValue="Excelência"/);assert.match(s,/id="TaskpaneButton.Label" DefaultValue="Novo registro"/);assert.match(s,/<Version>2\.0\.0\.0<\/Version>/);});
+test('Marca consistente na landing e no suplemento',()=>{assert.match(read('index.html'),/<h1>Registra<\/h1>/);assert.match(read('taskpane.html'),/<h1>Registra<\/h1>/);assert.match(read('taskpane.html'),/welcome-brand">REGISTRA</);assert.match(read('demo/taskpane.html'),/<h1>Registra<\/h1>/);});
+test('Nome do workbook preservado',()=>{assert.match(read('index.html'),/Registros de Envios\.xlsx/);assert.match(read('demo/index.html'),/Registros de Envios\.xlsx/);});

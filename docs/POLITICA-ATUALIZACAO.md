@@ -25,3 +25,6 @@ Referência: https://learn.microsoft.com/office/dev/add-ins/publish/maintain-bre
 
 ## Estrutura e distribuição
 O código web está em `public/`; a Vercel publica seu conteúdo na raiz do domínio, sem alterar URLs existentes. O download oficial aponta para https://addin-registros-envios.vercel.app/manifest.xml, servido sem cache após publicação autorizada. Testes e documentos ficam fora da pasta publicada. Validar preview e produção separadamente; não confundir o XML da branch com o publicado.
+
+## Nomenclatura aprovada
+Suplemento: Registra. Guia Início, grupo Excelência, botão Novo registro. O workbook `Registros de Envios.xlsx`, os identificadores do Office, as URLs públicas e a configuração SSO permanecem inalterados. A versão 2.0.0.0 do XML continua reservada para a primeira publicação da Alpha 2.0.

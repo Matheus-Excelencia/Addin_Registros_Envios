@@ -1,13 +1,16 @@
 <div align="center">
-<img src="public/assets/brand-registros.svg" width="96" alt="Registros de Envios">
+<img src="public/assets/brand-registros.svg" width="96" alt="Registra">
 
-# Registros de Envios
+# Registra
 
 **Suplemento corporativo para Microsoft Excel Web**
+
+Anteriormente denominado Registros de Envios; o workbook mantém seu nome original.
 
 *Menos retrabalho. Mais controle.*
 
 ![Desenvolvimento](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
+[![Validação Alpha 2.0](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=feat%2Falpha-2.0)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
 ![Vercel](https://img.shields.io/badge/Vercel-Produção%20Alpha%201.06-black)
@@ -20,13 +23,13 @@
 
 ## Visão geral
 
-O Registros de Envios padroniza o registro operacional de campanhas de E-mail e SMS/URA realizadas no Konfiansa. **O suplemento não dispara mensagens.** Ele registra os envios já realizados no workbook corporativo `Registros de Envios.xlsx`, armazenado no SharePoint.
+O Registra padroniza o registro operacional de campanhas de E-mail e SMS/URA realizadas no Konfiansa. **O suplemento não dispara mensagens.** Ele registra os envios já realizados no workbook corporativo `Registros de Envios.xlsx`, armazenado no SharePoint.
 
 ## Funcionalidades
 
 | Módulo | Responsabilidade |
 |---|---|
-| Novo Registro | Escolha entre E-mail e SMS |
+| Novo registro | Escolha entre E-mail e SMS |
 | E-mail | Registro, validação de endereço, assunto e mensagem |
 | SMS | Registro, contador e limite configurável |
 | Histórico | Filtros, ordenação, duplicação, perguntas personalizadas e navegação até a linha |
@@ -58,7 +61,7 @@ O Registros de Envios padroniza o registro operacional de campanhas de E-mail e 
 2. Abra o workbook corporativo no Excel Web.
 3. Acesse **Início → Suplementos → Avançado** ou **Inserir → Suplementos → Mais Suplementos**, conforme a interface disponível.
 4. Escolha **Carregar meu suplemento**, selecione o XML e confirme o carregamento.
-5. Na guia Início, procure o grupo **Registros** e o botão **Novo Registro**.
+5. Na guia Início, procure o grupo **Excelência** e o botão **Novo registro**.
 6. Confirme a abertura do painel e a identificação do usuário nos formulários.
 
 > Os nomes dos menus podem variar. Se o carregamento personalizado estiver indisponível, consulte o administrador Microsoft 365. Não contorne políticas corporativas. Excel Desktop não é o ambiente oficial.
@@ -178,7 +181,7 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 
 <div align="center">
 
-**Grupo Excelência · Registros de Envios**  
+**Grupo Excelência · Registra**  
 Responsabilidade técnica: Matheus Passos  
 Uso corporativo · Alpha 2.0 em desenvolvimento
 

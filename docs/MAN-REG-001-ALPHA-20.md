@@ -1,11 +1,11 @@
-# Manual de instalação — Alpha 2.0 (rascunho)
+# Manual de instalação — Registra · Alpha 2.0 (rascunho)
 **Não publicado.** O manifesto 2.0.0.0 está preparado para a publicação autorizada da Alpha 2.0. O endereço permanente ainda serve a produção Alpha 1.06. Não instalar este XML para homologar o código da branch.
 
 ## Após publicação autorizada
 1. Abra uma cópia de teste do workbook no Excel Web com conta Microsoft 365 autorizada.
 2. Baixe o manifesto XML 2.0.0.0 da versão publicada; salve como XML.
 3. Em Início > Suplementos > Avançado (ou Inserir > Suplementos), escolha Carregar meu suplemento e selecione o XML. Se bloqueado, solicite apoio ao administrador.
-4. Na guia Início, grupo Registros, clique Novo Registro. Aguarde a abertura ou clique Continuar.
+4. Na guia Início, grupo Excelência, clique Novo registro. Aguarde a abertura ou clique Continuar.
 5. Confirme identificação Microsoft ou preencha Realizado por manualmente. Cadastre E-mail e SMS fictícios, verifique Histórico, Resumo e Configurações.
 6. Confirme temas, perguntas, filtros e duplicação. Não use dados reais durante homologação.
 

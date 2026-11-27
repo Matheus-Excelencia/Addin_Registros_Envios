@@ -12,7 +12,7 @@
   <ProviderName>Excelência Cobrança</ProviderName>
   <DefaultLocale>pt-BR</DefaultLocale>
 
-  <DisplayName DefaultValue="Registros de Envios"/>
+  <DisplayName DefaultValue="Registra"/>
   <Description DefaultValue="Painel corporativo para registro, consulta e acompanhamento de envios de E-mail e SMS."/>
 
   <IconUrl DefaultValue="https://addin-registros-envios.vercel.app/assets/icon-32.png"/>
@@ -120,9 +120,9 @@
       </bt:Urls>
 
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Registros de Envios"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Registros"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Novo Registro"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Registra"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Excelência"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Novo registro"/>
       </bt:ShortStrings>
 
       <bt:LongStrings>
