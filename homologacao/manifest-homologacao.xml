@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <Id>c5a78e19-6792-4e98-9c25-c67eb6e7db21</Id>
+  <Version>2.0.0.0</Version>
+  <ProviderName>Excelência Cobrança</ProviderName>
+  <DefaultLocale>pt-BR</DefaultLocale>
+
+  <DisplayName DefaultValue="Registra - Homologação"/>
+  <Description DefaultValue="Ambiente de homologação. Use somente uma cópia de teste com dados fictícios. SSO desativado."/>
+
+  <IconUrl DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/assets/icon-80.png"/>
+
+  <SupportUrl DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/"/>
+
+  <AppDomains>
+    <AppDomain>https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Workbook"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides
+    xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+    xsi:type="VersionOverridesV1_0">
+
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.4">
+        <bt:Set Name="ExcelApi" MinVersion="1.4"/>
+      </bt:Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="Workbook">
+
+        <DesktopFormFactor>
+
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+
+          <FunctionFile resid="Commands.Url"/>
+
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+
+            <OfficeTab id="TabHome">
+
+              <Group id="CommandsGroup">
+
+                <Label resid="CommandsGroup.Label"/>
+
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+
+                <Control xsi:type="Button" id="TaskpaneButton">
+
+                  <Label resid="TaskpaneButton.Label"/>
+
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+
+                </Control>
+
+              </Group>
+
+            </OfficeTab>
+
+          </ExtensionPoint>
+
+        </DesktopFormFactor>
+
+      </Host>
+    </Hosts>
+
+    <Resources>
+
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/assets/icon-80.png"/>
+      </bt:Images>
+
+      <bt:Urls>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/taskpane.html"/>
+      </bt:Urls>
+
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title" DefaultValue="Registra - Homologação"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Excelência - Teste"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Novo registro (teste)"/>
+      </bt:ShortStrings>
+
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description" DefaultValue="Abra o painel para registrar um novo envio."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Abrir o painel de novo registro."/>
+      </bt:LongStrings>
+
+    </Resources>
+
+  </VersionOverrides>
+
+</OfficeApp>

@@ -1,1 +1,0 @@
-Office.onReady(function(){const go=u=>window.location.assign(u);const v=document.getElementById("btnVoltar"),e=document.getElementById("btnEmail"),s=document.getElementById("btnSms");if(v)v.addEventListener("click",()=>go("taskpane.html"));if(e)e.addEventListener("click",()=>go("email.html"));if(s)s.addEventListener("click",()=>go("sms.html"));});

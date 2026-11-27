@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node scripts/sync-demo.cjs --check",
+  "outputDirectory": "public",
+  "headers": [
+    {
+      "source": "/manifest.xml",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"manifest.xml\""
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/preview-alpha20",
+      "destination": "/demo/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/preview-alpha20/:path*",
+      "destination": "/:path*",
+      "permanent": false
+    }
+  ]
+}

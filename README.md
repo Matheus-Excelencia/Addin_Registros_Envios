@@ -1,36 +1,49 @@
 <div align="center">
-<img src="assets/brand-registros.svg" width="96" alt="Registros de Envios">
+<img src="public/assets/brand-registros.svg" width="96" alt="Registra">
 
-# Registros de Envios
+# Registra
 
 **Suplemento corporativo para Microsoft Excel Web**
 
+Anteriormente denominado Registros de Envios; o workbook mantém seu nome original.
+
 *Menos retrabalho. Mais controle.*
 
-![Versão](https://img.shields.io/badge/versão-Alpha%201.06-217346)
+![Desenvolvimento](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
+[![Validação Alpha 2.0](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=feat%2Falpha-2.0)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
-![Vercel](https://img.shields.io/badge/Vercel-Produção-black)
+![Vercel](https://img.shields.io/badge/Vercel-Produção%20Alpha%201.06-black)
 
 [Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação)
 
 </div>
 
+> Alpha 2.0 em desenvolvimento; Alpha 1.06 permanece a versão publicada. Os links públicos apontam para a produção.
+
 ## Visão geral
 
-O Registros de Envios padroniza o registro operacional de campanhas de E-mail e SMS/URA realizadas no Konfiansa. **O suplemento não dispara mensagens.** Ele registra os envios já realizados no workbook corporativo `Registros de Envios.xlsx`, armazenado no SharePoint.
+O Registra padroniza o registro operacional de campanhas de E-mail e SMS/URA realizadas no Konfiansa. **O suplemento não dispara mensagens.** Ele registra os envios já realizados no workbook corporativo `Registros de Envios.xlsx`, armazenado no SharePoint.
 
 ## Funcionalidades
 
 | Módulo | Responsabilidade |
 |---|---|
-| Novo Registro | Escolha entre E-mail e SMS |
+| Novo registro | Escolha entre E-mail e SMS |
 | E-mail | Registro, validação de endereço, assunto e mensagem |
 | SMS | Registro, contador e limite configurável |
-| Histórico | Filtros, ordenação, duplicação e navegação até a linha |
-| Resumo | Consolidação por período |
+| Histórico | Filtros, ordenação, duplicação, perguntas personalizadas e navegação até a linha |
+| Resumo | Consolidação por período, cards, lista e gráficos |
 | Configurações | Listas, mensagens, perguntas dinâmicas e formatos Excel |
 | Identidade | Microsoft SSO, com contingência manual nos formulários |
+
+### Alpha 2.0 — em desenvolvimento
+
+- Identidade visual compartilhada, temas persistentes e abertura de sete segundos com botão Continuar.
+- Resumo em cards, lista e gráficos; regras de visibilidade de perguntas no Histórico e Resumo.
+- Duplicação pelo fluxo existente do Histórico, incluindo respostas personalizadas.
+- Demonstração sem SSO, com reinício dos dados fictícios e da abertura; autenticação real preservada.
+- Homologação pendente; não instalar como versão de produção.
 
 ### Novidades da Alpha 1.06
 
@@ -44,11 +57,11 @@ O Registros de Envios padroniza o registro operacional de campanhas de E-mail e 
 
 **Ambiente oficial:** Excel para a Web, com conta Microsoft 365 e permissão de edição no workbook.
 
-1. [Baixe o manifesto XML](https://raw.githubusercontent.com/Matheus-Excelencia/Addin_Registros_Envios/main/manifest.xml) (salve como `manifest.xml`, não como TXT).
+1. [Baixe o manifesto XML](https://addin-registros-envios.vercel.app/manifest.xml) (salve como `manifest.xml`, não como TXT).
 2. Abra o workbook corporativo no Excel Web.
 3. Acesse **Início → Suplementos → Avançado** ou **Inserir → Suplementos → Mais Suplementos**, conforme a interface disponível.
 4. Escolha **Carregar meu suplemento**, selecione o XML e confirme o carregamento.
-5. Na guia Início, procure o grupo **Registros** e o botão **Novo Registro**.
+5. Na guia Início, procure o grupo **Excelência** e o botão **Novo registro**.
 6. Confirme a abertura do painel e a identificação do usuário nos formulários.
 
 > Os nomes dos menus podem variar. Se o carregamento personalizado estiver indisponível, consulte o administrador Microsoft 365. Não contorne políticas corporativas. Excel Desktop não é o ambiente oficial.
@@ -89,7 +102,7 @@ HTML, CSS e JavaScript compõem a interface; Office.js integra o workbook. O có
 | K | ID REGISTRO | — |
 | L | Valor | — |
 
-A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores, nomes e textos de mensagens de E-mail/SMS e limite SMS (A–I). Metadados adicionais incluem PERGUNTA PERSONALIZADA, FORMULARIO, TIPO RESPOSTA, OBRIGATORIA, FORMATO EXCEL, COLUNA EXCEL e PERGUNTA ATIVA. Perguntas adicionais usam cabeçalhos próprios. Preserve a estrutura oficial; não presuma migração automática de qualquer planilha antiga.
+A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores, nomes e textos de mensagens de E-mail/SMS e limite SMS (A–I). Metadados adicionais incluem PERGUNTA PERSONALIZADA, FORMULARIO, TIPO RESPOSTA, OBRIGATORIA, FORMATO EXCEL, COLUNA EXCEL e PERGUNTA ATIVA, EXIBIR HISTORICO e EXIBIR RESUMO. Perguntas adicionais usam cabeçalhos próprios. Preserve a estrutura oficial; não presuma migração automática de qualquer planilha antiga.
 
 ## Regras e segurança
 
@@ -110,23 +123,54 @@ A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores
 | [PR #13](../../pull/13) | 31 testes; homologação 28/30 |
 | [PR #14](../../pull/14) | [33 testes aprovados](../../actions/runs/45456326476); 20 itens manuais não validados |
 
-As suítes são cumulativas. A última homologação visual relatou que as melhorias não funcionaram como esperado; não há diagnóstico conclusivo. O fallback de inicialização Office.js ainda carece de teste específico e a revisão de logs de produção está pendente. A validação funcional anterior não substitui uma nova homologação.
+As suítes são cumulativas. [82 testes aprovados no marco de segurança Alpha 2.0](../../actions/runs/45918207334); a homologação real do Excel Web continua pendente. A validação automatizada não substitui o teste no host Office.
 
-## Desenvolvimento e manutenção
+## Organização do repositório e desenvolvimento
 
-| Arquivo / grupo | Finalidade |
+A raiz contém apenas configuração, documentação e ferramentas de desenvolvimento. A Vercel publica exclusivamente `public/`; os endereços existentes do Excel não mudam.
+
+```text
+.
+├── .github/workflows/    # Validação automatizada
+├── docs/                 # Segurança, homologação e manuais
+├── public/               # Arquivos web publicados
+│   ├── assets/           # Ícones e identidade visual
+│   ├── demo/             # Simulação com dados fictícios
+│   ├── manifest.xml      # Contrato Office
+│   ├── index.html        # Landing page
+│   └── ...               # Páginas e recursos do suplemento
+├── scripts/              # Sincronização da demonstração
+├── tests/                # Testes automatizados
+├── CONTRIBUTING.md
+├── README.md
+└── vercel.json
+```
+
+| Módulo (em public/) | Finalidade |
 |---|---|
-| manifest.xml | Integração, permissões, comandos e identidade |
-| taskpane.* | Menu e boas-vindas |
-| email.* / sms.* | Formulários e gravação |
-| perguntas.js | Regras compartilhadas de perguntas |
+| taskpane.* / novo.* | Menu e abertura |
+| email.* / sms.* / perguntas.js | Formulários e gravação |
 | config.* | Configurações |
-| commands.* / assets/ | Comandos e ícones |
-| tests/alpha106.test.cjs | Suíte automatizada |
+| historico.* / resumo.* | Consulta e indicadores |
+| registro-security.js | Proteção de gravações e duplicação |
+| brand.* / question-visibility.js | Tema e regras de exibição |
+| commands.* / manifest.xml | Integração Office |
 
-Execute `node --test tests/alpha106.test.cjs` na raiz do projeto com Node.js. Trabalhe em branch separada para alterações funcionais, valide o Excel Web, preserve manifesto e SSO, crie backup antes do merge autorizado e confira o deploy. Atualize parâmetros de cache quando necessário.
+Com Node.js 22, execute na raiz:
+
+```bash
+node scripts/sync-demo.cjs --check
+node --test tests/*.test.cjs
+```
+
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e publicação. O manifesto para usuários é sempre o da produção, não o arquivo bruto da branch.
 
 ## Documentação
+
+- [Manual Alpha 2.0 (rascunho)](docs/MAN-REG-001-ALPHA-20.md)
+- [Revisão de segurança](docs/ALPHA-20-SEGURANCA.md)
+- [Homologação](docs/ALPHA-20-HOMOLOGACAO.md)
+- [Política de atualização](docs/POLITICA-ATUALIZACAO.md)
 
 - [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS) (acesso corporativo).
 - DOC-REG-007 — Alpha 1.06: edição preparada para aprovação documental.
@@ -137,8 +181,14 @@ Execute `node --test tests/alpha106.test.cjs` na raiz do projeto com Node.js. Tr
 
 <div align="center">
 
-**Grupo Excelência · Registros de Envios**  
+**Grupo Excelência · Registra**  
 Responsabilidade técnica: Matheus Passos  
-Uso corporativo · Alpha 1.06
+Uso corporativo · Alpha 2.0 em desenvolvimento
 
 </div>
+
+## Homologação isolada
+[Instruções e manifesto exclusivo de teste](homologacao/README.md). Use apenas dados fictícios. O preview é protegido; SSO de produção não é reutilizado.
+
+## Preparação para lançamento
+[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação oficial e uso operacional ainda não autorizados.
