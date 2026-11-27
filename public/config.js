@@ -131,6 +131,36 @@ async function adicionarPergunta(){
  }catch(e){status(e.message||"Erro ao adicionar pergunta.",false,null,"statusPergunta")}
  } finally {cadastrandoPergunta=false;botao.disabled=false;}
 }
+// Cada lista de Config é independente; mensagens são ordenadas pelo nome, junto do texto.
+function ordenarCadastroConfig(valores, primeiraLinha, colunas, novo){
+ const linhas=[];
+ for(let i=primeiraLinha;i<valores.length;i++){
+  const dados=colunas.map(c=>valores[i]?.[c]??"");
+  if(dados.some(v=>String(v).trim()!==""))linhas.push(dados);
+ }
+ linhas.push(novo);
+ const collator=new Intl.Collator("pt-BR",{sensitivity:"base",numeric:true});
+ linhas.sort((a,b)=>{
+  const x=String(a[0]).trim(),y=String(b[0]).trim();
+  if(!x||!y)return x? -1:y?1:0;
+  return collator.compare(x,y);
+ });
+ return linhas;
+}
+function gravarCadastroOrdenado(sh,u,h,colunas,novo){
+ const primeira=h.linha+1;
+ const linhas=ordenarCadastroConfig(u.values,primeira,colunas,novo);
+ let ultima=primeira-1;
+ for(let i=primeira;i<u.values.length;i++){
+  if(colunas.some(c=>String(u.values[i]?.[c]??"").trim()!==""))ultima=i;
+ }
+ const quantidade=Math.max(linhas.length,ultima-primeira+1);
+ for(const [j,col] of colunas.entries()){
+  const range=sh.getRangeByIndexes(u.rowIndex+primeira,u.columnIndex+col,quantidade,1);
+  range.values=Array.from({length:quantidade},(_,i)=>[RegistroSecurity.cell(linhas[i]?.[j]??"")]);
+  range.format.wrapText=false;
+ }
+}
 async function adicionarCadastro(){
  const valor=document.getElementById("valorCadastro").value.trim(),tipo=document.getElementById("tipoCadastro").value;
  if(!valor)return status("Informe o valor.",false,"valorCadastro");
@@ -139,10 +169,9 @@ async function adicionarCadastro(){
   const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);
   u.load(["values","isNullObject","rowIndex","columnIndex"]);await context.sync();
   if(u.isNullObject)throw new Error("Config vazia.");
-  const h=head(u.values),col=idx(h.mapa,[tipo]);if(col===-1)throw new Error("Coluna não encontrada.");
+  const h=head(u.values);if(!h)throw new Error("Cabeçalho não encontrado.");const aliases={"EMPRESAS":["EMPRESAS","EMPRESA"],"EMAIL RESPOSTA":["EMAIL RESPOSTA","E-MAIL RESPOSTA","EMAILS_RESPOSTA","EMAILS RESPOSTA"],"SUPERVISORES":["SUPERVISORES","SUPERVISOR"],"REALIZADO POR":["REALIZADO POR"]};const col=idx(h.mapa,aliases[tipo]||[]);if(col===-1)throw new Error("Coluna não encontrada.");
   for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][col])===n(valor))throw new Error("Esse valor já está cadastrado.");
-  let r=h.linha+1;while(r<u.values.length&&String(u.values[r][col]??"").trim())r++;
-  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+col,1,1).values=[[RegistroSecurity.cell(valor)]];await context.sync();
+  gravarCadastroOrdenado(sh,u,h,[col],[valor]);await context.sync();
  });document.getElementById("valorCadastro").value="";status("✓ Cadastro adicionado.",true,null,"statusCadastro")}catch(e){status(e.message||"Erro ao adicionar.",false,null,"statusCadastro")}
 }
 async function adicionarMensagem(){
@@ -156,9 +185,7 @@ async function adicionarMensagem(){
   const nc=idx(h.mapa,[tipo==="email"?"NOME MENSAGEM EMAIL":"NOME MENSAGEM SMS"]),tc=idx(h.mapa,[tipo==="email"?"TEXTO MENSAGEM EMAIL":"TEXTO MENSAGEM SMS"]);
   if(nc===-1||tc===-1)throw new Error("Colunas de mensagem não encontradas.");
   for(let i=h.linha+1;i<u.values.length;i++)if(n(u.values[i][nc])===n(nome))throw new Error("Esse nome de mensagem já existe.");
-  let r=h.linha+1;while(r<u.values.length&&(String(u.values[r][nc]??"").trim()||String(u.values[r][tc]??"").trim()))r++;
-  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+nc,1,1).values=[[RegistroSecurity.cell(nome)]];
-  sh.getRangeByIndexes(u.rowIndex+r,u.columnIndex+tc,1,1).values=[[RegistroSecurity.cell(texto)]];await context.sync();
+  gravarCadastroOrdenado(sh,u,h,[nc,tc],[nome,texto]);await context.sync();
  });document.getElementById("nomeMensagem").value="";document.getElementById("textoMensagem").value="";atualizarContadorSMS();status("✓ Mensagem adicionada.",true,null,"statusMensagem")}catch(e){status(e.message||"Erro ao adicionar.",false,null,"statusMensagem")}
 }
 async function salvarLimite(){
