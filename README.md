@@ -228,3 +228,9 @@ O responsável técnico confirmou sua autorização para concluir as pendências
 - MAN-REG-002 — Manual de Instalação, sucessor do MAN-REG-001 (Alpha 1.06).
 - Ambas as novas emissões estão preparadas em DOCX e PDF. As anteriores permanecem preservadas. Publicação no SharePoint ainda não confirmada.
 - O caminho histórico deste manual Markdown no GitHub permanece estável para preservar links existentes; a numeração corporativa vigente é MAN-REG-002.
+
+## Termo de liberação operacional — REL-REG-001
+
+- Emissão corporativa de 27/11/2026, Alpha 2.1.5, em Word e PDF, vinculada ao [registro de liberação](docs/REL-REG-001.md).
+- Formaliza REL-001 e a autorização já concedida pelo responsável, sem constituir assinatura digital certificada.
+- Arquivamento no SharePoint dos três documentos corporativos (DOC-REG-008, MAN-REG-002 e REL-REG-001) ainda não confirmado.

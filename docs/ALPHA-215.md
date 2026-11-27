@@ -22,3 +22,9 @@ Consulte [matriz final](ALPHA-215-HOMOLOGACAO-FINAL.md). Pendências externas: a
 ## Autorização do responsável — 27/11/2026
 
 O responsável técnico confirmou sua autorização para concluir as pendências, incluindo aprovação documental do DOC-REG-008 e MAN-REG-002 e distribuição/reabertura operacional (REL-001). Aceite funcional de 31/31 itens e baseline de 132/132 testes preservados. Os documentos Word foram revisados para Alpha 2.1.5; a publicação na pasta corporativa do SharePoint ainda depende de acesso autorizado e confirmação de envio. Não alterar manifesto, SSO, versão, código funcional ou escopo da Alpha 3.0. Em cada atualização futura, revisar README, documentação técnica, manual de instalação/uso, versões Word e necessidade de republicação no SharePoint, preservando histórico e evidências.
+
+## Termo de liberação operacional — REL-REG-001
+
+- Emissão corporativa de 27/11/2026, Alpha 2.1.5, em Word e PDF, vinculada ao [registro de liberação](REL-REG-001.md).
+- Formaliza REL-001 e a autorização já concedida pelo responsável, sem constituir assinatura digital certificada.
+- Arquivamento no SharePoint dos três documentos corporativos (DOC-REG-008, MAN-REG-002 e REL-REG-001) ainda não confirmado.
