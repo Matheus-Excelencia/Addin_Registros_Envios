@@ -1,0 +1,12 @@
+const Feedback=(()=>{
+const timers=new WeakMap();
+function clear(el){if(!el)return;clearTimeout(timers.get(el));timers.delete(el);el.textContent="";el.className="status";el.hidden=true;}
+function notice(el,text,type="aviso",duration=type==="erro"?0:4500){if(!el)return;clear(el);el.hidden=false;el.style.removeProperty("display");el.className="status "+type;el.setAttribute("role",type==="erro"?"alert":"status");el.textContent=String(text||"");if(duration>0)timers.set(el,setTimeout(()=>clear(el),duration));}
+function remove(el){if(!el?.id)return;const msg=document.getElementById(el.id+"-erro");if(msg){msg.hidden=true;msg.textContent="";}el.removeAttribute("aria-invalid");}
+function field(id,text,focus=false){const el=typeof id==="string"?document.getElementById(id):id;if(!el)return false;const key=el.id+"-erro";let msg=document.getElementById(key);if(!msg){msg=document.createElement("small");msg.id=key;msg.className="field-error";msg.setAttribute("role","alert");el.after(msg);const desc=(el.getAttribute("aria-describedby")||"").split(/\s+/).filter(Boolean);if(!desc.includes(key))desc.push(key);el.setAttribute("aria-describedby",desc.join(" "));el.addEventListener("input",()=>remove(el));el.addEventListener("change",()=>remove(el));}msg.textContent=String(text);msg.hidden=false;el.setAttribute("aria-invalid","true");if(focus){el.focus();el.scrollIntoView?.({block:"nearest"});}return true;}
+function clearFields(root=document){root.querySelectorAll('[aria-invalid="true"]').forEach(remove);}
+function validate(form){clearFields(form);let first=null;for(const el of form.querySelectorAll("input,select,textarea")){if(el.disabled||el.readOnly||!el.id)continue;let text="";if(el.required&&!String(el.value||"").trim())text="Preencha este campo.";else if(el.validity&&!el.validity.valid)text=el.id==="qtde"?"Informe uma quantidade inteira maior que zero.":el.type==="email"?"Informe um e-mail válido.":el.validationMessage||"Informe um valor válido.";if(text){field(el,text);if(!first)first=el;}}if(first){first.focus();first.scrollIntoView?.({block:"nearest"});return false;}return true;}
+function error(id,message){return Object.assign(new Error(message),{fieldId:id});}
+function showError(e,el){if(!e?.fieldId||!field(e.fieldId,e.message,true))notice(el,e?.message||"Não foi possível concluir a operação.","erro");}
+return Object.freeze({clear,notice,field,remove,clearFields,validate,error,showError});
+})();

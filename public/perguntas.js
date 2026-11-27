@@ -87,35 +87,35 @@ function coletarRespostasPersonalizadas() {
         const campo = document.getElementById("perguntaPersonalizada_" + i);
         const bruto = campo ? campo.value.trim() : "";
         if (!bruto) {
-            if (pergunta.obrigatoria) throw new Error('Preencha o campo "' + pergunta.nome + '".');
+            if (pergunta.obrigatoria) throw Object.assign(new Error('Preencha o campo "' + pergunta.nome + '".'),{fieldId:"perguntaPersonalizada_"+i});
             respostas.push({nome: pergunta.coluna, valor: "", formato: pergunta.formato, tipo: pergunta.tipo});
             return;
         }
         if (pergunta.tipo === "int") {
             const numero = Number(bruto);
-            if (!Number.isSafeInteger(numero)) throw new Error('O campo "' + pergunta.nome + '" deve ser um número inteiro.');
+            if (!Number.isSafeInteger(numero)) throw Object.assign(new Error('O campo "' + pergunta.nome + '" deve ser um número inteiro.'),{fieldId:"perguntaPersonalizada_"+i});
             respostas.push({nome: pergunta.coluna, valor: numero / (pergunta.formato === "percentual" ? 100 : 1), formato: pergunta.formato, tipo: pergunta.tipo});
         } else if (pergunta.tipo === "float") {
             let normalizado = bruto.replace(/^R\$\s*/i, "");
             if (/^[+-]?\d{1,3}(?:\.\d{3})+$/.test(normalizado)) normalizado = normalizado.replace(/\./g, "");
             if (normalizado.includes(",")) {
-                if (!/^[+-]?(?:\d+|\d{1,3}(?:\.\d{3})+),\d+$/.test(normalizado)) throw new Error("Número decimal inválido: " + pergunta.nome);
+                if (!/^[+-]?(?:\d+|\d{1,3}(?:\.\d{3})+),\d+$/.test(normalizado)) throw Object.assign(new Error("Número decimal inválido: " + pergunta.nome),{fieldId:"perguntaPersonalizada_"+i});
                 normalizado = normalizado.replace(/\./g, "").replace(",", ".");
             }
             if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(normalizado) || !Number.isFinite(Number(normalizado))) {
-                throw new Error('O campo "' + pergunta.nome + '" deve ser um número decimal válido. Exemplo: 1.234,56.');
+                throw Object.assign(new Error('O campo "' + pergunta.nome + '" deve ser um número decimal válido. Exemplo: 1.234,56.'),{fieldId:"perguntaPersonalizada_"+i});
             }
             respostas.push({nome: pergunta.coluna, valor: Number(normalizado) / (pergunta.formato === "percentual" ? 100 : 1), formato: pergunta.formato, tipo: pergunta.tipo});
         } else {
             if (pergunta.tipo === "date" || pergunta.tipo === "datetime") {
                 const d = new Date(pergunta.tipo === "date" ? bruto + "T00:00:00" : bruto);
-                if (Number.isNaN(d.getTime())) throw new Error('Data inválida em "' + pergunta.nome + '".');
+                if (Number.isNaN(d.getTime())) throw Object.assign(new Error('Data inválida em "' + pergunta.nome + '".'),{fieldId:"perguntaPersonalizada_"+i});
                 const serial = (Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes())-Date.UTC(1899,11,30))/86400000;
                 respostas.push({nome: pergunta.coluna, valor: serial, formato: pergunta.formato === "geral" ? (pergunta.tipo === "date" ? "data" : "datahora") : pergunta.formato, tipo: pergunta.tipo});
             } else if (pergunta.tipo === "time") {
-                if (!/^\d{2}:\d{2}$/.test(bruto)) throw new Error('Hora inválida em "' + pergunta.nome + '".');
+                if (!/^\d{2}:\d{2}$/.test(bruto)) throw Object.assign(new Error('Hora inválida em "' + pergunta.nome + '".'),{fieldId:"perguntaPersonalizada_"+i});
                 const [h,m]=bruto.split(":").map(Number);
-                if(h>23||m>59)throw new Error('Hora inválida em "' + pergunta.nome + '".');
+                if(h>23||m>59)throw Object.assign(new Error('Hora inválida em "' + pergunta.nome + '".'),{fieldId:"perguntaPersonalizada_"+i});
                 respostas.push({nome: pergunta.coluna, valor: (h*60+m)/1440, formato: pergunta.formato === "geral" ? "hora" : pergunta.formato, tipo: pergunta.tipo});
             } else respostas.push({nome: pergunta.coluna, valor: pergunta.tipo === "bool" ? bruto === "Sim" : bruto, formato: pergunta.formato, tipo: pergunta.tipo});
         }

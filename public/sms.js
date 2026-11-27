@@ -33,13 +33,13 @@ function prepararLog() {
 }
 
 function atualizarLog() {
-    const elemento = document.getElementById("mensagemStatus");
-    if (!elemento) return;
-    elemento.style.whiteSpace = "pre-line";
-    elemento.style.fontSize = "12px";
-    elemento.style.lineHeight = "1.4";
-    elemento.textContent = statusLog.join("\n");
-    elemento.className = "status aviso";
+ const texto=statusLog[statusLog.length-1]||"";
+ if(/SSO/.test(texto))return;
+ const el=document.getElementById("mensagemStatus");
+ const campo=/Empresas/.test(texto)?"empresa":/E-mails/.test(texto)?"emailResposta":/Supervisores/.test(texto)?"supervisor":/Realizado por/.test(texto)?"realizadoPor":/Mensagens/.test(texto)?"mensagem":null;
+ if(texto.startsWith("⚠")&&campo){Feedback.field(campo,"Nenhuma opção cadastrada. Confira Configurações.");return;}
+ if(texto.startsWith("⚠"))Feedback.notice(el,texto,"erro");
+ else if(!el?.classList.contains("erro"))Feedback.notice(el,texto,"aviso");
 }
 
 function adicionarLog(texto) {
@@ -48,18 +48,11 @@ function adicionarLog(texto) {
 }
 
 function limparStatus() {
-    statusLog = [];
-    const elemento = document.getElementById("mensagemStatus");
-    if (!elemento) return;
-    elemento.textContent = "";
-    elemento.className = "status";
+ statusLog=[];Feedback.clear(document.getElementById("mensagemStatus"));Feedback.clearFields();
 }
 
-function mostrarStatus(texto, tipo) {
-    const elemento = document.getElementById("mensagemStatus");
-    if (!elemento) return;
-    elemento.textContent = texto;
-    elemento.className = "status " + tipo;
+function mostrarStatus(texto,tipo) {
+ Feedback.notice(document.getElementById("mensagemStatus"),texto,tipo,tipo==="sucesso"?6500:tipo==="erro"?0:4500);
 }
 
 function limparFormulario() {
@@ -181,7 +174,7 @@ async function carregarDados() {
     } catch (erro) {
         // Não registrar objetos de erro do Office.
         adicionarLog("⚠ Erro no Config");
-        mostrarStatus(statusLog.join("\n"), "aviso");
+        mostrarStatus("Não foi possível carregar Configurações. Confira a aba Config.","erro");
         await identificarUsuario();
     }
 }
@@ -310,6 +303,8 @@ function obterDataHoraAtual() {
 
 async function salvarSMS(event) {
     event.preventDefault();
+    Feedback.clear(document.getElementById("mensagemStatus"));
+    if(!Feedback.validate(document.getElementById("formSms")))return;
 
     const btn = document.getElementById("btnSalvar");
     btn.disabled = true;
@@ -318,7 +313,7 @@ async function salvarSMS(event) {
 
     try {
         const realizadoPor = document.getElementById("realizadoPor").value.trim();
-        if (!realizadoPor) throw new Error("Informe o Realizado por.");
+        if (!realizadoPor) throw Feedback.error("realizadoPor","Informe o Realizado por.");
         const empresa = document.getElementById("empresa").value.trim();
         const qtde = document.getElementById("qtde").value.trim();
         const supervisor = document.getElementById("supervisor").value.trim();
@@ -329,13 +324,13 @@ async function salvarSMS(event) {
         const nomeMensagem = document.getElementById("mensagem").value;
         const textoMensagem = document.getElementById("textoMensagem").value;
 
-        if (!empresa) throw new Error("Informe a empresa.");
-        if (!qtde || Number(qtde) <= 0 || !Number.isInteger(Number(qtde))) throw new Error("A Qtde deve ser um número inteiro maior que zero.");
-        if (!supervisor) throw new Error("Informe o Supervisor.");
-        if (!historicoExterno) throw new Error("Informe o Histórico Externo.");
-        if (!nomeMensagem) throw new Error("Selecione uma mensagem.");
-        if (!textoMensagem) throw new Error("A mensagem selecionada não possui texto.");
-        if (textoMensagem.length > limiteSMS) throw new Error("A mensagem possui " + textoMensagem.length + " caracteres. O limite é " + limiteSMS + ".");
+        if (!empresa) throw Feedback.error("empresa","Informe a empresa.");
+        if (!qtde || Number(qtde) <= 0 || !Number.isInteger(Number(qtde))) throw Feedback.error("qtde","A Qtde deve ser um número inteiro maior que zero.");
+        if (!supervisor) throw Feedback.error("supervisor","Informe o Supervisor.");
+        if (!historicoExterno) throw Feedback.error("historicoExterno","Informe o Histórico Externo.");
+        if (!nomeMensagem) throw Feedback.error("mensagem","Selecione uma mensagem.");
+        if (!textoMensagem) throw Feedback.error("mensagem","A mensagem selecionada não possui texto.");
+        if (textoMensagem.length > limiteSMS) throw Feedback.error("mensagem","A mensagem possui " + textoMensagem.length + " caracteres. O limite é " + limiteSMS + ".");
 
         await Excel.run(async function (context) {
             await adicionarRegistroSMS(context, {
@@ -371,7 +366,7 @@ async function salvarSMS(event) {
         await identificarUsuario();
     } catch (erro) {
         // Não registrar objetos de erro do Office.
-        mostrarStatus(erro.message || "Erro ao salvar.", "erro");
+        Feedback.showError(erro,document.getElementById("mensagemStatus"));
     } finally {
         btn.disabled = false;
         btn.textContent = "Salvar";

@@ -59,22 +59,14 @@ function prepararLog() {
 
 
 function atualizarLog() {
-
-    const elemento =
-        document.getElementById("mensagemStatus");
-
-    if (!elemento) return;
-
-    elemento.style.whiteSpace = "pre-line";
-    elemento.style.fontSize = "12px";
-    elemento.style.lineHeight = "1.4";
-
-    elemento.textContent =
-        statusLog.join("\n");
-
-    elemento.className = "status aviso";
+ const texto=statusLog[statusLog.length-1]||"";
+ if(/SSO/.test(texto))return;
+ const el=document.getElementById("mensagemStatus");
+ const campo=/Empresas/.test(texto)?"empresa":/E-mails/.test(texto)?"emailResposta":/Supervisores/.test(texto)?"supervisor":/Realizado por/.test(texto)?"realizadoPor":/Mensagens/.test(texto)?"mensagem":null;
+ if(texto.startsWith("⚠")&&campo){Feedback.field(campo,"Nenhuma opção cadastrada. Confira Configurações.");return;}
+ if(texto.startsWith("⚠"))Feedback.notice(el,texto,"erro");
+ else if(!el?.classList.contains("erro"))Feedback.notice(el,texto,"aviso");
 }
-
 
 function adicionarLog(texto) {
 
@@ -85,28 +77,11 @@ function adicionarLog(texto) {
 
 
 function limparStatus() {
-
-    statusLog = [];
-
-    const elemento =
-        document.getElementById("mensagemStatus");
-
-    if (!elemento) return;
-
-    elemento.textContent = "";
-    elemento.className = "status";
+ statusLog=[];Feedback.clear(document.getElementById("mensagemStatus"));Feedback.clearFields();
 }
 
-
-function mostrarStatus(texto, tipo) {
-
-    const elemento =
-        document.getElementById("mensagemStatus");
-
-    if (!elemento) return;
-
-    elemento.textContent = texto;
-    elemento.className = "status " + tipo;
+function mostrarStatus(texto,tipo) {
+ Feedback.notice(document.getElementById("mensagemStatus"),texto,tipo,tipo==="sucesso"?6500:tipo==="erro"?0:4500);
 }
 
 
@@ -514,10 +489,7 @@ async function carregarDados() {
             "⚠ Erro no Config"
         );
 
-        mostrarStatus(
-            statusLog.join("\n"),
-            "aviso"
-        );
+        mostrarStatus("Não foi possível carregar Configurações. Confira a aba Config.","erro");
 
 
         await identificarUsuario();
@@ -845,6 +817,8 @@ function obterDataHoraAtual() {
 async function salvarEmail(event) {
 
     event.preventDefault();
+    Feedback.clear(document.getElementById("mensagemStatus"));
+    if(!Feedback.validate(document.getElementById("formEmail")))return;
 
     limparStatus();
 
@@ -866,7 +840,7 @@ async function salvarEmail(event) {
             document.getElementById(
                 "realizadoPor"
             ).value.trim();
-        if (!realizadoPor) throw new Error("Informe o Realizado por.");
+        if (!realizadoPor) throw Feedback.error("realizadoPor","Informe o Realizado por.");
 
 
         const empresa =
@@ -923,9 +897,7 @@ async function salvarEmail(event) {
 
 
         if (!empresa)
-            throw new Error(
-                "Informe a empresa."
-            );
+            throw Feedback.error("empresa","Informe a empresa.");
 
 
         if (
@@ -935,42 +907,30 @@ async function salvarEmail(event) {
                 Number(qtde)
             )
         )
-            throw new Error(
-                "A Qtde deve ser um número inteiro maior que zero."
-            );
+            throw Feedback.error("qtde","A Qtde deve ser um número inteiro maior que zero.");
 
 
-        if (!emailResposta)
-            throw new Error(
-                "Informe o E-mail Resposta."
-            );
+        if (!emailValido(emailResposta))
+            throw Feedback.error("emailResposta","Informe um e-mail válido.");
 
 
         if (!supervisor)
-            throw new Error(
-                "Informe o Supervisor."
-            );
+            throw Feedback.error("supervisor","Informe o Supervisor.");
 
 
         if (!historicoExterno)
-            throw new Error(
-                "Informe o Histórico Externo."
-            );
+            throw Feedback.error("historicoExterno","Informe o Histórico Externo.");
 
 
         if (!nomeMensagem)
-            throw new Error(
-                "Selecione uma mensagem."
-            );
+            throw Feedback.error("mensagem","Selecione uma mensagem.");
 
 
         if (!textoMensagem)
-            throw new Error(
-                "A mensagem selecionada não possui texto."
-            );
+            throw Feedback.error("mensagem","A mensagem selecionada não possui texto.");
 
 
-        if (!assunto) throw new Error("Informe o assunto.");
+        if (!assunto) throw Feedback.error("assunto","Informe o assunto.");
 
 
         await Excel.run(
@@ -1040,11 +1000,7 @@ async function salvarEmail(event) {
 
         // Não registrar objetos de erro do Office.
 
-        mostrarStatus(
-            erro.message ||
-            "Erro ao salvar.",
-            "erro"
-        );
+        Feedback.showError(erro,document.getElementById("mensagemStatus"));
 
     }
     finally {
