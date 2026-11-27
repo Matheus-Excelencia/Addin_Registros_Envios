@@ -34,7 +34,8 @@ async function iniciarBoasVindas(){
  const tela=document.getElementById("boasVindas"),menu=document.getElementById("menuPrincipal");
  if(!menu)return;if(!tela){menu.hidden=false;return;}
  const demo=window.REGISTROS_DEMO===true;
- try{if(sessionStorage.getItem("splash20")){menu.hidden=false;return;}sessionStorage.setItem("splash20","1");}catch{}
+ const splashKey=demo?"splash20.demo":window.REGISTROS_HOMOLOGACAO===true?"splash20.homologacao":"splash20";
+ try{if(sessionStorage.getItem(splashKey)){menu.hidden=false;menu.inert=false;return;}sessionStorage.setItem(splashKey,"1");}catch{}
  const reduced=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
  const greeting=document.getElementById("saudacao"),name=document.getElementById("nomeBoasVindas"),message=document.getElementById("mensagemBoasVindas"),skip=document.getElementById("pularBoasVindas");
  let closed=false,timer,timeout;

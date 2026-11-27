@@ -38,3 +38,6 @@ Suplemento: Registra. Guia Início, grupo Excelência, botão Novo registro. O w
 
 ## Ambiente de homologação preparado
 Alias: https://addin-registros-envios-git-feat-alpha-20-acme-vs-coyote.vercel.app/. Preview anterior 0478910 READY, verificado por HTTP autenticado: landing, taskpane, demo, manifesto, módulo de segurança e PNG disponíveis (200); documento fora de public/ retorna 404. Manifesto separado em [homologacao/manifest-homologacao.xml](../homologacao/manifest-homologacao.xml), ID distinto, SSO desativado, identificação manual. Proteção Vercel preservada. Acesso no iframe Office, visual renderizado, validação funcional real e SSO de teste continuam pendentes. Nenhuma publicação oficial.
+
+## Registro de andamento — 26/11/2026
+O usuário informou todos os sete passos iniciais pendentes. Não há evidência de instalação ou homologação manual. Foram adicionados testes de interface simulada (tema persistente, storage indisponível, transição e redução de movimento, isolamento da abertura, ausência de SSO de teste). O resultado de CI não substitui o navegador real. A planilha fictícia foi preparada separadamente para entrega no chat; não contém dados operacionais.
