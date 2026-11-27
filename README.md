@@ -9,12 +9,12 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 
 *Menos retrabalho. Mais controle.*
 
-![Versão](https://img.shields.io/badge/versão-Alpha%202.0.6-087f72)
+![Versão](https://img.shields.io/badge/versão-Alpha%202.1.5-087f72)
 [![Validação Alpha 2.0](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=feat%2Falpha-2.0)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 [![License: uso corporativo](https://img.shields.io/badge/license-uso%20corporativo%20restrito-555)](LICENSE)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
-[![Vercel: Alpha 2.0 controlada](.github/assets/vercel-status.svg)](https://addin-registros-envios.vercel.app/)
+[![Vercel: Alpha 2.1.5](.github/assets/vercel-status.svg)](https://addin-registros-envios.vercel.app/)
 
 [Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação) · [Licença](#licença)
 
@@ -201,5 +201,11 @@ Uso corporativo · Alpha 2.0 em homologação controlada
 
 ## Alpha 2.0.6
 - Avisos temporários e validação próxima ao campo.
-- Configurações → Ordem dos formulários: campos padrão e personalizados, por canal, salvos na aba Config (`ORDEM FORMULARIOS`). O manifesto 2.0.0.0 permanece estável.
+- Configurações → Ordem dos formulários: campos padrão e personalizados, por canal, originalmente salvos na aba Config (`ORDEM FORMULARIOS`); substituídos pelas preferências pessoais na Alpha 2.1.5. O manifesto 2.0.0.0 permanece estável.
 - [Proposta Alpha 3.0](docs/ROADMAP-ALPHA-30.md).
+
+## Alpha 2.1.5
+- Ordem dos formulários e exibição no Histórico/Resumo são pessoais, separadas por identidade Microsoft e workbook no navegador. Sem SSO, preferências temporárias de sessão; sem identidade de arquivo, somente em memória.
+- Criação e edição das perguntas continuam compartilhadas. Colunas legadas de visualização são preservadas, mas não utilizadas para definir a preferência pessoal.
+- Log de conexão com Config permanece visível e seção de ordenação usa a identidade visual Registra.
+- Manifesto 2.0.0.0 permanece inalterado. [Roadmap Alpha 3.0](docs/ROADMAP-ALPHA-30.md).
