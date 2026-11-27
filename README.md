@@ -14,7 +14,7 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 [![License: uso corporativo](https://img.shields.io/badge/license-uso%20corporativo%20restrito-555)](LICENSE)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
-![Vercel](https://img.shields.io/badge/Vercel-Alpha%202.0%20controlada-black)
+[![Vercel: Alpha 2.0 controlada](.github/assets/vercel-status.svg)](https://addin-registros-envios.vercel.app/)
 
 [Landing page](https://addin-registros-envios.vercel.app/) · [Demonstração](https://addin-registros-envios.vercel.app/demo/index.html) · [Instalação](#instalação) · [Funcionalidades](#funcionalidades) · [Arquitetura](#arquitetura) · [Documentação](#documentação) · [Licença](#licença)
 
