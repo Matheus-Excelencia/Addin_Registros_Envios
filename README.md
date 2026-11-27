@@ -9,7 +9,7 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 
 *Menos retrabalho. Mais controle.*
 
-![Versão](https://img.shields.io/badge/versão-Alpha%202.0-087f72)
+![Versão](https://img.shields.io/badge/versão-Alpha%202.0.6-087f72)
 [![Validação Alpha 2.0](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=feat%2Falpha-2.0)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 [![License: uso corporativo](https://img.shields.io/badge/license-uso%20corporativo%20restrito-555)](LICENSE)
@@ -198,3 +198,8 @@ Uso corporativo · Alpha 2.0 em homologação controlada
 ## Licença
 
 [Uso corporativo restrito — LICENSE](LICENSE). Não é um projeto de código aberto; não há concessão de licença pública de reutilização. Direitos de terceiros são preservados. A titularidade e eventuais permissões adicionais dependem dos respectivos titulares.
+
+## Alpha 2.0.6
+- Avisos temporários e validação próxima ao campo.
+- Configurações → Ordem dos formulários: campos padrão e personalizados, por canal, salvos na aba Config (`ORDEM FORMULARIOS`). O manifesto 2.0.0.0 permanece estável.
+- [Proposta Alpha 3.0](docs/ROADMAP-ALPHA-30.md).

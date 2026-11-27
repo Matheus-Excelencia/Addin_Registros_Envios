@@ -268,19 +268,19 @@ function render() {
     });
 
     lista.querySelectorAll(".btn-ir").forEach(button => {
-        button.addEventListener("click", () => irParaRegistro(ordenados[Number(button.dataset.index)]));
+        button.addEventListener("click", () => irParaRegistro(ordenados[Number(button.dataset.index)],button));
     });
 
     lista.querySelectorAll(".btn-duplicar").forEach(button => {
-        button.addEventListener("click", () => duplicar(ordenados[Number(button.dataset.index)]));
+        button.addEventListener("click", () => duplicar(ordenados[Number(button.dataset.index)],button));
     });
 
     if (!ordenados.length) lista.innerHTML = '<div class="registro">Nenhum registro encontrado.</div>';
 }
 
-async function irParaRegistro(r) {
+async function irParaRegistro(r,button) {
     if (!r || !Number.isInteger(r.linhaPlanilha)) {
-        erro("Não foi possível localizar a linha deste registro.");
+        erroRegistro(button,"Não foi possível localizar a linha deste registro.");
         return;
     }
 
@@ -293,11 +293,11 @@ async function irParaRegistro(r) {
             await context.sync();
         });
     } catch (e) {
-        erro("Não foi possível ir para o registro. " + (e?.message || ""));
+        erroRegistro(button,"Não foi possível ir para o registro. " + (e?.message || ""));
     }
 }
 
-async function duplicar(r) {
+async function duplicar(r,button) {
     if (!r) return;
     const ok = await RegistroSecurity.store({
         tipo: r.tipo === "Email" ? "email" : "sms",
@@ -311,7 +311,7 @@ async function duplicar(r) {
         mensagem: r.mensagem,
         camposPersonalizados: r.camposPersonalizados
     }, escopoHistorico);
-    if (!ok) { erro("Duplicação indisponível: não foi possível identificar com segurança a pasta de trabalho. Salve e reabra o arquivo."); return; }
+    if (!ok) { erroRegistro(button,"Duplicação indisponível: não foi possível identificar com segurança a pasta de trabalho. Salve e reabra o arquivo."); return; }
     window.location.href = r.tipo === "Email" ? "email.html" : "sms.html";
 }
 
@@ -327,10 +327,5 @@ function limpar() {
     pesquisar();
 }
 
-function erro(mensagem) {
-    const status = document.getElementById("status");
-    if (!status) return;
-    status.textContent = mensagem;
-    status.className = "status erro";
-    status.style.display = "block";
-}
+function erro(mensagem) { Feedback.notice(document.getElementById("status"),mensagem,"erro"); }
+function erroRegistro(button,text){if(!button)return erro(text);let el=button.parentElement.querySelector(".record-feedback");if(!el){el=document.createElement("div");el.className="record-feedback status";button.parentElement.append(el);}Feedback.notice(el,text,"erro");}
