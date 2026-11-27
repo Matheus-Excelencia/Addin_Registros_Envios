@@ -4,7 +4,7 @@ let cadastrandoPergunta=false;
 let info=null;
 let limiteMensagemSMS=160;
 let perguntaEmEdicao=null;
-const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA","EXIBIR HISTORICO","EXIBIR RESUMO"];
+const COLUNAS_PERGUNTAS=["PERGUNTA PERSONALIZADA","FORMULARIO","TIPO RESPOSTA","OBRIGATORIA","FORMATO EXCEL","COLUNA EXCEL","PERGUNTA ATIVA"];
 Office.onReady(async function(){
  document.getElementById("btnVoltar").onclick=()=>location.href="taskpane.html";
  document.getElementById("btnCadastro").onclick=adicionarCadastro;
@@ -14,6 +14,7 @@ Office.onReady(async function(){
  document.getElementById("perguntaTipo").onchange=atualizarFormatos; atualizarFormatos();
  document.getElementById("tipoMensagem").onchange=atualizarContadorSMS;
  document.getElementById("textoMensagem").oninput=atualizarContadorSMS;
+ await PersonalPrefs.init();
  await carregar();
 });
 function n(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase()}
@@ -34,7 +35,7 @@ async function carregar(){
    document.getElementById("limite").value=lim;limiteMensagemSMS=lim;atualizarContadorSMS();
    const perguntas=lerPerguntas(u.values, u.rowIndex||0, info);
    renderizarPerguntas(perguntas);
-   if(typeof FormLayout!=="undefined"){layoutQuestions=perguntas;layoutSaved=FormLayout.read(u.values,info);layoutReady=true;renderLayout();}
+   if(typeof FormLayout!=="undefined"){layoutQuestions=perguntas;layoutSaved={email:PersonalPrefs.getOrder("email"),sms:PersonalPrefs.getOrder("sms")};layoutReady=true;renderLayout();renderPersonalVisibility();}
   });
   status("✓ Configurações carregadas.",true);
  }catch(e){status(e.message||"Erro ao carregar.",false)}
@@ -65,7 +66,7 @@ function renderizarPerguntas(perguntas){
   const item=document.createElement("div");item.className="pergunta-item";
   const nome=document.createElement("strong");nome.textContent=q.nome;
   const detalhe=document.createElement("small");detalhe.textContent=(q.formulario==="ambos"?"E-mail e SMS":q.formulario==="email"?"Somente E-mail":"Somente SMS")+" · "+q.tipo+" · "+q.formato+" · Coluna: "+q.coluna+" · "+(q.obrigatoria?"Obrigatória":"Opcional");
-  item.appendChild(nome);item.appendChild(detalhe);const vis=document.createElement("small");vis.textContent="Histórico: "+q.historico+" · Resumo: "+q.resumo;item.appendChild(vis);const a=document.createElement("small");a.textContent=q.padrao?"Padrão · Ativa":q.ativo?"Ativa":"Desativada";a.className="pergunta-situacao";item.appendChild(a);
+  item.appendChild(nome);item.appendChild(detalhe);const a=document.createElement("small");a.textContent=q.padrao?"Padrão · Ativa":q.ativo?"Ativa":"Desativada";a.className="pergunta-situacao";item.appendChild(a);
   if(!q.padrao&&q.linha!==undefined){const b=document.createElement("button");b.type="button";b.textContent=q.ativo?"Desativar":"Reativar";b.onclick=()=>alterarAtividade(q);item.appendChild(b);}const editar=document.createElement("button");editar.type="button";editar.textContent="Editar";editar.onclick=()=>iniciarEdicao(q);item.appendChild(editar);
   area.appendChild(item);
  });
@@ -121,7 +122,7 @@ async function adicionarPergunta(){
    }
    let linha=h.linha+1;
    while(linha<u.values.length&&String(u.values[linha][cols.pergunta]??"").trim())linha++;
-   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[RegistroSecurity.cell(valor)]];
+   for(const [indice,valor] of [[cols.pergunta,nome],[cols.formulario,formulario],[cols.tipo,tipo],[cols.obrigatoria,obrigatoria],[cols.formato,formato],[cols.coluna,coluna],[cols.ativo,"SIM"]])sh.getRangeByIndexes(u.rowIndex+linha,u.columnIndex+indice,1,1).values=[[RegistroSecurity.cell(valor)]];
    await context.sync();
   });
   document.getElementById("perguntaNome").value="";
@@ -178,7 +179,7 @@ function iniciarEdicao(q){
  perguntaEmEdicao=q;
  document.getElementById("editorPergunta")?.classList?.add("editando");
  document.getElementById("perguntaNome")?.scrollIntoView?.({block:"center"});
- for(const [id,v] of Object.entries({perguntaNome:q.nome,perguntaFormulario:q.formulario,perguntaTipo:q.tipo,perguntaFormato:q.formato,perguntaObrigatoria:q.obrigatoria?"sim":"nao",perguntaColuna:q.coluna,perguntaHistorico:q.historico||"oculto",perguntaResumo:q.resumo||"oculto"}))document.getElementById(id).value=v;
+ for(const [id,v] of Object.entries({perguntaNome:q.nome,perguntaFormulario:q.formulario,perguntaTipo:q.tipo,perguntaFormato:q.formato,perguntaObrigatoria:q.obrigatoria?"sim":"nao",perguntaColuna:q.coluna}))document.getElementById(id).value=v;
  for(const id of ["perguntaColuna","perguntaTipo","perguntaFormulario"])document.getElementById(id).disabled=true;
  atualizarFormatos();document.getElementById("btnPergunta").textContent="Salvar edição";
  const b=document.createElement("button");b.id="cancelarEdicao";b.type="button";b.textContent="Cancelar edição";b.onclick=encerrarEdicao;
@@ -190,12 +191,36 @@ async function salvarEdicao(){
  if(!nome||/^[=+\-@]/.test(nome)||(!q.padrao&&/^QUAL VALOR TOTAL DOS PROCESSOS\??$/.test(n(nome)))||["DATA","REALIZADO POR","EMPRESA","QTDE","EMAIL RESPOSTA","E-MAIL RESPOSTA","SUPERVISOR","OBS","OBS.","HISTORICO EXTERNO","HISTORICOEXTERNO","MENSAGEM","ASSUNTO","ID REGISTRO","VALOR"].includes(n(nome))||!FORMATOS_COMPATIVEIS[q.tipo]?.includes(formato))return status("Nome ou formato inválido.",false,"perguntaNome");
  if(q.padrao&&!["geral","decimal","decimal4","contabil","moeda"].includes(formato))return status("Formato inválido para Valor.",false,"perguntaFormato");
  if((q.formato==="percentual")!==(formato==="percentual"))return status("Crie outra pergunta para alterar a escala percentual.",false,"perguntaFormato");
- try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],[cols.historico,document.getElementById("perguntaHistorico").value],[cols.resumo,document.getElementById("perguntaResumo").value],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[RegistroSecurity.cell(v)]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.",true,null,"statusPergunta");}catch(e){status(e.message,false);}
+ try{await Excel.run(async context=>{const {sh,u,h,cols}=await obterEstruturaConfig(context);const rows=[];for(let i=h.linha+1;i<u.values.length;i++){const r=u.values[i];if(q.padrao?n(r[cols.coluna])==="VALOR":n(r[cols.pergunta])===n(q.nome)&&n(r[cols.coluna]||r[cols.pergunta])===n(q.coluna))rows.push(i);else if(n(r[cols.pergunta])===n(nome))throw new Error("Nome já cadastrado.");}if(q.padrao&&rows.length===0){let i=h.linha+1;while(i<u.values.length&&String(u.values[i][cols.pergunta]??"").trim())i++;rows.push(i);}if(rows.length!==1)throw new Error("Pergunta não identificada.");for(const [j,v] of [[cols.pergunta,nome],[cols.coluna,q.coluna],[cols.formato,formato],[cols.obrigatoria,obrigatoria],...(q.padrao?[[cols.formulario,"ambos"],[cols.tipo,"float"],[cols.ativo,"SIM"]]:[])])sh.getRangeByIndexes(u.rowIndex+rows[0],u.columnIndex+j,1,1).values=[[RegistroSecurity.cell(v)]];await context.sync();});encerrarEdicao();await carregar();status("Pergunta atualizada.",true,null,"statusPergunta");}catch(e){status(e.message,false);}
 }
 
 function atualizarContadorSMS(){const tipo=document.getElementById("tipoMensagem"),campo=document.getElementById("textoMensagem"),contador=document.getElementById("contadorMensagemSMS"),botao=document.getElementById("btnMensagem");if(!tipo||!campo||!contador||!botao)return;const sms=tipo.value==="sms",n=campo.value.length,excesso=sms&&n>limiteMensagemSMS;contador.hidden=!sms;contador.textContent=n+" / "+limiteMensagemSMS+" caracteres"+(excesso?" — limite excedido":"");contador.className=excesso?"contador-sms excesso":"contador-sms";botao.disabled=excesso;}
 
 let layoutQuestions=[],layoutSaved={},layoutDraft={},layoutBusy=false,layoutReady=false;
-function renderLayout(){const ch=document.getElementById("layoutChannel"),list=document.getElementById("layoutList");if(!ch||!list)return;const channel=ch.value,rows=FormLayout.order(FormLayout.items(channel,layoutQuestions),layoutDraft[channel]||layoutSaved[channel]);list.replaceChildren();rows.forEach((r,i)=>{const line=document.createElement("div");line.className="layout-row";const name=document.createElement("span");name.textContent=(i+1)+". "+r.label;line.append(name);for(const [delta,label] of [[-1,"↑"],[1,"↓"]]){const b=document.createElement("button");b.type="button";b.textContent=label;b.setAttribute("aria-label",(delta<0?"Subir ":"Descer ")+r.label);b.disabled=!layoutReady||layoutBusy||i+delta<0||i+delta>=rows.length;b.onclick=()=>{const keys=rows.map(x=>x.key);[keys[i],keys[i+delta]]=[keys[i+delta],keys[i]];layoutDraft[channel]=keys;renderLayout()};line.append(b)}list.append(line)});document.getElementById("layoutSave").disabled=!layoutReady||layoutBusy;document.getElementById("layoutReset").disabled=!layoutReady||layoutBusy;}
-async function saveLayout(reset=false){if(!layoutReady||layoutBusy)return;const channel=document.getElementById("layoutChannel").value;if(!["email","sms"].includes(channel))return;const keys=reset?[]:FormLayout.order(FormLayout.items(channel,layoutQuestions),layoutDraft[channel]||layoutSaved[channel]).map(r=>r.key);layoutBusy=true;renderLayout();try{await Excel.run(async context=>{const sh=context.workbook.worksheets.getItem("Config"),u=sh.getUsedRangeOrNullObject(true);u.load(["values","isNullObject","rowIndex","columnIndex"]);await context.sync();const h=!u.isNullObject&&head(u.values);if(!h)throw Error("Cabeçalho Config não encontrado.");const matches=(u.values[h.linha]||[]).map((v,i)=>n(v)===FormLayout.HEADER?i:-1).filter(i=>i>=0);if(matches.length>1)throw Error("Coluna de ordem duplicada. Nenhum dado alterado.");let j=matches[0];const current=FormLayout.read(u.values,h);current[channel]=keys;const value=JSON.stringify(current);if(value.length>30000||keys.length>300)throw Error("Ordem muito extensa.");if(j===undefined){j=Math.max(0,...u.values.map(r=>r.length));sh.getRangeByIndexes(u.rowIndex+h.linha,u.columnIndex+j,1,1).values=[[FormLayout.HEADER]];}sh.getRangeByIndexes(u.rowIndex+h.linha+1,u.columnIndex+j,1,1).values=[[value]];await context.sync();layoutSaved=current;});delete layoutDraft[channel];status(reset?"Ordem padrão restaurada.":"Ordem do formulário salva.",true,null,"statusLayout");}catch(e){status(e.message||"Erro ao salvar ordem.",false,null,"statusLayout");}finally{layoutBusy=false;renderLayout();}}
+function renderLayout(){const ch=document.getElementById("layoutChannel"),list=document.getElementById("layoutList");if(!ch||!list)return;const channel=ch.value,rows=FormLayout.order(FormLayout.items(channel,layoutQuestions),layoutDraft[channel]||layoutSaved[channel]);list.replaceChildren();rows.forEach((r,i)=>{const line=document.createElement("div");line.className="layout-row";const name=document.createElement("span");name.className="layout-field-name";name.textContent=r.label;const num=document.createElement("span");num.className="layout-number";num.textContent=String(i+1).padStart(2,"0");line.append(num,name);for(const [delta,label] of [[-1,"↑"],[1,"↓"]]){const b=document.createElement("button");b.type="button";b.className="layout-move";b.textContent=label;b.setAttribute("aria-label",(delta<0?"Subir ":"Descer ")+r.label);b.disabled=!layoutReady||layoutBusy||i+delta<0||i+delta>=rows.length;b.onclick=()=>{const keys=rows.map(x=>x.key);[keys[i],keys[i+delta]]=[keys[i+delta],keys[i]];layoutDraft[channel]=keys;renderLayout()};line.append(b)}list.append(line)});document.getElementById("layoutSave").disabled=!layoutReady||layoutBusy;document.getElementById("layoutReset").disabled=!layoutReady||layoutBusy;}
+async function saveLayout(reset=false){
+ if(!layoutReady||layoutBusy)return;
+ const channel=document.getElementById("layoutChannel").value;
+ if(!["email","sms"].includes(channel))return;
+ const keys=reset?[]:FormLayout.order(FormLayout.items(channel,layoutQuestions),layoutDraft[channel]||layoutSaved[channel]).map(r=>r.key);
+ if(keys.length>300)return status("Ordem muito extensa.",false,null,"statusLayout");
+ const saved=PersonalPrefs.setOrder(channel,keys);
+ layoutSaved[channel]=keys;delete layoutDraft[channel];renderLayout();
+ status(saved?(reset?"Sua ordem padrão foi restaurada.":"Sua ordem foi salva."):"Ordem aplicada apenas nesta tela; armazenamento indisponível.",saved,null,"statusLayout");
+ renderPreferenceScope();
+}
+function renderPreferenceScope(){for(const id of ["layoutScope","visibilityScope"]){const e=document.getElementById(id);if(e)e.textContent=PersonalPrefs.label();}}
+function renderPersonalVisibility(){
+ const list=document.getElementById("personalVisibility");if(!list)return;list.replaceChildren();renderPreferenceScope();
+ const qs=FormLayout.items("email",layoutQuestions).concat(FormLayout.items("sms",layoutQuestions)).filter(q=>q.key.startsWith("custom:"));
+ const seen=new Set();for(const q of qs){const key=q.key.slice(7);if(seen.has(key))continue;seen.add(key);
+ const card=document.createElement("div");card.className="visibility-row";const name=document.createElement("strong");name.textContent=q.label;card.append(name);
+ const controls=document.createElement("div");controls.className="visibility-controls";
+ for(const [mode,label] of [["historico","Histórico"],["resumo","Resumo"]]){const l=document.createElement("label");l.textContent=label;const s=document.createElement("select");s.setAttribute("aria-label",label+" — "+q.label);
+ for(const [value,text] of [["oculto","Não exibir"],["opcional","Opcional"],["sempre","Sempre exibir"]]){const opt=document.createElement("option");opt.value=value;opt.textContent=text;s.append(opt);}
+ s.value=PersonalPrefs.mode(key,mode,key==="VALOR"?(mode==="historico"?"sempre":"opcional"):"oculto");
+ s.onchange=()=>{const ok=PersonalPrefs.setMode(key,mode,s.value);status(ok?"Sua preferência foi salva.":"Preferência apenas nesta tela; armazenamento indisponível.",ok,null,"statusVisibility");renderPreferenceScope();};l.append(s);controls.append(l);}
+ card.append(controls);list.append(card);}
+}
+
 if(typeof document.addEventListener==="function")document.addEventListener("DOMContentLoaded",()=>{const ch=document.getElementById("layoutChannel");if(!ch)return;ch.onchange=renderLayout;document.getElementById("layoutSave").onclick=()=>saveLayout();document.getElementById("layoutReset").onclick=()=>saveLayout(true);renderLayout();});
