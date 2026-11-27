@@ -1,12 +1,12 @@
-# MAN-REG-001 — Manual de instalação e atualização
+# MAN-REG-001 — Manual de instalação, atualização e utilização
 
-**Produto:** Registra · Alpha 2.0 | **Manifesto:** 2.0.0.0 | **Ambiente:** Excel Web / Microsoft 365 | **Situação:** edição preparada, aguardando homologação e autorização de publicação. Não distribuir como versão oficial antes do aceite.
+**Produto:** Registra · Alpha 2.1.5 | **Manifesto:** 2.0.0.0 | **Ambiente:** Excel Web / Microsoft 365 | **Situação:** homologação funcional aprovada pelo responsável em 27/11/2026; revisão e publicação documental corporativa pendentes.
 
 ## 1. Requisitos
 Conta Microsoft 365 autorizada, permissão de edição no workbook e política que permita suplemento personalizado. Navegador atualizado. O suplemento não dispara E-mail ou SMS: registra envios já realizados. Não exige banco próprio.
 
 ## 2. Instalação após liberação
-1. Acessar https://addin-registros-envios.vercel.app/ e clicar **Baixar manifesto XML**. Confirmar que a versão liberada é 2.0.0.0; salvar como `manifest.xml`, sem extensão .txt. Durante o desenvolvimento, esse endereço ainda entrega a versão anterior.
+1. Acessar https://addin-registros-envios.vercel.app/ e clicar **Baixar manifesto XML**. Confirmar que a versão liberada é 2.0.0.0; salvar como `manifest.xml`, sem extensão .txt. O domínio oficial entregava a Alpha 2.1.5 no baseline verificado.
 2. Abrir o workbook autorizado no Excel Web. Para homologação, usar somente a cópia fictícia salva no OneDrive/SharePoint.
 3. Em Início > Suplementos > Avançado ou Inserir > Suplementos (nomes variam), escolher Carregar meu suplemento e selecionar o XML. Se bloqueado, consultar administrador; não contornar política corporativa.
 4. Na guia Início, localizar **Excelência > Novo registro**. Aguardar tela de boas-vindas ou clicar Continuar. Confirmar nome Registra.
@@ -26,4 +26,22 @@ O mesmo ID e endereço permanecem. O código web muda quando o deploy oficial é
 Atualizações de HTML/CSS/JS no domínio permanente não exigem XML novo. Mudança de permissões, comandos ou outro contrato do manifesto requer revisão e atualização. Em caso de erro de gravação, anotar ID/status e conferir a linha antes de repetir. Não compartilhar dados de clientes em chamados. Se o suplemento não abrir, atualizar a página e contactar suporte; não desativar segurança do navegador/Vercel.
 
 ## 6. Homologação e aprovação
-Preview protegido recusou abrir dentro do Excel Web segundo relato do usuário; não homologado. Teste controlado no domínio oficial somente após autorização, suspensão de uso e backup de dados. [Plano de publicação e rollback](PLANO-PUBLICACAO-ALPHA-20.md) e [matriz de testes](ALPHA-20-HOMOLOGACAO.md). Responsável, data e aprovação: pendentes.
+Preview protegido recusou abrir dentro do Excel Web segundo relato do usuário; não homologado. Teste controlado no domínio oficial somente após autorização, suspensão de uso e backup de dados. [Plano de publicação e rollback](PLANO-PUBLICACAO-ALPHA-20.md) e [matriz de testes](ALPHA-20-HOMOLOGACAO.md). Registro histórico do ambiente isolado. Aceite funcional posterior: 27/11/2026, conforme declaração do responsável; consulte [homologação final](ALPHA-215-HOMOLOGACAO-FINAL.md). Aprovação documental e autorização operacional são distintas.
+
+## 7. Configurações e preferências pessoais
+
+1. Para cadastrar empresas, e-mails de resposta, supervisores ou realizadores, acesse Configurações e selecione o tipo de cadastro. Informe o valor e confirme. Valores já cadastrados não são duplicados.
+2. Ao salvar um novo registro de E-mail ou SMS, valores novos dos campos correspondentes também são incluídos na Config. E-mail de resposta aplica-se somente ao formulário E-mail.
+3. Ao cadastrar mensagens, selecione E-mail ou SMS, informe nome e texto e salve; respeite o limite configurado para SMS. Os pares nome/texto permanecem associados. As listas são ordenadas alfabeticamente e os intervalos atualizados ficam sem quebra automática de texto. Parágrafos intencionais são preservados. Edição manual na planilha não dispara essa rotina.
+4. Em Configurações, crie ou edite perguntas personalizadas, definindo formulário, tipo, obrigatoriedade e formato compatível. A pergunta Valor é opcional por padrão. Não modifique cabeçalhos e IDs manualmente.
+5. Em Ordem dos formulários, selecione E-mail ou SMS, mova os campos pelas setas e salve ou restaure a ordem. A ordem visual não altera a coluna de destino.
+6. Nas preferências de visibilidade, escolha Não exibir, Opcional ou Sempre exibir para Histórico e Resumo. Essas preferências e a ordem são pessoais por identidade Microsoft e arquivo no navegador; sem SSO são temporárias por sessão, e sem identidade de arquivo ou armazenamento ficam em memória. Não há sincronização entre dispositivos. Ao trocar de conta sem SSO, feche a aba.
+7. As perguntas e os cadastros da Config continuam compartilhados entre operadores autorizados. Confira o log de conexão e os avisos de validação antes de gravar.
+
+## 8. Site e demonstração
+
+A página inicial e o artigo possuem botão flutuante de retorno ao topo, com rolagem suave e adaptação ao tema. A demonstração usa somente dados fictícios e não realiza autenticação Microsoft real. Reiniciar os dados da demonstração não altera o workbook corporativo.
+
+## 9. Controle documental
+
+Manual atualizado no GitHub; submissão, aprovação e publicação no SharePoint dependem do responsável autorizado. DOC-REG-007 permanece sujeito a aprovação documental. Não confundir o aceite funcional com aprovação do documento ou autorização de distribuição.

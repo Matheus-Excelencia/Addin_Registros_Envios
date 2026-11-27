@@ -10,7 +10,7 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 *Menos retrabalho. Mais controle.*
 
 ![Versão](https://img.shields.io/badge/versão-Alpha%202.1.5-087f72)
-[![Validação Alpha 2.0](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=feat%2Falpha-2.0)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
+[![Validação main](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml/badge.svg?branch=main)](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/workflows/alpha20.yml)
 ![Excel](https://img.shields.io/badge/Excel-Web-217346)
 [![License: uso corporativo](https://img.shields.io/badge/license-uso%20corporativo%20restrito-555)](LICENSE)
 ![Office.js](https://img.shields.io/badge/Office.js-API-blue)
@@ -20,7 +20,7 @@ Anteriormente denominado Registros de Envios; o workbook mantém seu nome origin
 
 </div>
 
-> **Alpha 2.0 publicada em janela controlada de homologação.** Uso operacional suspenso até aceite funcional e SSO; os links públicos apontam para a produção. Backup Alpha 1.06 preservado.
+> **Alpha 2.1.5 — homologação funcional aprovada pelo responsável em 27/11/2026.** 31/31 validações manuais declaradas e 132/132 testes automatizados aprovados. Documentação corporativa e autorização de distribuição/reabertura, se ainda não registrada, permanecem sob responsabilidade do gestor. Backup Alpha 1.06 preservado.
 
 ## Visão geral
 
@@ -44,7 +44,7 @@ O Registra padroniza o registro operacional de campanhas de E-mail e SMS/URA rea
 - Resumo em cards, lista e gráficos; regras de visibilidade de perguntas no Histórico e Resumo.
 - Duplicação pelo fluxo existente do Histórico, incluindo respostas personalizadas.
 - Demonstração sem SSO, com reinício dos dados fictícios e da abertura; autenticação real preservada.
-- Homologação funcional e SSO pendentes; instalar somente para testes autorizados com dados fictícios até o aceite.
+- Marco histórico: homologação funcional e SSO posteriormente aprovados na Alpha 2.1.5.
 
 ### Novidades da Alpha 1.06
 
@@ -52,7 +52,7 @@ O Registra padroniza o registro operacional de campanhas de E-mail e SMS/URA rea
 - Perguntas configuráveis por formulário, tipo, obrigatoriedade e formato.
 - Edição, desativação e reativação de perguntas; coluna, tipo e destino protegidos na edição.
 - Avisos de duplicidade de coluna e contador de SMS na configuração.
-- Saudação de boas-vindas uma vez por sessão. Digitação e esvanecimento publicados, mas não homologados; ajustes adiados.
+- Saudação de boas-vindas uma vez por sessão. Digitação e esvanecimento posteriormente aprovados na homologação Alpha 2.1.5 (UX-005/UX-006).
 
 ## Instalação
 
@@ -124,7 +124,7 @@ A aba `Config` contém empresas, e-mails de resposta, supervisores, realizadores
 | [PR #13](../../pull/13) | 31 testes; homologação 28/30 |
 | [PR #14](../../pull/14) | [33 testes aprovados](../../actions/runs/45456326476); 20 itens manuais não validados |
 
-As suítes são cumulativas. [108 testes aprovados no candidato de lançamento](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/runs/45922397612); a homologação real do Excel Web continua pendente. A validação automatizada não substitui o teste no host Office.
+As suítes são cumulativas. [132/132 testes aprovados](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/actions/runs/46027246753) no baseline funcional `ba1b10c`; [31/31 validações manuais aprovadas pelo responsável](docs/ALPHA-215-HOMOLOGACAO-FINAL.md). A validação automatizada não substitui o teste no host Office.
 
 ## Organização do repositório e desenvolvimento
 
@@ -169,9 +169,11 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 
 ## Documentação
 
-- [Manual Alpha 2.0 (rascunho)](docs/MAN-REG-001-ALPHA-20.md)
+- [Manual Alpha 2.1.5 (revisão corporativa pendente)](docs/MAN-REG-001-ALPHA-20.md)
 - [Revisão de segurança](docs/ALPHA-20-SEGURANCA.md)
-- [Homologação](docs/ALPHA-20-HOMOLOGACAO.md)
+- [Homologação histórica Alpha 2.0](docs/ALPHA-20-HOMOLOGACAO.md)
+- [Homologação final Alpha 2.1.5](docs/ALPHA-215-HOMOLOGACAO-FINAL.md)
+- [Documentação técnica Alpha 2.1.5](docs/ALPHA-215.md)
 - [Política de atualização](docs/POLITICA-ATUALIZACAO.md)
 
 - [Pasta oficial de documentação — SharePoint](https://excelenciacobrancaempres629.sharepoint.com/:f:/s/backofficearquivos/IgB1hL4JmiUnRJ6PWKmwB5aQAVWwebeL5AhbYGjeiiRju2M?e=48kyBS) (acesso corporativo).
@@ -185,7 +187,7 @@ Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e pu
 
 **Grupo Excelência · Registra**  
 Responsabilidade técnica: Matheus Passos  
-Uso corporativo · Alpha 2.0 em homologação controlada
+Uso corporativo · Alpha 2.1.5 — aceite funcional registrado
 
 </div>
 
@@ -193,7 +195,7 @@ Uso corporativo · Alpha 2.0 em homologação controlada
 [Instruções e manifesto exclusivo de teste](homologacao/README.md). Use apenas dados fictícios. O preview é protegido; SSO de produção não é reutilizado.
 
 ## Preparação para lançamento
-[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação controlada autorizada. Liberação operacional ainda pendente.
+[Plano de publicação e rollback](docs/PLANO-PUBLICACAO-ALPHA-20.md) · [Backup Alpha 1.06](https://github.com/Matheus-Excelencia/Addin_Registros_Envios/tree/backup/alpha-1.06-pre-registra). Preview Office bloqueado; publicação controlada autorizada. Aceite funcional registrado; autorização de distribuição/reabertura permanece separada.
 
 ## Licença
 
@@ -209,3 +211,8 @@ Uso corporativo · Alpha 2.0 em homologação controlada
 - Criação e edição das perguntas continuam compartilhadas. Colunas legadas de visualização são preservadas, mas não utilizadas para definir a preferência pessoal.
 - Log de conexão com Config permanece visível e seção de ordenação usa a identidade visual Registra.
 - Manifesto 2.0.0.0 permanece inalterado. [Roadmap Alpha 3.0](docs/ROADMAP-ALPHA-30.md).
+
+### Organização da Config
+- Cadastros realizados em Configurações ou nos formulários E-mail/SMS são ordenados por lista, em português brasileiro, a cada inclusão de valor novo. Campos existentes não são duplicados.
+- Mensagens são ordenadas pelo nome, mantendo o texto correspondente; `wrapText` é desativado nos intervalos atualizados, sem remover quebras de linha inseridas no texto. Edições manuais diretamente na planilha não disparam a ordenação.
+- A página inicial e o artigo possuem botão de retorno ao topo; layout e temas restaurados e aprovados.

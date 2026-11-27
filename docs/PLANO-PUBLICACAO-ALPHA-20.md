@@ -1,5 +1,8 @@
 # Registra Alpha 2.0 — Plano de publicação e rollback
 
+> **Atualização de situação — 27/11/2026:** este documento preserva o histórico da Alpha 2.0. O aceite funcional mais recente é o da [Alpha 2.1.5](ALPHA-215-HOMOLOGACAO-FINAL.md), com 31/31 itens declarados aprovados e 132/132 testes automatizados. SSO, fallback, segurança, interface e concorrência foram aprovados no escopo declarado. Registros antigos de pendência abaixo são históricos; não equivalem ao estado atual. Aprovação documental corporativa e autorização de distribuição/reabertura, se ainda não registrada, permanecem separadas. Riscos residuais e procedimentos de segurança continuam aplicáveis.
+
+
 **Status: publicação controlada autorizada; uso operacional ainda bloqueado.** Marco original de preparação: NÃO AUTORIZADO PARA PUBLICAÇÃO. O usuário confirmou backup de dados e suspensão de uso. Deploy de lançamento 02097fe confirmado READY. Homologação real permanece pendente; nenhum rollback executado.
 
 ## Evidências e baseline
